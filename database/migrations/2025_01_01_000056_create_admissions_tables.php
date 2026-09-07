@@ -76,7 +76,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
 
-            $table->index(['admission_application_id', 'created_at']);
+            $table->index(['admission_application_id', 'created_at'], 'admission_app_event_idx');
         });
     }
 

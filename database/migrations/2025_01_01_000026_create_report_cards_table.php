@@ -24,7 +24,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['school_id', 'academic_year_id']);
-            $table->unique(['school_id', 'academic_year_id', 'semester_id', 'student_id']);
+            $table->unique(['school_id', 'academic_year_id', 'semester_id', 'student_id'], 'report_cards_unique');
         });
     }
 

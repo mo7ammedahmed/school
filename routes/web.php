@@ -356,3 +356,18 @@ Route::middleware(['auth', 'can:access-platform'])->prefix('platform')->name('pl
     Route::get('/health', [HealthController::class, 'index'])->name('health');
     Route::get('/support-access', [SupportAccessController::class, 'index'])->name('support-access');
 });
+
+Route::get('/debug-db', function () {
+    $connection = DB::connection()->getDatabaseName();
+    return response()->json(['database' => $connection]);
+});
+
+
+Route::get('/debug-env', function () {
+    return response()->json([
+        'DB_CONNECTION' => env('DB_CONNECTION'),
+        'DB_DATABASE' => env('DB_DATABASE'),
+        'APP_ENV' => env('APP_ENV'),
+    ]);
+});
+
