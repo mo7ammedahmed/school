@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Academics\Actions;
+
+use App\Domain\Academics\Models\AcademicYear;
+use App\Domain\Academics\Models\GradeLevel;
+use App\Domain\Academics\Models\Section;
+use App\Domain\Schools\Models\School;
+use Exception;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
+
+class CreateSection
+{
+    public function __construct(
+        private readonly School $school,
+    ) {}
+
+    public function execute(array $data): Section
+    {
+        if (empty($data['name']) || empty($data['grade_level_id']) || empty($data['academic_year_id'])) {
+            throw new Exception('Section name, grade level, and academic year are required.');
+        }
+
+        if (isset($data['capacity']) && $data['capacity'] < 1) {
+            throw new Exception('Section capacity must be at least 1.');
+        }
+
+        $gradeLevel = GradeLevel::find($data['grade_level_id']);
+        if (!$gradeLevel || $gradeLevel->school_id !== $this->school->id) {
+            throw new Exception('Invalid grade level for this school.');
+        }
+
+        $academicYear = AcademicYear::find($data['academic_year_id']);
+        if (!$academicYear || $academicYear->school_id !== $this->school->id) {
+            throw new Exception('Invalid academic year for this school.');
+        }
+
+        $data['school_id'] = $this->school->id;
+
+        try {
+            return DB::transaction(fn() => Section::create($data));
+        } catch (UniqueConstraintViolationException $e) {
+            throw new Exception('A section with this code already exists for the selected grade level and academic year.', $e->getCode(), previous: $e);
+        }
+    }
+}

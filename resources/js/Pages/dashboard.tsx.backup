@@ -1,0 +1,90 @@
+import AppShell from '@/layouts/app-shell';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, BookOpen, Calendar, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+
+export default function Dashboard({ stats }: { stats: { total_students: number; total_teachers: number; total_classes: number; total_revenue: number; attendance_rate: number; pending_payments: number } }) {
+    const statCards = [
+        {
+            title: 'Total Students',
+            value: stats.total_students,
+            icon: Users,
+            color: 'text-blue-600',
+            bgColor: 'bg-blue-50',
+            link: '/students',
+        },
+        {
+            title: 'Total Teachers',
+            value: stats.total_teachers,
+            icon: BookOpen,
+            color: 'text-green-600',
+            bgColor: 'bg-green-50',
+            link: '/teachers',
+        },
+        {
+            title: 'Total Classes',
+            value: stats.total_classes,
+            icon: Calendar,
+            color: 'text-purple-600',
+            bgColor: 'bg-purple-50',
+            link: '/sections',
+        },
+        {
+            title: 'Revenue',
+            value: `$${Number(stats.total_revenue).toFixed(2)}`,
+            icon: DollarSign,
+            color: 'text-emerald-600',
+            bgColor: 'bg-emerald-50',
+            link: '/finance/payments',
+        },
+        {
+            title: 'Attendance Rate',
+            value: `${Number(stats.attendance_rate).toFixed(1)}%`,
+            icon: TrendingUp,
+            color: 'text-cyan-600',
+            bgColor: 'bg-cyan-50',
+            link: '/attendance',
+        },
+        {
+            title: 'Pending Payments',
+            value: stats.pending_payments,
+            icon: AlertCircle,
+            color: 'text-orange-600',
+            bgColor: 'bg-orange-50',
+            link: '/finance/invoices',
+        },
+    ];
+
+    return (
+        <AppShell
+            title="Dashboard"
+            breadcrumbs={[
+                { label: 'Dashboard' },
+            ]}
+        >
+            <PageHeader
+                title="Dashboard"
+                description="Welcome to your school management system"
+            />
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {statCards.map((stat) => (
+                    <Link key={stat.title} href={stat.link}>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">
+                                    {stat.title}
+                                </CardTitle>
+                                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{stat.value}</div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
+            </div>
+        </AppShell>
+    );
+}
