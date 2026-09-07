@@ -30,6 +30,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('school_id');
 
         return redirect()->route('school.select');
     }

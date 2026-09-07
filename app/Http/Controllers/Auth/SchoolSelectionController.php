@@ -45,7 +45,7 @@ class SchoolSelectionController extends Controller
             'last_login_at' => now(),
         ]);
 
-        session(['school_id' => $request->school_id]);
+        session(['school_id' => $membership->school_id]);
 
         return redirect()->route('dashboard');
     }

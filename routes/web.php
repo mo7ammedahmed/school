@@ -156,7 +156,9 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 // Authenticated application routes
 Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(function () {
     // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('permission:view-dashboard')
+        ->name('dashboard');
 
     // Academics
     Route::prefix('academic-years')->name('academic-years.')->group(function () {
@@ -224,6 +226,11 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::prefix('finance')->name('finance.')->group(function () {
         Route::get('/fee-types', [FeeStructureController::class, 'index'])->name('fee-types.index');
         Route::get('/fee-structures', [FeeStructureController::class, 'index'])->name('fee-structures.index');
+        Route::get('/fee-structures/create', [FeeStructureController::class, 'create'])->name('fee-structures.create');
+        Route::post('/fee-structures', [FeeStructureController::class, 'store'])->name('fee-structures.store');
+        Route::get('/fee-structures/{feeStructure}', [FeeStructureController::class, 'show'])->name('fee-structures.show');
+        Route::get('/fee-structures/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('fee-structures.edit');
+        Route::put('/fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
         Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])->name('fee-assignments.index');
         Route::resource('discounts', FinanceDiscountController::class);
         Route::resource('invoices', FinanceInvoiceController::class);
@@ -309,20 +316,22 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/password', [PasswordController::class, 'store']);
         Route::get('/preferences', [PreferenceController::class, 'index'])->name('preferences');
         Route::post('/preferences', [PreferenceController::class, 'store']);
-        Route::get('/security/two-factor', [SecurityController::class, 'twoFactor'])->name('security.two-factor');
-        Route::post('/security/two-factor', [SecurityController::class, 'updateTwoFactor']);
+        Route::get('/security/two-factor', [SecurityController::class, 'index'])->name('security.two-factor');
+        Route::post('/security/two-factor/enable', [SecurityController::class, 'enable'])->name('security.two-factor.enable');
+        Route::post('/security/two-factor/disable', [SecurityController::class, 'disable'])->name('security.two-factor.disable');
+
+        Route::resource('users', UserController::class);
     });
 
     // Administration
-    Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::get('/permissions', [RoleController::class, 'permissions'])->name('permissions.index');
     Route::resource('schools', SchoolController::class);
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
     // Student portal
-    Route::prefix('student')->name('student.')->group(function () {
-        Route::get('/dashboard', [StudentPortalController::class, 'dashboard'])->name('dashboard');
+    Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {
+        Route::get('/dashboard', [StudentPortalController::class, 'index'])->name('dashboard');
         Route::get('/schedule', [StudentPortalController::class, 'schedule'])->name('schedule');
         Route::get('/attendance', [StudentPortalController::class, 'attendance'])->name('attendance');
         Route::get('/grades', [StudentPortalController::class, 'grades'])->name('grades');
@@ -331,8 +340,8 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     });
 
     // Guardian portal
-    Route::prefix('guardian')->name('guardian.')->group(function () {
-        Route::get('/dashboard', [GuardianPortalController::class, 'dashboard'])->name('dashboard');
+    Route::prefix('guardian')->name('guardian.')->middleware('role:guardian')->group(function () {
+        Route::get('/dashboard', [GuardianPortalController::class, 'index'])->name('dashboard');
         Route::get('/children', [GuardianPortalController::class, 'children'])->name('children');
         Route::get('/children/{child}/schedule', [GuardianPortalController::class, 'childSchedule'])->name('children.schedule');
         Route::get('/children/{child}/attendance', [GuardianPortalController::class, 'childAttendance'])->name('children.attendance');

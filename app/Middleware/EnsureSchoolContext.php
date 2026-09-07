@@ -20,16 +20,21 @@ class EnsureSchoolContext
         }
 
         $schoolId = session('school_id');
+        $membership = $user->memberships()
+            ->where('is_active', true)
+            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->first();
 
-        if (!$schoolId) {
+        if (!$membership) {
+            session()->forget('school_id');
             $membership = $user->memberships()->where('is_active', true)->first();
 
             if (!$membership) {
-                return redirect()->route('welcome')->with('error', 'No active school membership found.');
+                return redirect()->route('school.select')->with('error', 'No active school membership found.');
             }
-
-            session(['school_id' => $membership->school_id]);
         }
+
+        session(['school_id' => $membership->school_id]);
 
         return $next($request);
     }

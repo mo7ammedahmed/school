@@ -3,9 +3,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
-export default function TwoFactorSecurity({ enabled, recoveryCodesRemaining }: { enabled: boolean; recoveryCodesRemaining?: number }) {
+export default function TwoFactorSecurity({ twoFactorEnabled, recoveryCodesRemaining }: { twoFactorEnabled: boolean; recoveryCodesRemaining?: number }) {
     return (
         <AppShell
             title="Two-Factor Security"
@@ -33,9 +33,9 @@ export default function TwoFactorSecurity({ enabled, recoveryCodesRemaining }: {
                     <div className="space-y-4">
                         <div>
                             <p className="text-sm text-muted-foreground">
-                                Status: {enabled ? 'Enabled' : 'Disabled'}
+                                Status: {twoFactorEnabled ? 'Enabled' : 'Disabled'}
                             </p>
-                            {enabled && recoveryCodesRemaining !== undefined && (
+                            {twoFactorEnabled && recoveryCodesRemaining !== undefined && (
                                 <p className="text-sm text-muted-foreground mt-1">
                                     Recovery codes remaining: {recoveryCodesRemaining}
                                 </p>
@@ -43,13 +43,13 @@ export default function TwoFactorSecurity({ enabled, recoveryCodesRemaining }: {
                         </div>
 
                         <div className="flex gap-4">
-                            {!enabled ? (
-                                <Button asChild>
-                                    <Link href="/settings/security/two-factor/enable">Enable Two-Factor Authentication</Link>
+                            {!twoFactorEnabled ? (
+                                <Button type="button" onClick={() => router.post('/settings/security/two-factor/enable')}>
+                                    Enable Two-Factor Authentication
                                 </Button>
                             ) : (
-                                <Button variant="destructive" asChild>
-                                    <Link href="/settings/security/two-factor/disable">Disable Two-Factor Authentication</Link>
+                                <Button type="button" variant="destructive" onClick={() => router.post('/settings/security/two-factor/disable')}>
+                                    Disable Two-Factor Authentication
                                 </Button>
                             )}
                         </div>

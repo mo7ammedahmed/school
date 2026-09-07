@@ -1,23 +1,23 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Middleware;
 
 use App\Domain\Schools\Models\School;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Ensures the authenticated user has a valid, membership-backed school context.
- *
- * The session school_id is never trusted alone: it must correspond to an
- * active membership (or super-admin platform access) for the current user.
- */
-class EnsureSchoolContext
+class SchoolContext
 {
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure(\Illuminate\Http\Request): \Illuminate\Http\Response  $next
+     * @return \Illuminate\Http\Response
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();

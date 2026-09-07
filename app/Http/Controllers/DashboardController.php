@@ -15,11 +15,21 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $schoolId = session('school_id');
 
-        $stats = [];
+        // Initialize stats with default values
+        $stats = [
+            'total_students' => 0,
+            'total_teachers' => 0,
+            'total_classes' => 0,
+            'total_revenue' => 0,
+            'attendance_rate' => 0.0,
+            'pending_payments' => 0,
+        ];
+
+        // Only fetch stats if we have a valid school ID
         if ($schoolId) {
             $stats = [
                 'total_students' => Student::where('school_id', $schoolId)->count(),
