@@ -11,6 +11,7 @@
         />
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
         <meta name="theme-color" content="#0a5c42" />
+        @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
         @inertiaHead
     </head>
@@ -18,4 +19,3 @@
         @inertia
     </body>
 </html>
-

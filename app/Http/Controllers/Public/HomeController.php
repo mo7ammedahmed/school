@@ -15,15 +15,15 @@ class HomeController
     public function index(Request $request): Response
     {
         $latestNews = News::where('is_published', true)
-            ->latest('publish_date')
+            ->latest('published_at')
             ->take(3)
-            ->get(['id', 'title', 'excerpt', 'category', 'publish_date', 'featured_image']);
+            ->get(['id', 'title', 'excerpt', 'published_at', 'featured_image_path']);
 
         $upcomingEvents = Event::where('is_published', true)
-            ->where('event_date', '>=', now())
-            ->orderBy('event_date')
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date')
             ->take(3)
-            ->get(['id', 'title', 'excerpt', 'event_date', 'event_time', 'location', 'featured_image']);
+            ->get(['id', 'title', 'description', 'start_date', 'end_date', 'location', 'featured_image_path']);
 
         return Inertia::render('welcome', [
             'latestNews' => $latestNews,

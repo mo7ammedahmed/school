@@ -370,4 +370,3 @@ Route::get('/debug-env', function () {
         'APP_ENV' => env('APP_ENV'),
     ]);
 });
-

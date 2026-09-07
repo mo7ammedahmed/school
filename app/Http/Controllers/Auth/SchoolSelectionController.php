@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Auth;
 
 class SchoolSelectionController extends Controller
 {
+    public function index()
+    {
+        return $this->create();
+    }
+
     public function create()
     {
         $user = Auth::user();
@@ -43,5 +48,10 @@ class SchoolSelectionController extends Controller
         session(['school_id' => $request->school_id]);
 
         return redirect()->route('dashboard');
+    }
+
+    public function select(Request $request)
+    {
+        return $this->store($request);
     }
 }
