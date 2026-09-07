@@ -96,8 +96,8 @@ const NAV_GROUPS: NavGroup[] = [
         labelKey: 'shell.group.communication',
         items: [
             { key: 'nav.announcements', href: '/announcements', icon: Bell, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.news', href: '/content/news', icon: Bell, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.events', href: '/content/events', icon: Calendar, roles: [...ADMINS, 'teacher'] },
+            { key: 'nav.news', href: '/content/news', icon: Bell, roles: ADMINS },
+            { key: 'nav.events', href: '/content/events', icon: Calendar, roles: ADMINS },
             { key: 'nav.messages', href: '/messages', icon: MessageSquare, roles: [...ADMINS, 'teacher', 'registrar'] },
             { key: 'nav.documents', href: '/documents', icon: FileText, roles: [...ADMINS, 'teacher'] },
         ],

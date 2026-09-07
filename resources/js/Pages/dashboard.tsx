@@ -101,7 +101,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             visible: canTeach(roles),
         },
         { label: 'Announcements', meta: 'Share updates', href: '/announcements', visible: canTeach(roles) },
-        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: canTeach(roles) },
+        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: roles.some((r) => ADMINS.includes(r)) },
         { label: 'Documents', meta: 'Policies & forms', href: '/documents', visible: canTeach(roles) },
     ].filter((item) => item.visible);
 

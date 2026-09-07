@@ -101,14 +101,19 @@ Route::post('/contact', [ContactController::class, 'store'])->name('public.conta
 Route::get('/faq', [FaqController::class, 'index'])->name('public.faq');
 
 // Apply / Admissions
-Route::get('/apply', [AdmissionsController::class, 'apply'])->name('apply');
-Route::get('/apply/start', [AdmissionsController::class, 'start'])->name('apply.start');
-Route::get('/apply/guardian', [AdmissionsController::class, 'guardian'])->name('apply.guardian');
-Route::get('/apply/student', [AdmissionsController::class, 'student'])->name('apply.student');
-Route::get('/apply/previous-school', [AdmissionsController::class, 'previousSchool'])->name('apply.previous-school');
-Route::get('/apply/documents', [AdmissionsController::class, 'documents'])->name('apply.documents');
-Route::get('/apply/review', [AdmissionsController::class, 'review'])->name('apply.review');
-Route::get('/apply/submitted', [AdmissionsController::class, 'submitted'])->name('apply.submitted');
+Route::get('/apply', [PublicAdmissionsController::class, 'apply'])->name('apply');
+Route::get('/apply/start', [PublicAdmissionsController::class, 'start'])->name('apply.start');
+Route::post('/apply/start', [PublicAdmissionsController::class, 'storeStart']);
+Route::get('/apply/guardian', [PublicAdmissionsController::class, 'guardian'])->name('apply.guardian');
+Route::post('/apply/guardian', [PublicAdmissionsController::class, 'storeGuardian']);
+Route::get('/apply/student', [PublicAdmissionsController::class, 'student'])->name('apply.student');
+Route::post('/apply/student', [PublicAdmissionsController::class, 'storeStudent']);
+Route::get('/apply/previous-school', [PublicAdmissionsController::class, 'previousSchool'])->name('apply.previous-school');
+Route::post('/apply/previous-school', [PublicAdmissionsController::class, 'storePreviousSchool']);
+Route::get('/apply/documents', [PublicAdmissionsController::class, 'documents'])->name('apply.documents');
+Route::post('/apply/documents', [PublicAdmissionsController::class, 'storeDocuments']);
+Route::get('/apply/review', [PublicAdmissionsController::class, 'review'])->name('apply.review');
+Route::get('/apply/submitted', [PublicAdmissionsController::class, 'submitted'])->name('apply.submitted');
 
 // Authentication
 Route::middleware('guest')->group(function () {
@@ -275,15 +280,17 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
 
     // Content management (admin)
-    Route::resource('content/news', NewsController::class);
-    Route::resource('content/events', EventController::class);
+    Route::middleware('permission:manage-content')->group(function () {
+        Route::resource('content/news', NewsController::class);
+        Route::resource('content/events', EventController::class);
+    });
 
     // Reports
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Settings
-    Route::prefix('settings')->name('settings.')->group(function () {
+    Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings')->group(function () {
         Route::get('/general', [SchoolSettingsController::class, 'index'])->name('general');
         Route::post('/general', [SchoolSettingsController::class, 'store']);
         Route::get('/school', [SchoolSettingsController::class, 'index'])->name('school');
@@ -320,13 +327,15 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/security/two-factor/enable', [SecurityController::class, 'enable'])->name('security.two-factor.enable');
         Route::post('/security/two-factor/disable', [SecurityController::class, 'disable'])->name('security.two-factor.disable');
 
-        Route::resource('users', UserController::class);
+        Route::resource('users', UserController::class)->middleware('permission:manage-users');
     });
 
     // Administration
-    Route::resource('roles', RoleController::class);
-    Route::get('/permissions', [RoleController::class, 'permissions'])->name('permissions.index');
-    Route::resource('schools', SchoolController::class);
+    Route::resource('roles', RoleController::class)->middleware('permission:manage-roles');
+    Route::get('/permissions', [RoleController::class, 'permissions'])
+        ->middleware('permission:manage-roles')
+        ->name('permissions.index');
+    Route::resource('schools', SchoolController::class)->middleware('permission:manage-schools');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
     // Student portal
