@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function AcademicYearsEdit({ academicYear }: { academicYear: { id: number; name: string; start_date: string; end_date: string; is_current: boolean } }) {
+export default function AcademicYearsEdit({ academicYear }: { academicYear: { id: number; name: string; name_ar: string; name_en: string; start_date: string; end_date: string; is_current: boolean } }) {
     return (
         <AppShell
             title="Edit Academic Year"
@@ -36,8 +36,12 @@ export default function AcademicYearsEdit({ academicYear }: { academicYear: { id
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Academic Year Name</Label>
-                                <Input id="name" name="name" defaultValue={academicYear.name} required />
+                                <Label htmlFor="name_ar">Academic Year Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" defaultValue={academicYear.name_ar} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Academic Year Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={academicYear.name_en} required />
                             </div>
                             <div>
                                 <Label htmlFor="is_current">Current Year</Label>

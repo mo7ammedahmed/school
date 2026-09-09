@@ -24,7 +24,7 @@ class FeeStructureController extends Controller
 
     public function create()
     {
-        $gradeLevels = GradeLevel::orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('name_en')->get();
         $feeTypes = FeeType::orderBy('name')->get();
         return Inertia::render('finance/fee-structures/create', [
             'gradeLevels' => $gradeLevels,
@@ -56,7 +56,7 @@ class FeeStructureController extends Controller
 
     public function edit(FeeStructure $feeStructure)
     {
-        $gradeLevels = GradeLevel::orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('name_en')->get();
         $feeTypes = FeeType::orderBy('name')->get();
         return Inertia::render('finance/fee-structures/edit', [
             'feeStructure' => $feeStructure,

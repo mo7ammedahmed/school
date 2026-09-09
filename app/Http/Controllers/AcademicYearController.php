@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Models\AcademicYear;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
 
 class AcademicYearController extends Controller
 {
@@ -35,9 +35,10 @@ class AcademicYearController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => [
+            'name_ar' => 'required|string|max:255',
+            'name_en' => [
                 'required', 'string', 'max:255',
-                Rule::unique('academic_years', 'name')->where('school_id', $this->schoolId()),
+                Rule::unique('academic_years', 'name_en')->where('school_id', $this->schoolId()),
             ],
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -76,9 +77,10 @@ class AcademicYearController extends Controller
         abort_unless((int) $academicYear->school_id === $this->schoolId(), 403);
 
         $validated = $request->validate([
-            'name' => [
+            'name_ar' => 'required|string|max:255',
+            'name_en' => [
                 'required', 'string', 'max:255',
-                Rule::unique('academic_years', 'name')
+                Rule::unique('academic_years', 'name_en')
                     ->where('school_id', $this->schoolId())
                     ->ignore($academicYear->id),
             ],

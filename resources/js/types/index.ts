@@ -6,7 +6,9 @@ export type PageProps<
 
 export interface School {
     id: number;
-    name: string;
+    name?: string;
+    name_ar?: string | null;
+    name_en?: string | null;
     slug: string;
     email?: string;
     phone?: string;
@@ -16,10 +18,12 @@ export interface School {
     timezone: string;
     locale: string;
     currency: string;
-    logo_path?: string;
-    favicon_path?: string;
-    primary_color: string;
-    secondary_color: string;
+    logo_path?: string | null;
+    favicon_path?: string | null;
+    primary_color?: string | null;
+    secondary_color?: string | null;
+    accent_color?: string | null;
+    theme_config?: App.ThemeConfig | null;
     metadata?: Record<string, unknown>;
 }
 

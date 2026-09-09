@@ -7,10 +7,10 @@ import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 
-export default function StudentsIndex({ students }: { students: { id: number; first_name: string; last_name: string; email: string; enrollment_number: string; status: string }[] }) {
+export default function StudentsIndex({ students }: { students: { id: number; first_name: string; last_name: string; email: string; student_id_number: string; status: string }[] }) {
     const columns: ColumnDef<any>[] = [
         {
-            accessorKey: 'enrollment_number',
+            accessorKey: 'student_id_number',
             header: 'Enrollment #',
         },
         {

@@ -35,8 +35,12 @@ export default function AcademicYearsCreate() {
                     <form className="space-y-6" method="POST" action="/academic-years">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Academic Year Name</Label>
-                                <Input id="name" name="name" placeholder="e.g., 2024-2025" required />
+                                <Label htmlFor="name_ar">Academic Year Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" placeholder="مثال: ٢٠٢٤-٢٠٢٥" required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Academic Year Name (English)</Label>
+                                <Input id="name_en" name="name_en" placeholder="e.g., 2024-2025" required />
                             </div>
                             <div>
                                 <Label htmlFor="is_current">Current Year</Label>

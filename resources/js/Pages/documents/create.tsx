@@ -35,12 +35,12 @@ export default function DocumentsCreate() {
                     <form className="space-y-6" method="POST" action="/documents" encType="multipart/form-data">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Document Name</Label>
-                                <Input id="name" name="name" required />
+                                <Label htmlFor="title">Document Name</Label>
+                                <Input id="title" name="title" required />
                             </div>
                             <div>
-                                <Label htmlFor="document_type">Document Type</Label>
-                                <select id="document_type" name="document_type" className="input" required>
+                                <Label htmlFor="classification">Document Type</Label>
+                                <select id="classification" name="classification" className="input" required>
                                     <option value="">Select type</option>
                                     <option value="transcript">Transcript</option>
                                     <option value="certificate">Certificate</option>

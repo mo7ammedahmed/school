@@ -9,10 +9,5 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        echo 'TestCase setUp called' . PHP_EOL;
-
-        $this->artisan('config:clear');
-
-        $this->refreshApplication();
     }
 }

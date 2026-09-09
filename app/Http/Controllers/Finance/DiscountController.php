@@ -25,7 +25,7 @@ class DiscountController extends Controller
     public function create()
     {
         $students = Student::orderBy('name')->get();
-        $gradeLevels = GradeLevel::orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('name_en')->get();
         return Inertia::render('finance/discounts/create', [
             'students' => $students,
             'gradeLevels' => $gradeLevels,
@@ -60,7 +60,7 @@ class DiscountController extends Controller
     public function edit(Discount $discount)
     {
         $students = Student::orderBy('name')->get();
-        $gradeLevels = GradeLevel::orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('name_en')->get();
         return Inertia::render('finance/discounts/edit', [
             'discount' => $discount,
             'students' => $students,

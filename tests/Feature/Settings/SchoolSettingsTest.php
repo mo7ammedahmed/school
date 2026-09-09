@@ -41,7 +41,7 @@ class SchoolSettingsTest extends TestCase
         $user = User::factory()->create();
         $user->givePermissionTo('manage-schools');
         $school = School::factory()->create([
-            'name' => 'Original School',
+            'name_en' => 'Original School', 'name_ar' => '??????? ???????',
         ]);
         UserMembership::factory()->create([
             'user_id' => $user->id,
@@ -50,7 +50,7 @@ class SchoolSettingsTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post('/settings/school', [
-            'name' => 'Updated School',
+            'name_en' => 'Updated School', 'name_ar' => '??????? ???????',
             'address' => '123 Main St',
             'phone' => '555-1234',
             'email' => 'school@example.com',
@@ -59,7 +59,8 @@ class SchoolSettingsTest extends TestCase
         $response->assertRedirect('/settings/school');
         $this->assertDatabaseHas('schools', [
             'id' => $school->id,
-            'name' => 'Updated School',
+            'name_en' => 'Updated School', 'name_ar' => '??????? ???????',
         ]);
     }
 }
+

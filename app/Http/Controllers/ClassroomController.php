@@ -22,7 +22,7 @@ class ClassroomController extends Controller
 
     public function create(): Response
     {
-        $sections = Section::orderBy('name')->get();
+        $sections = Section::orderBy('name_en')->get();
         $teachers = Teacher::orderBy('first_name')->get();
         return inertia('classrooms/create', ['sections' => $sections, 'teachers' => $teachers]);
     }
@@ -51,7 +51,7 @@ class ClassroomController extends Controller
 
     public function edit(Classroom $classroom): Response
     {
-        $sections = Section::orderBy('name')->get();
+        $sections = Section::orderBy('name_en')->get();
         $teachers = Teacher::orderBy('first_name')->get();
         return inertia('classrooms/edit', ['classroom' => $classroom, 'sections' => $sections, 'teachers' => $teachers]);
     }

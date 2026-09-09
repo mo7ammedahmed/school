@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\Finance\Models\FeeStructure;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,14 +15,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'school_id',
-    'name',
+    'name_ar',
+    'name_en',
     'code',
     'level',
     'description',
 ])]
+#[Appends([
+    'name',
+])]
 class GradeLevel extends Model
 {
     use SoftDeletes;
+
+    public function getNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+
+        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+    }
 
     public function school(): BelongsTo
     {

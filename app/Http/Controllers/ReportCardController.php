@@ -23,7 +23,7 @@ class ReportCardController extends Controller
     public function create(): Response
     {
         $students = Student::orderBy('first_name')->get();
-        $academicYears = AcademicYear::orderBy('name', 'desc')->get();
+        $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
         return inertia('report-cards/create', ['students' => $students, 'academicYears' => $academicYears]);
     }
 
@@ -52,7 +52,7 @@ class ReportCardController extends Controller
     public function edit(ReportCard $reportCard): Response
     {
         $students = Student::orderBy('first_name')->get();
-        $academicYears = AcademicYear::orderBy('name', 'desc')->get();
+        $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
         return inertia('report-cards/edit', ['reportCard' => $reportCard, 'students' => $students, 'academicYears' => $academicYears]);
     }
 

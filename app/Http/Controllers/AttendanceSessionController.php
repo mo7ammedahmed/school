@@ -32,11 +32,11 @@ class AttendanceSessionController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
         $teachers = TeacherProfile::where('school_id', $schoolId)->orderBy('first_name')->get();
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $semesters = Semester::where('school_id', $schoolId)->orderBy('name')->get();
-        $academicYears = AcademicYear::where('school_id', $schoolId)->orderBy('name', 'desc')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $semesters = Semester::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->orderBy('name_en', 'desc')->get();
 
         return inertia('attendance-sessions/create', [
             'sections' => $sections,
@@ -100,11 +100,11 @@ class AttendanceSessionController extends Controller
     {
         $this->authorizeSchool($session);
         $schoolId = session('school_id');
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
         $teachers = TeacherProfile::where('school_id', $schoolId)->orderBy('first_name')->get();
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $semesters = Semester::where('school_id', $schoolId)->orderBy('name')->get();
-        $academicYears = AcademicYear::where('school_id', $schoolId)->orderBy('name', 'desc')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $semesters = Semester::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $academicYears = AcademicYear::where('school_id', $schoolId)->orderBy('name_en', 'desc')->get();
 
         return inertia('attendance-sessions/edit', [
             'session' => $session->load(['offering.subject', 'section', 'teacher', 'semester', 'academicYear']),

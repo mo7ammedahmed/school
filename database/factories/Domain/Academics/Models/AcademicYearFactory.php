@@ -14,7 +14,8 @@ class AcademicYearFactory extends Factory
     {
         return [
             'school_id' => School::factory(),
-            'name' => fake()->randomElement(['2024-2025', '2025-2026']) . ' Academic Year',
+            'name_en' => fake()->randomElement(['2024-2025', '2025-2026']).' Academic Year',
+            'name_ar' => fake()->randomElement(['٢٠٢٤-٢٠٢٥', '٢٠٢٥-٢٠٢٦']).' عام دراسي',
             'start_date' => fake()->date('Y-m-d', '-1 year'),
             'end_date' => fake()->date('Y-m-d', '+1 year'),
             'is_current' => false,

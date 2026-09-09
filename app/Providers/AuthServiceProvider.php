@@ -32,6 +32,8 @@ use App\Policies\TimetablePolicy;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\StaffProfile;
 use App\Domain\Content\Models\ContactLead;
+use App\Domain\Content\Models\ContentPage;
+use App\Domain\Content\Policies\ContentPagePolicy;
 use App\Domain\Compliance\Models\AuditLog;
 use App\Models\User;
 use App\Models\Student as AppStudent;
@@ -55,6 +57,7 @@ class AuthServiceProvider extends ServiceProvider
         Faq::class => FaqPolicy::class,
         StaffProfile::class => StaffProfilePolicy::class,
         ContactLead::class => ContactLeadPolicy::class,
+        ContentPage::class => ContentPagePolicy::class,
         AuditLog::class => AuditLogPolicy::class,
         User::class => UserPolicy::class,
         AppStudent::class => AppStudentPolicy::class,

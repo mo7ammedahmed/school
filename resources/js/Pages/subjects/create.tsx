@@ -35,8 +35,12 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
                     <form className="space-y-6" method="POST" action="/subjects">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Subject Name</Label>
-                                <Input id="name" name="name" required />
+                                <Label htmlFor="name_ar">Subject Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Subject Name (English)</Label>
+                                <Input id="name_en" name="name_en" required />
                             </div>
                             <div>
                                 <Label htmlFor="code">Subject Code</Label>
@@ -69,3 +73,4 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
         </AppShell>
     );
 }
+

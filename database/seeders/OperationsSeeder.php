@@ -4,42 +4,40 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\Student;
-use App\Domain\People\Models\TeacherProfile;
-use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\Academics\Models\AcademicYear;
-use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\GradeLevel;
-use App\Domain\Academics\Models\Section;
-use App\Domain\Academics\Models\Subject;
-use App\Domain\Academics\Models\Offering;
-use App\Domain\Academics\Models\Enrollment;
-use App\Domain\Academics\Models\GradingScale;
 use App\Domain\Academics\Models\GradingCategory;
-use App\Domain\Scheduling\Models\Room;
-use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Attendance\Models\AttendanceSession;
-use App\Domain\Attendance\Models\AttendanceRecord;
+use App\Domain\Academics\Models\GradingScale;
+use App\Domain\Academics\Models\Offering;
+use App\Domain\Academics\Models\Section;
+use App\Domain\Academics\Models\Semester;
+use App\Domain\Academics\Models\Subject;
 use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Assessment\Models\AssessmentScore;
 use App\Domain\Assessment\Models\Exam;
 use App\Domain\Assessment\Models\ExamResult;
 use App\Domain\Assessment\Models\ReportCard;
-use App\Domain\Learning\Models\Material;
-use App\Domain\Learning\Models\Assignment;
-use App\Domain\Learning\Models\Submission;
-use App\Domain\Learning\Models\Quiz;
-use App\Domain\Learning\Models\QuizAttempt;
-use App\Domain\Communication\Models\Notification;
+use App\Domain\Attendance\Models\AttendanceRecord;
+use App\Domain\Attendance\Models\AttendanceSession;
+use App\Domain\Communication\Models\Announcement;
 use App\Domain\Communication\Models\Conversation;
 use App\Domain\Communication\Models\Message;
-use App\Domain\Communication\Models\Announcement;
-use App\Domain\Documents\Models\DocumentCategory;
-use App\Domain\Documents\Models\Document;
+use App\Domain\Communication\Models\Notification;
 use App\Domain\Compliance\Models\AuditLog;
+use App\Domain\Documents\Models\Document;
+use App\Domain\Documents\Models\DocumentCategory;
+use App\Domain\Learning\Models\Assignment;
+use App\Domain\Learning\Models\Material;
+use App\Domain\Learning\Models\Quiz;
+use App\Domain\Learning\Models\QuizAttempt;
+use App\Domain\Learning\Models\Submission;
+use App\Domain\People\Models\Student;
+use App\Domain\People\Models\TeacherProfile;
+use App\Domain\Scheduling\Models\Room;
+use App\Domain\Scheduling\Models\TimetableEntry;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 /**
  * Seeds the academic operating layer: offerings, timetable, attendance,
@@ -49,6 +47,7 @@ use Illuminate\Support\Str;
 class OperationsSeeder extends Seeder
 {
     private const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
+
     private const PERIODS = [
         ['08:00', '08:45'],
         ['08:50', '09:35'],
@@ -92,14 +91,14 @@ class OperationsSeeder extends Seeder
     private function seedRooms(School $school): void
     {
         $rooms = [
-            ['name' => 'Room 101', 'code' => 'R101', 'room_type' => 'classroom', 'capacity' => 30, 'description' => 'Main building, ground floor'],
-            ['name' => 'Room 102', 'code' => 'R102', 'room_type' => 'classroom', 'capacity' => 30, 'description' => 'Main building, ground floor'],
-            ['name' => 'Room 201', 'code' => 'R201', 'room_type' => 'classroom', 'capacity' => 28, 'description' => 'Main building, first floor'],
-            ['name' => 'Room 202', 'code' => 'R202', 'room_type' => 'classroom', 'capacity' => 28, 'description' => 'Main building, first floor'],
-            ['name' => 'Science Lab 1', 'code' => 'LAB1', 'room_type' => 'laboratory', 'capacity' => 24, 'description' => 'Science block laboratory'],
-            ['name' => 'Computer Lab', 'code' => 'LAB2', 'room_type' => 'laboratory', 'capacity' => 24, 'description' => 'Computer laboratory'],
-            ['name' => 'Main Hall', 'code' => 'HALL-A', 'room_type' => 'hall', 'capacity' => 120, 'description' => 'Assembly and events hall'],
-            ['name' => 'Sports Hall', 'code' => 'HALL-B', 'room_type' => 'hall', 'capacity' => 80, 'description' => 'Indoor sports hall'],
+            ['name_ar' => 'قاعة ١٠١', 'name_en' => 'Room 101', 'code' => 'R101', 'room_type' => 'classroom', 'capacity' => 30, 'description' => 'Main building, ground floor'],
+            ['name_ar' => 'قاعة ١٠٢', 'name_en' => 'Room 102', 'code' => 'R102', 'room_type' => 'classroom', 'capacity' => 30, 'description' => 'Main building, ground floor'],
+            ['name_ar' => 'قاعة ٢٠١', 'name_en' => 'Room 201', 'code' => 'R201', 'room_type' => 'classroom', 'capacity' => 28, 'description' => 'Main building, first floor'],
+            ['name_ar' => 'قاعة ٢٠٢', 'name_en' => 'Room 202', 'code' => 'R202', 'room_type' => 'classroom', 'capacity' => 28, 'description' => 'Main building, first floor'],
+            ['name_ar' => 'مختبر العلوم ١', 'name_en' => 'Science Lab 1', 'code' => 'LAB1', 'room_type' => 'laboratory', 'capacity' => 24, 'description' => 'Science block laboratory'],
+            ['name_ar' => 'مختبر الحاسب', 'name_en' => 'Computer Lab', 'code' => 'LAB2', 'room_type' => 'laboratory', 'capacity' => 24, 'description' => 'Computer laboratory'],
+            ['name_ar' => 'القاعة الرئيسية', 'name_en' => 'Main Hall', 'code' => 'HALL-A', 'room_type' => 'hall', 'capacity' => 120, 'description' => 'Assembly and events hall'],
+            ['name_ar' => 'الصالة الرياضية', 'name_en' => 'Sports Hall', 'code' => 'HALL-B', 'room_type' => 'hall', 'capacity' => 80, 'description' => 'Indoor sports hall'],
         ];
 
         foreach ($rooms as $room) {
@@ -206,7 +205,7 @@ class OperationsSeeder extends Seeder
 
     private function seedAttendance(School $school, AcademicYear $year, ?Semester $semester, $sections, $teachers, $students): void
     {
-        $userIds = \App\Models\User::pluck('id')->toArray();
+        $userIds = User::pluck('id')->toArray();
         $recorderId = $userIds[0] ?? null;
 
         foreach ($sections as $section) {
@@ -352,7 +351,7 @@ class OperationsSeeder extends Seeder
                 ]
             );
 
-            if (!$exam->is_published) {
+            if (! $exam->is_published) {
                 continue; // results only for published exams
             }
 
@@ -408,7 +407,7 @@ class OperationsSeeder extends Seeder
     private function seedLearning(School $school, $sections, $students): void
     {
         $offerings = Offering::where('school_id', $school->id)->with('section')->get();
-        $userIds = \App\Models\User::pluck('id')->toArray();
+        $userIds = User::pluck('id')->toArray();
 
         foreach ($offerings->take(10) as $oIndex => $offering) {
             // Material
@@ -493,8 +492,8 @@ class OperationsSeeder extends Seeder
 
     private function seedCommunication(School $school): void
     {
-        $admin = \App\Models\User::where('email', 'admin@alnoor.school')->first();
-        $teacher = \App\Models\User::where('email', 'teacher@alnoor.school')->first();
+        $admin = User::where('email', 'admin@alnoor.school')->first();
+        $teacher = User::where('email', 'teacher@alnoor.school')->first();
 
         Announcement::firstOrCreate(
             ['school_id' => $school->id, 'title' => 'Welcome to the New Academic Year'],
@@ -552,8 +551,8 @@ class OperationsSeeder extends Seeder
 
     private function seedDocuments(School $school): void
     {
-        $admin = \App\Models\User::where('email', 'admin@alnoor.school')->first();
-        $uploader = $admin?->id ?? \App\Models\User::query()->value('id') ?? 1;
+        $admin = User::where('email', 'admin@alnoor.school')->first();
+        $uploader = $admin?->id ?? User::query()->value('id') ?? 1;
 
         $categories = [
             ['name' => 'Policies', 'code' => 'POL', 'description' => 'Official school policies'],
@@ -592,7 +591,7 @@ class OperationsSeeder extends Seeder
 
     private function seedAuditLogs(School $school): void
     {
-        $admin = \App\Models\User::where('email', 'admin@alnoor.school')->first();
+        $admin = User::where('email', 'admin@alnoor.school')->first();
         $student = Student::where('school_id', $school->id)->first();
 
         if ($student) {
@@ -615,7 +614,7 @@ class OperationsSeeder extends Seeder
 
     private function seedNotifications(School $school): void
     {
-        $users = \App\Models\User::whereHas('memberships', fn ($q) => $q->where('school_id', $school->id))->get();
+        $users = User::whereHas('memberships', fn ($q) => $q->where('school_id', $school->id))->get();
 
         foreach ($users as $index => $user) {
             Notification::firstOrCreate(

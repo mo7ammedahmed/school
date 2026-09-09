@@ -29,8 +29,8 @@ class QuizController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('quizzes/create', ['subjects' => $subjects, 'sections' => $sections]);
     }
@@ -77,8 +77,8 @@ class QuizController extends Controller
     {
         $this->authorizeSchool($quiz);
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('quizzes/edit', [
             'quiz' => $quiz->load(['offering.subject', 'offering.section']),

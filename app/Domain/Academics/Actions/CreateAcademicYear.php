@@ -18,7 +18,7 @@ class CreateAcademicYear
 
     public function execute(array $data): AcademicYear
     {
-        if (empty($data['name']) || empty($data['start_date']) || empty($data['end_date'])) {
+        if (empty($data['name_en']) || empty($data['start_date']) || empty($data['end_date'])) {
             throw new Exception('Academic year name, start date, and end date are required.');
         }
 

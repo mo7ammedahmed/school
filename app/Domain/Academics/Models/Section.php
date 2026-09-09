@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\Academics\Models\Enrollment;
-use App\Domain\Academics\Models\Offering;
-use App\Domain\Scheduling\Models\TimetableEntry;
+use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
-use App\Domain\Academics\Models\AcademicYear;
+use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
-use App\Domain\Attendance\Models\AttendanceSession;
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -23,16 +21,27 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'school_id',
     'academic_year_id',
     'grade_level_id',
-    'name',
+    'name_ar',
+    'name_en',
     'code',
     'homeroom_teacher_id',
     'capacity',
     'current_count',
     'notes',
 ])]
+#[Appends([
+    'name',
+])]
 class Section extends Model
 {
     use SoftDeletes;
+
+    public function getNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+
+        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+    }
 
     public function school(): BelongsTo
     {

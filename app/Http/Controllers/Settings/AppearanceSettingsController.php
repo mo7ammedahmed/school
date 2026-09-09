@@ -1,18 +1,18 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use App\Services\ColorService;
 use App\Domain\Schools\Models\School;
-use Inertia\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Services\ColorService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Activitylog\Facades\Activity;
 
 class AppearanceSettingsController extends Controller
@@ -27,9 +27,11 @@ class AppearanceSettingsController extends Controller
                 'theme' => auth()->user()->theme ?? 'system',
                 'primary_color' => $school->primary_color,
                 'secondary_color' => $school->secondary_color,
+                'accent_color' => $school->accent_color,
                 'logo_path' => $school->logo_path,
                 'favicon_path' => $school->favicon_path,
             ],
+            'themeConfig' => $school->getThemeConfig(),
         ]);
     }
 
@@ -39,17 +41,17 @@ class AppearanceSettingsController extends Controller
         abort_unless($school, 404);
 
         $validated = $request->validate([
-            'theme' => 'required|in:light,dark,system',
+            'theme' => 'nullable|in:light',
             'primary_color' => [
                 'required',
                 'regex:/^#[0-9a-fA-F]{6}$/',
                 function ($attribute, $value, $fail) {
                     /** Validate that primary color has sufficient contrast with its foreground */
                     $foreground = ColorService::getSemanticForeground($value);
-                    if (!ColorService::meetsContrastStandard($foreground, $value)) {
+                    if (! ColorService::meetsContrastStandard($foreground, $value)) {
                         $fail('The primary color does not have sufficient contrast with its text color. Please choose a different color.');
                     }
-                }
+                },
             ],
             'secondary_color' => [
                 'required',
@@ -57,13 +59,24 @@ class AppearanceSettingsController extends Controller
                 function ($attribute, $value, $fail) {
                     /** Validate that secondary color has sufficient contrast with its foreground */
                     $foreground = ColorService::getSemanticForeground($value);
-                    if (!ColorService::meetsContrastStandard($foreground, $value)) {
+                    if (! ColorService::meetsContrastStandard($foreground, $value)) {
                         $fail('The secondary color does not have sufficient contrast with its text color. Please choose a different color.');
                     }
-                }
+                },
+            ],
+            'accent_color' => [
+                'required',
+                'regex:/^#[0-9a-fA-F]{6}$/',
+                function ($attribute, $value, $fail) {
+                    $foreground = ColorService::getSemanticForeground($value);
+                    if (! ColorService::meetsContrastStandard($foreground, $value)) {
+                        $fail('The accent color does not have sufficient contrast with its text color. Please choose a different color.');
+                    }
+                },
             ],
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,ico,webp|max:512',
+            'theme_config' => 'sometimes|string|json',
         ]);
 
         $oldLogo = $school->logo_path;
@@ -71,10 +84,12 @@ class AppearanceSettingsController extends Controller
         $oldAppearance = $school->only([
             'primary_color',
             'secondary_color',
+            'accent_color',
             'logo_path',
             'favicon_path',
         ]);
 
+        // Process logo and favicon uploads
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('school-branding', 'public');
         }
@@ -86,8 +101,22 @@ class AppearanceSettingsController extends Controller
         // Remove validation-only fields
         unset($validated['theme'], $validated['logo'], $validated['favicon']);
 
-        // Update school with appearance settings
+        // If theme_config is provided, we will not update the individual color columns from the request
+        // because they will be updated by the theme configuration.
+        $themeConfig = null;
+        if ($request->has('theme_config')) {
+            $themeConfig = json_decode($request->input('theme_config'), true);
+            // Remove the color fields from validated to avoid overwriting with request values
+            unset($validated['primary_color'], $validated['secondary_color'], $validated['accent_color']);
+        }
+
+        // Update school with appearance settings (logo_path, favicon_path, and possibly color columns if no theme_config)
         $school->update($validated);
+
+        // If theme_config is provided, set the theme configuration
+        if ($themeConfig !== null) {
+            $school->setThemeConfig($themeConfig);
+        }
 
         // Update user's theme preference
         auth()->user()->update(['theme' => $request->input('theme')]);
@@ -101,8 +130,14 @@ class AppearanceSettingsController extends Controller
             Storage::disk('public')->delete($oldFavicon);
         }
 
-        // Log the appearance changes
-        $newAppearance = $school->only(array_keys($oldAppearance));
+        // Prepare new appearance array for logging (after potential theme config update)
+        $newAppearance = $school->only([
+            'primary_color',
+            'secondary_color',
+            'accent_color',
+            'logo_path',
+            'favicon_path',
+        ]);
         $changedKeys = collect($newAppearance)
             ->keys()
             ->filter(fn (string $key): bool => $oldAppearance[$key] !== $newAppearance[$key])
@@ -133,13 +168,13 @@ class AppearanceSettingsController extends Controller
     {
         $schoolId = session('school_id');
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return null;
         }
 
         $user = auth()->user();
 
-        if (!$user->hasRole('super_admin') && !$user->memberships()
+        if (! $user->hasRole('super_admin') && ! $user->memberships()
             ->where('school_id', $schoolId)
             ->where('is_active', true)
             ->exists()) {
@@ -149,3 +184,4 @@ class AppearanceSettingsController extends Controller
         return School::find($schoolId);
     }
 }
+

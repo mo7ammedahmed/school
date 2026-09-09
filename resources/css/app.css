@@ -1,8 +1,7 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-/* The design system is light-first; legacy `dark:*` utilities follow the
-   class-based convention (Tailwind v4 defaults `dark:` to OS preference). */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Light-only theme â€” no dark variant is defined, so `dark:` utilities
+   never activate. Removing the custom-variant keeps the build valid. */
 
 @theme {
     /* ---------- Typography ---------- */
@@ -20,6 +19,8 @@
     --color-primary-foreground: #ffffff;
     --color-card: #ffffff;
     --color-card-foreground: #1c1a16;
+    --color-popover: #ffffff;
+    --color-popover-foreground: #1c1a16;
     --color-secondary: #f2efe8;
     --color-secondary-foreground: #29261f;
     --color-muted: #f2efe8;
@@ -32,22 +33,61 @@
     --color-input: #ddd8c9;
     --color-ring: #0a5c42;
     --color-success: #15803d;
+    --color-success-foreground: #ffffff;
     --color-warning: #b45309;
+    --color-warning-foreground: #ffffff;
     --color-error: #b42318;
+    --color-error-foreground: #ffffff;
     --color-info: #0e7490;
+    --color-info-foreground: #ffffff;
+    --color-link: #0a5c42;
+    --color-link-hover: #0c3f30;
+    --color-sidebar: #ffffff;
+    --color-sidebar-foreground: #1c1a16;
+    --color-sidebar-primary: #0a5c42;
+    --color-sidebar-primary-foreground: #ffffff;
+    --color-sidebar-accent: #f2efe8;
+    --color-sidebar-accent-foreground: #29261f;
+    --color-sidebar-border: #e6e1d3;
+    --color-sidebar-ring: #0a5c42;
+    --color-header: #ffffff;
+    --color-header-foreground: #1c1a16;
+    --color-header-border: #e6e1d3;
+    --color-footer: #06281e;
+    --color-footer-foreground: #f4f5f2;
+    --color-footer-border: #1c533e;
+    --color-table-header: #f2efe8;
+    --color-table-header-foreground: #29261f;
+    --color-table-row: #ffffff;
+    --color-table-row-hover: #faf9f5;
+    --color-table-border: #e6e1d3;
+    --color-input-background: #ffffff;
+    --color-input-foreground: #1c1a16;
+    --color-input-placeholder: #74705f;
+    --color-input-border: #ddd8c9;
+    --color-input-focus: #0a5c42;
+    --color-button-primary: #0a5c42;
+    --color-button-primary-foreground: #ffffff;
+    --color-button-secondary: #f2efe8;
+    --color-button-secondary-foreground: #29261f;
+    --color-button-outline: #ffffff;
+    --color-button-ghost: transparent;
 
-    /* Brand deep-pine / gold accents (used mainly by the public site) */
-    --color-pine-50: #eef7f1;
-    --color-pine-100: #d7ecdf;
-    --color-pine-200: #b3d8c4;
-    --color-pine-300: #85bda2;
-    --color-pine-400: #579e80;
-    --color-pine-500: #388263;
-    --color-pine-600: #25684d;
-    --color-pine-700: #1c533e;
-    --color-pine-800: #0a5c42;
-    --color-pine-900: #0c3f30;
-    --color-pine-950: #06281e;
+    /* Brand deep-pine / gold accents (used mainly by the public site).
+       The pine scale is derived from --color-primary at runtime, so the
+       school's theme (set in Settings â†’ Appearance) recolors the public
+       website, not just the admin dashboard. */
+    --color-pine-50: color-mix(in oklab, var(--color-primary, #0a5c42) 8%, white);
+    --color-pine-100: color-mix(in oklab, var(--color-primary, #0a5c42) 16%, white);
+    --color-pine-200: color-mix(in oklab, var(--color-primary, #0a5c42) 28%, white);
+    --color-pine-300: color-mix(in oklab, var(--color-primary, #0a5c42) 42%, white);
+    --color-pine-400: color-mix(in oklab, var(--color-primary, #0a5c42) 57%, white);
+    --color-pine-500: color-mix(in oklab, var(--color-primary, #0a5c42) 73%, white);
+    --color-pine-600: var(--color-primary, #0a5c42);
+    --color-pine-700: color-mix(in oklab, var(--color-primary, #0a5c42) 84%, black);
+    --color-pine-800: color-mix(in oklab, var(--color-primary, #0a5c42) 72%, black);
+    --color-pine-900: color-mix(in oklab, var(--color-primary, #0a5c42) 60%, black);
+    --color-pine-950: color-mix(in oklab, var(--color-primary, #0a5c42) 45%, black);
     --color-gold-100: #f6ecd7;
     --color-gold-200: #ead5a8;
     --color-gold-300: #dcba77;
@@ -56,9 +96,9 @@
     --color-gold-600: #a06f2c;
     --color-gold-700: #7f5624;
 
-    /* Semantic aliases used by marketing sections */
-    --color-ink: #1c1a16;
-    --color-paper: #faf9f5;
+    /* Semantic aliases used by marketing sections (themed at runtime) */
+    --color-ink: var(--color-foreground, #1c1a16);
+    --color-paper: var(--color-background, #faf9f5);
 
     /* ---------- Warm gray remap (legacy gray-* usages harmonize) ---------- */
     --color-gray-50: #faf9f6;
@@ -145,24 +185,11 @@
         --color-secondary-foreground: #29261f;
     }
 
-    .dark {
-        color-scheme: dark;
-        --color-background: #171a19;
-        --color-foreground: #f4f5f2;
-        --color-card: #202523;
-        --color-card-foreground: #f4f5f2;
-        --color-secondary: #2a302d;
-        --color-secondary-foreground: #f4f5f2;
-        --color-muted: #2a302d;
-        --color-muted-foreground: #b1bbb4;
-        --color-accent: #303a35;
-        --color-accent-foreground: #f4f5f2;
-        --color-border: #3b4540;
-        --color-input: #4a5750;
-        --color-ring: var(--color-primary);
-        --color-primary-foreground: #ffffff;
-        --color-paper: #171a19;
-    }
+    /*
+     * No dark variant exists in this build. The `.dark` block above has been
+     * removed so there is no path to dark mode â€” even on OS/browser defaults
+     * the app shell stays in light mode.
+     */
 
     * {
         border-color: var(--color-border);
@@ -475,3 +502,4 @@
         );
     }
 }
+

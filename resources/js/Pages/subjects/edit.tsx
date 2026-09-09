@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: number; name: string; code: string; grade_level_id: number; credits: number }; gradeLevels: { id: number; name: string }[] }) {
+export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: number; name: string; name_ar: string | null; name_en: string | null; code: string; grade_level_id: number | null; credits: number | null }; gradeLevels: { id: number; name: string }[] }) {
+    const s = subject;
+
     return (
         <AppShell
             title="Edit Subject"
@@ -19,7 +21,7 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
         >
             <PageHeader
                 title="Edit Subject"
-                description={subject.name}
+                description={s.name_en ?? s.name ?? ''}
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/subjects"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
@@ -36,16 +38,20 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Subject Name</Label>
-                                <Input id="name" name="name" defaultValue={subject.name} required />
+                                <Label htmlFor="name_ar">Subject Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" defaultValue={s.name_ar ?? ''} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Subject Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={s.name_en ?? ''} required />
                             </div>
                             <div>
                                 <Label htmlFor="code">Subject Code</Label>
-                                <Input id="code" name="code" defaultValue={subject.code} required />
+                                <Input id="code" name="code" defaultValue={s.code} required />
                             </div>
                             <div>
                                 <Label htmlFor="grade_level_id">Grade Level</Label>
-                                <select id="grade_level_id" name="grade_level_id" className="input" required defaultValue={subject.grade_level_id}>
+                                <select id="grade_level_id" name="grade_level_id" className="input" required defaultValue={s.grade_level_id ?? ''}>
                                     <option value="">Select grade level</option>
                                     {gradeLevels.map((grade) => (
                                         <option key={grade.id} value={grade.id}>{grade.name}</option>
@@ -54,7 +60,7 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
                             </div>
                             <div>
                                 <Label htmlFor="credits">Credits</Label>
-                                <Input id="credits" name="credits" type="number" step="0.1" defaultValue={subject.credits} />
+                                <Input id="credits" name="credits" type="number" step="0.1" defaultValue={s.credits ?? ''} />
                             </div>
                         </div>
 
@@ -70,3 +76,5 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
         </AppShell>
     );
 }
+
+

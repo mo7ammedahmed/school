@@ -20,7 +20,7 @@ class CreateSection
 
     public function execute(array $data): Section
     {
-        if (empty($data['name']) || empty($data['grade_level_id']) || empty($data['academic_year_id'])) {
+        if (empty($data['name_en']) || empty($data['grade_level_id']) || empty($data['academic_year_id'])) {
             throw new Exception('Section name, grade level, and academic year are required.');
         }
 

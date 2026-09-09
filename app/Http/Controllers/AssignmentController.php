@@ -30,8 +30,8 @@ class AssignmentController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('assignments/create', ['subjects' => $subjects, 'sections' => $sections]);
     }
@@ -79,8 +79,8 @@ class AssignmentController extends Controller
     {
         $this->authorizeSchool($assignment);
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('assignments/edit', [
             'assignment' => $assignment->load(['offering.subject', 'offering.section']),

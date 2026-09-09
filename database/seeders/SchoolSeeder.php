@@ -16,7 +16,8 @@ class SchoolSeeder extends Seeder
             ['slug' => 'al-noor-school'],
             [
                 'organization_id' => $organization->id,
-                'name' => 'Al Noor School',
+                'name_ar' => 'مدرسة النور',
+                'name_en' => 'Al Noor School',
                 'email' => 'admissions@alnoor.school',
                 'phone' => '+966501234567',
                 'address' => '123 Education Street, Riyadh, Saudi Arabia',

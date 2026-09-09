@@ -14,10 +14,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'school_id',
     'slug',
     'title',
+    'title_ar',
     'content',
+    'template',
+    'sections',
     'seo_metadata',
+    'seo_title',
+    'seo_description',
+    'canonical_url',
+    'robots',
     'is_published',
+    'status',
     'published_at',
+    'scheduled_at',
 ])]
 class ContentPage extends Model
 {
@@ -31,8 +40,20 @@ class ContentPage extends Model
     {
         return [
             'seo_metadata' => 'array',
+            'sections' => 'array',
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'scheduled_at' => 'datetime',
         ];
+    }
+
+    public function scopePublished($query)
+    {
+        return $query
+            ->where('status', 'published')
+            ->where('is_published', true)
+            ->where(function ($query): void {
+                $query->whereNull('published_at')->orWhere('published_at', '<=', now());
+            });
     }
 }

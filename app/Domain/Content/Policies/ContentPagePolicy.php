@@ -14,19 +14,19 @@ class ContentPagePolicy
 
     public function view(User $user, ContentPage $model): bool
     {
-        return $user->hasPermissionTo('manage-content-pages') ||
-            $model->school_id === session('school_id');
+        return $model->school_id === session('school_id')
+            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
     }
 
     public function update(User $user, ContentPage $model): bool
     {
-        return $user->hasPermissionTo('manage-content-pages') &&
-            $model->school_id === session('school_id');
+        return $model->school_id === session('school_id')
+            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
     }
 
     public function delete(User $user, ContentPage $model): bool
     {
-        return $user->hasPermissionTo('manage-content-pages') &&
-            $model->school_id === session('school_id');
+        return $model->school_id === session('school_id')
+            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
     }
 }

@@ -4,18 +4,33 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 
-export default function DocumentsIndex({ documents }: { documents: { id: number; name: string; document_type: string; file_size: string; uploaded_by: string; uploaded_at: string }[] }) {
-    const columns: ColumnDef<any>[] = [
+type DocumentRow = {
+    id: number;
+    title: string;
+    classification?: string | null;
+    file_size?: string | null;
+    uploadedBy?: { id: number; name: string } | null;
+    created_at?: string | null;
+};
+
+export default function DocumentsIndex({ documents }: { documents: DocumentRow[] }) {
+    const columns: ColumnDef<DocumentRow>[] = [
         {
-            accessorKey: 'name',
+            accessorKey: 'title',
             header: 'Document Name',
         },
         {
-            accessorKey: 'document_type',
+            accessorKey: 'classification',
             header: 'Type',
-            cell: ({ row }) => row.original.document_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            cell: ({ row }) => {
+                const documentType = row.original.classification?.trim();
+
+                return documentType
+                    ? documentType.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+                    : 'Unknown';
+            },
         },
         {
             accessorKey: 'file_size',
@@ -23,11 +38,12 @@ export default function DocumentsIndex({ documents }: { documents: { id: number;
             cell: ({ row }) => row.original.file_size || '-',
         },
         {
-            accessorKey: 'uploaded_by',
+            accessorKey: 'uploadedBy',
             header: 'Uploaded By',
+            cell: ({ row }) => row.original.uploadedBy?.name || '-',
         },
         {
-            accessorKey: 'uploaded_at',
+            accessorKey: 'created_at',
             header: 'Uploaded At',
         },
         {

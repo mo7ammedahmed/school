@@ -35,8 +35,12 @@ export default function SectionsCreate({ gradeLevels, academicYears }: { gradeLe
                     <form className="space-y-6" method="POST" action="/sections">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Section Name</Label>
-                                <Input id="name" name="name" required />
+                                <Label htmlFor="name_ar">Section Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Section Name (English)</Label>
+                                <Input id="name_en" name="name_en" required />
                             </div>
                             <div>
                                 <Label htmlFor="grade_level_id">Grade Level</Label>

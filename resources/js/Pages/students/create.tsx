@@ -43,6 +43,10 @@ export default function StudentsCreate({ guardians }: { guardians: { id: number;
                                 <Input id="last_name" name="last_name" required />
                             </div>
                             <div>
+                                <Label htmlFor="student_id_number">Student ID</Label>
+                                <Input id="student_id_number" name="student_id_number" required />
+                            </div>
+                            <div>
                                 <Label htmlFor="email">Email</Label>
                                 <Input id="email" name="email" type="email" required />
                             </div>

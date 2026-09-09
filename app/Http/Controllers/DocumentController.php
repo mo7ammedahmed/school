@@ -15,6 +15,7 @@ class DocumentController extends Controller
     public function index(): Response
     {
         $documents = Document::where('school_id', session('school_id'))
+            ->with('uploadedBy')
             ->latest()
             ->paginate(15);
 
@@ -29,14 +30,11 @@ class DocumentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'document_type' => 'required|in:transcript,certificate,report,policy,form,other',
+            'title' => 'required|string|max:255',
+            'classification' => 'required|in:transcript,certificate,report,policy,form,other',
             'file' => 'required|file|max:10240',
             'description' => 'nullable|string',
         ]);
-        $validated['title'] = $validated['name'];
-        $validated['classification'] = $validated['document_type'];
-        unset($validated['name'], $validated['document_type']);
 
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('documents', 'public');
@@ -57,12 +55,16 @@ class DocumentController extends Controller
     {
         abort_unless((int) $document->school_id === (int) session('school_id'), 404);
 
+        $document->load('uploadedBy');
+
         return inertia('documents/show', ['document' => $document]);
     }
 
     public function edit(Document $document): Response
     {
         abort_unless((int) $document->school_id === (int) session('school_id'), 404);
+
+        $document->load('uploadedBy');
 
         return inertia('documents/edit', ['document' => $document]);
     }
@@ -72,13 +74,10 @@ class DocumentController extends Controller
         abort_unless((int) $document->school_id === (int) session('school_id'), 404);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'document_type' => 'required|in:transcript,certificate,report,policy,form,other',
+            'title' => 'required|string|max:255',
+            'classification' => 'required|in:transcript,certificate,report,policy,form,other',
             'description' => 'nullable|string',
         ]);
-        $validated['title'] = $validated['name'];
-        $validated['classification'] = $validated['document_type'];
-        unset($validated['name'], $validated['document_type']);
 
         $document->update($validated);
 

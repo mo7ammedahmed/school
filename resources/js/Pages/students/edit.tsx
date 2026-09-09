@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function StudentsEdit({ student, guardians }: { student: { id: number; first_name: string; last_name: string; email: string; phone: string; date_of_birth: string; gender: string; address: string; guardian_id: number; enrollment_date: string; status: string }; guardians: { id: number; first_name: string; last_name: string }[] }) {
+export default function StudentsEdit({ student, guardians }: { student: { id: number; first_name: string; last_name: string; student_id_number: string; email: string | null; phone: string | null; date_of_birth: string | null; gender: string | null; address: string | null; guardian_id: number | null; enrollment_date: string | null; status: string | null }; guardians: { id: number; first_name: string; last_name: string }[] }) {
+    const s = student;
+
     return (
         <AppShell
             title="Edit Student"
@@ -19,7 +21,7 @@ export default function StudentsEdit({ student, guardians }: { student: { id: nu
         >
             <PageHeader
                 title="Edit Student"
-                description={`${student.first_name} ${student.last_name}`}
+                description={`${s.first_name} ${s.last_name}`}
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/students"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
@@ -37,27 +39,31 @@ export default function StudentsEdit({ student, guardians }: { student: { id: nu
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <Label htmlFor="first_name">First Name</Label>
-                                <Input id="first_name" name="first_name" defaultValue={student.first_name} required />
+                                <Input id="first_name" name="first_name" defaultValue={s.first_name} required />
                             </div>
                             <div>
                                 <Label htmlFor="last_name">Last Name</Label>
-                                <Input id="last_name" name="last_name" defaultValue={student.last_name} required />
+                                <Input id="last_name" name="last_name" defaultValue={s.last_name} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="student_id_number">Student ID</Label>
+                                <Input id="student_id_number" name="student_id_number" defaultValue={s.student_id_number} required />
                             </div>
                             <div>
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" defaultValue={student.email} required />
+                                <Input id="email" name="email" type="email" defaultValue={s.email ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="phone">Phone</Label>
-                                <Input id="phone" name="phone" type="tel" defaultValue={student.phone} />
+                                <Input id="phone" name="phone" type="tel" defaultValue={s.phone ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="date_of_birth">Date of Birth</Label>
-                                <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={student.date_of_birth} required />
+                                <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={s.date_of_birth ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="gender">Gender</Label>
-                                <select id="gender" name="gender" className="input" required defaultValue={student.gender}>
+                                <select id="gender" name="gender" className="input" required defaultValue={s.gender ?? ''}>
                                     <option value="male">Male</option>
                                     <option value="female">Female</option>
                                     <option value="other">Other</option>
@@ -65,11 +71,11 @@ export default function StudentsEdit({ student, guardians }: { student: { id: nu
                             </div>
                             <div>
                                 <Label htmlFor="address">Address</Label>
-                                <Input id="address" name="address" defaultValue={student.address} />
+                                <Input id="address" name="address" defaultValue={s.address ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="guardian_id">Guardian</Label>
-                                <select id="guardian_id" name="guardian_id" className="input" required defaultValue={student.guardian_id}>
+                                <select id="guardian_id" name="guardian_id" className="input" required defaultValue={s.guardian_id ?? ''}>
                                     <option value="">Select guardian</option>
                                     {guardians.map((guardian) => (
                                         <option key={guardian.id} value={guardian.id}>{guardian.first_name} {guardian.last_name}</option>
@@ -78,11 +84,11 @@ export default function StudentsEdit({ student, guardians }: { student: { id: nu
                             </div>
                             <div>
                                 <Label htmlFor="enrollment_date">Enrollment Date</Label>
-                                <Input id="enrollment_date" name="enrollment_date" type="date" defaultValue={student.enrollment_date} required />
+                                <Input id="enrollment_date" name="enrollment_date" type="date" defaultValue={s.enrollment_date ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="status">Status</Label>
-                                <select id="status" name="status" className="input" required defaultValue={student.status}>
+                                <select id="status" name="status" className="input" required defaultValue={s.status ?? ''}>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                     <option value="graduated">Graduated</option>

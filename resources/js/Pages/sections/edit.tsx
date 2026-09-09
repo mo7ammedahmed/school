@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function SectionsEdit({ section, gradeLevels, academicYears }: { section: { id: number; name: string; grade_level_id: number; academic_year_id: number; capacity: number }; gradeLevels: { id: number; name: string }[]; academicYears: { id: number; name: string }[] }) {
+export default function SectionsEdit({ section, gradeLevels, academicYears }: { section: { id: number; name: string; name_ar: string; name_en: string; grade_level_id: number; academic_year_id: number; capacity: number }; gradeLevels: { id: number; name: string }[]; academicYears: { id: number; name: string }[] }) {
     return (
         <AppShell
             title="Edit Section"
@@ -36,8 +36,12 @@ export default function SectionsEdit({ section, gradeLevels, academicYears }: { 
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Section Name</Label>
-                                <Input id="name" name="name" defaultValue={section.name} required />
+                                <Label htmlFor="name_ar">Section Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" defaultValue={section.name_ar} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Section Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={section.name_en} required />
                             </div>
                             <div>
                                 <Label htmlFor="grade_level_id">Grade Level</Label>

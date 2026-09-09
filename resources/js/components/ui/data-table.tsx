@@ -103,7 +103,7 @@ export function DataTable<TData extends Record<string, any>>({
                     <tbody className="divide-y divide-border/70 bg-card">
                         {loading ? (
                             <tr>
-                                <td colSpan={table.getVisibleColumns().length} className="px-4 py-16 text-center">
+                                <td colSpan={table.getVisibleFlatColumns().length} className="px-4 py-16 text-center">
                                     <div className="mx-auto h-4 w-32 animate-pulse rounded-full bg-muted" aria-label="Loading" />
                                 </td>
                             </tr>

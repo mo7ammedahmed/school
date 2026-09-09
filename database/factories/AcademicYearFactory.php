@@ -16,7 +16,8 @@ class AcademicYearFactory extends Factory
 
         return [
             'school_id' => School::factory(),
-            'name' => $start->format('Y').'-'.((int) $start->format('Y') + 1),
+            'name_en' => $start->format('Y').'-'.((int) $start->format('Y') + 1),
+            'name_ar' => $start->format('Y').'-'.((int) $start->format('Y') + 1),
             'start_date' => $start->format('Y-m-d'),
             'end_date' => $start->modify('+9 months')->format('Y-m-d'),
             'is_current' => false,

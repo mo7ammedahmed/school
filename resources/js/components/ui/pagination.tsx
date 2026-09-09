@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface PaginationProps extends React.HTMLAttributes<HTMLNavElement> {
+interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   className?: string;
   pageCount: number;
   currentPage: number;
@@ -13,13 +13,7 @@ interface PaginationProps extends React.HTMLAttributes<HTMLNavElement> {
   previousLabel?: string;
 }
 
-interface PaginationItemProps {
-  className?: string;
-  onClick?: () => void;
-  children: React.ReactNode;
-  'aria-current'?: string;
-  'aria-disabled'?: boolean;
-}
+type PageItem = { type: 'page'; page: number } | { type: 'dot' };
 
 function getPageList({
   pageCount,
@@ -40,7 +34,7 @@ function getPageList({
   const showLeftDots = leftSiblings > boundaryCount;
   const showRightDots = rightSiblings < pageCount - boundaryCount;
 
-  const pageList = [];
+  const pageList: PageItem[] = [];
 
   if (showLeftDots) {
     for (let i = 0; i < boundaryCount; i++) {

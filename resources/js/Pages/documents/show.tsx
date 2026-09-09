@@ -5,19 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function DocumentsShow({ document }: { document: { id: number; name: string; document_type: string; file_path: string; file_size: string; description: string; uploaded_by: string; uploaded_at: string } }) {
+export default function DocumentsShow({ document }: { document: { id: number; title: string; classification: string; file_path: string; file_size: string; description: string; uploadedBy: { id: number; name: string } | null; created_at: string } }) {
     return (
         <AppShell
             title="Document Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
                 { label: 'Documents', href: '/documents' },
-                { label: document.name },
+                { label: document.title },
             ]}
         >
             <PageHeader
                 title="Document Details"
-                description={document.name}
+                description={document.title}
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
@@ -38,11 +38,11 @@ export default function DocumentsShow({ document }: { document: { id: number; na
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Document Name</span>
-                            <p className="text-base">{document.name}</p>
+                            <p className="text-base">{document.title}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Document Type</span>
-                            <p className="text-base capitalize">{document.document_type.replace('_', ' ')}</p>
+                            <p className="text-base capitalize">{document.classification?.replace('_', ' ') ?? '-'}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">File Size</span>
@@ -50,11 +50,11 @@ export default function DocumentsShow({ document }: { document: { id: number; na
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Uploaded By</span>
-                            <p className="text-base">{document.uploaded_by}</p>
+                            <p className="text-base">{document.uploadedBy?.name ?? '-'}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Uploaded At</span>
-                            <p className="text-base">{document.uploaded_at}</p>
+                            <p className="text-base">{document.created_at}</p>
                         </div>
                         <div className="md:col-span-2">
                             <span className="text-sm font-medium text-muted-foreground">Description</span>

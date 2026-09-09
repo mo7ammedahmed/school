@@ -30,8 +30,8 @@ class MaterialController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('materials/create', ['subjects' => $subjects, 'sections' => $sections]);
     }
@@ -79,8 +79,8 @@ class MaterialController extends Controller
     {
         $this->authorizeSchool($material);
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('materials/edit', [
             'material' => $material->load(['offering.subject', 'offering.section']),

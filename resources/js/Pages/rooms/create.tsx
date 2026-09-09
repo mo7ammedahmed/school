@@ -35,8 +35,12 @@ export default function RoomsCreate() {
                     <form className="space-y-6" method="POST" action="/rooms">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Room Name</Label>
-                                <Input id="name" name="name" required />
+                                <Label htmlFor="name_ar">Room Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Room Name (English)</Label>
+                                <Input id="name_en" name="name_en" required />
                             </div>
                             <div>
                                 <Label htmlFor="code">Room Code</Label>

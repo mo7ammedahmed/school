@@ -27,8 +27,9 @@ class RoomController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:rooms,code,NULL,id,school_id,' . session('school_id'),
+            'name_ar' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:rooms,code,NULL,id,school_id,'.session('school_id'),
             'room_type' => 'required|in:classroom,laboratory,library,gymnasium,auditorium,office,other',
             'capacity' => 'required|integer|min:1',
             'description' => 'nullable|string',
@@ -66,8 +67,9 @@ class RoomController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:rooms,code,' . $room->id . ',school_id,' . session('school_id'),
+            'name_ar' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:rooms,code,'.$room->id.',school_id,'.session('school_id'),
             'room_type' => 'required|in:classroom,laboratory,library,gymnasium,auditorium,office,other',
             'capacity' => 'required|integer|min:1',
             'description' => 'nullable|string',

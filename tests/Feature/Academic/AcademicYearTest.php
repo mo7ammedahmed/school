@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Academic;
 
-use App\Models\User;
-use App\Domain\Schools\Models\School;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Academics\Models\AcademicYear;
+use App\Domain\Identity\Models\UserMembership;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -53,7 +53,8 @@ class AcademicYearTest extends TestCase
         $this->app['session']->put('school_id', $school->id);
 
         $response = $this->post('/academic-years', [
-            'name' => '2024-2025',
+            'name_ar' => '٢٠٢٤-٢٠٢٥',
+            'name_en' => '2024-2025',
             'start_date' => '2024-09-01',
             'end_date' => '2025-06-30',
             'is_current' => true,
@@ -61,7 +62,7 @@ class AcademicYearTest extends TestCase
 
         $response->assertRedirect('/academic-years');
         $this->assertDatabaseHas('academic_years', [
-            'name' => '2024-2025',
+            'name_en' => '2024-2025',
             'school_id' => $school->id,
         ]);
     }

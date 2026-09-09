@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: number; name: string; level: number; description: string } }) {
+export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: number; name: string; name_ar: string; name_en: string; level: number; description: string } }) {
     return (
         <AppShell
             title="Edit Grade Level"
@@ -36,8 +36,12 @@ export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: numb
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Grade Name</Label>
-                                <Input id="name" name="name" defaultValue={gradeLevel.name} required />
+                                <Label htmlFor="name_ar">Grade Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" defaultValue={gradeLevel.name_ar} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Grade Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={gradeLevel.name_en} required />
                             </div>
                             <div>
                                 <Label htmlFor="level">Level</Label>

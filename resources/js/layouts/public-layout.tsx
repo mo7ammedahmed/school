@@ -46,6 +46,7 @@ const FOOTER_COLUMNS: { heading: CopyKey; links: { key: CopyKey; href: string }[
 
 function BrandMark({ dark = false }: { dark?: boolean }) {
     const { locale } = useLocale();
+
     return (
         <Link href="/" className="group flex items-center gap-2.5" aria-label={t(locale, 'brand.alnoor')}>
             <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-pine-600 to-pine-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_2px_8px_rgba(6,40,30,0.35)]">
@@ -141,6 +142,36 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         });
         return () => mm.revert();
     }, []);
+
+
+
+    // Apply the school's LIGHT theme tokens to the public site. The entire
+    // marketing site — header, footer, hero, buttons, footer blur, sidebar
+    // accents — is driven by these tokens, so the dashboard can recolor the
+    // whole public site from Settings → Appearance → Website Colors.
+    useEffect(() => {
+        const school = page.props.school;
+        const theme = school?.theme_config?.light;
+        if (!theme) return;
+
+        const root = document.documentElement;
+        root.classList.remove('dark');
+        root.dataset.theme = 'light';
+
+        // Every token the public site cares about gets written as a CSS variable.
+        Object.entries(theme).forEach(([key, value]) => {
+            if (typeof value !== 'string') return;
+            const cssVar = key.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+            root.style.setProperty(`--${cssVar}`, value);
+        });
+
+        // Public-site brand accents: the pine/gold scale is derived from the
+        // themed primary color, not a hardcoded hex.
+        root.style.setProperty('--color-pine-600', theme.colorPrimary ?? '#0a5c42');
+        root.style.setProperty('--color-pine-950', theme.colorPrimary ?? '#0a5c42');
+        root.style.setProperty('--color-gold-400', theme.colorAccent ?? '#cda253');
+        root.style.setProperty('--color-gold-600', theme.colorMutedForeground ?? '#74705f');
+    }, [page.props.school]);
 
     return (
         <div className="flex min-h-screen flex-col bg-paper">
@@ -347,3 +378,4 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
         </div>
     );
 }
+

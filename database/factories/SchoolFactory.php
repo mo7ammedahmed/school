@@ -14,7 +14,8 @@ class SchoolFactory extends Factory
     {
         return [
             'organization_id' => \App\Domain\Schools\Models\Organization::factory(),
-            'name' => fake()->company() . ' School',
+            'name_ar' => fake()->company() . ' School',
+            'name_en' => fake()->company() . ' School',
             'slug' => fake()->slug(),
             'email' => fake()->optional()->safeEmail(),
             'phone' => fake()->optional()->phoneNumber(),
@@ -32,3 +33,4 @@ class SchoolFactory extends Factory
         ];
     }
 }
+

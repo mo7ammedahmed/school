@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Models\Student;
 use App\Models\Guardian;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class StudentController extends Controller
 {
@@ -42,6 +41,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'student_id_number' => 'nullable|string|max:100|unique:students,student_id_number,NULL,id,school_id,'.$this->schoolId(),
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',
@@ -97,6 +97,7 @@ class StudentController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'student_id_number' => 'nullable|string|max:100|unique:students,student_id_number,'.$student->id.',id,school_id,'.$this->schoolId(),
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'date_of_birth' => 'nullable|date',

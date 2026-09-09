@@ -86,7 +86,7 @@ export function FilterBarSelect({
   return (
     <div className="w-full">
       {label && (
-        <label htmlForm={label?.toLowerCase().replace(/\s+/g, '-')} className="mb-1.5 block text-sm font-semibold text-foreground">
+        <label htmlFor={label?.toLowerCase().replace(/\s+/g, '-')} className="mb-1.5 block text-sm font-semibold text-foreground">
           {label}
         </label>
       )}

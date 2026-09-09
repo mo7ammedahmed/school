@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function RoomsEdit({ room }: { room: { id: number; name: string; code: string; room_type: string; capacity: number; description: string } }) {
+export default function RoomsEdit({ room }: { room: { id: number; name: string; name_ar: string; name_en: string; code: string; room_type: string; capacity: number; description: string } }) {
     return (
         <AppShell
             title="Edit Room"
@@ -36,8 +36,12 @@ export default function RoomsEdit({ room }: { room: { id: number; name: string; 
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Room Name</Label>
-                                <Input id="name" name="name" defaultValue={room.name} required />
+                                <Label htmlFor="name_ar">Room Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" defaultValue={room.name_ar} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="name_en">Room Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={room.name_en} required />
                             </div>
                             <div>
                                 <Label htmlFor="code">Room Code</Label>

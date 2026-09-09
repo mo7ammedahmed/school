@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Models\GradeLevel;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class GradeLevelController extends Controller
 {
     public function index(): Response
     {
         $gradeLevels = GradeLevel::orderBy('level')->paginate(15);
+
         return inertia('grade-levels/index', ['gradeLevels' => $gradeLevels]);
     }
 
@@ -26,7 +26,8 @@ class GradeLevelController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_ar' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
             'level' => 'required|integer|min:1|unique:grade_levels,level',
             'description' => 'nullable|string',
         ]);
@@ -49,8 +50,9 @@ class GradeLevelController extends Controller
     public function update(Request $request, GradeLevel $gradeLevel): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'level' => 'required|integer|min:1|unique:grade_levels,level,' . $gradeLevel->id,
+            'name_ar' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
+            'level' => 'required|integer|min:1|unique:grade_levels,level,'.$gradeLevel->id,
             'description' => 'nullable|string',
         ]);
 

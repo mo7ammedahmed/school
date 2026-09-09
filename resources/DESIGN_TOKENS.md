@@ -31,6 +31,10 @@ These tokens are dynamically set based on school branding and theme:
 --color-card-foreground: #1c1a16
 ```
 
+The contract also includes `popover`, `link`, state foregrounds, and grouped tokens for `sidebar-*`, `header-*`, `footer-*`, `table-*`, `input-*`, and `button-*`. Components should consume these semantic variables instead of hard-coded palette colors.
+
+School `primary_color`, `secondary_color`, and `accent_color` values are applied at runtime as brand inputs. Light and dark surface tokens remain independent so school identity does not determine page surfaces or contrast.
+
 ### State Colors (Static)
 ```css
 --color-success: #15803d

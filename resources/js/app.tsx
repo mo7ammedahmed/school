@@ -9,6 +9,7 @@ type AppearanceProps = {
     theme?: 'light' | 'dark' | 'system';
     primary_color?: string;
     secondary_color?: string;
+    accent_color?: string;
     logo_path?: string | null;
     favicon_path?: string | null;
 };
@@ -23,6 +24,7 @@ function applyAppearance(
     branding?: {
         primary_color?: string;
         secondary_color?: string;
+        accent_color?: string;
         favicon_path?: string | null;
     } | null,
 ) {
@@ -46,6 +48,11 @@ function applyAppearance(
         // Calculate and set appropriate foreground color for secondary
         const secondaryForeground = getContrastingColor(branding.secondary_color);
         root.style.setProperty('--color-secondary-foreground', secondaryForeground);
+    }
+
+    if (branding?.accent_color) {
+        root.style.setProperty('--color-accent', branding.accent_color);
+        root.style.setProperty('--color-accent-foreground', getContrastingColor(branding.accent_color));
     }
 
     if (branding?.favicon_path) {
@@ -83,6 +90,7 @@ function applyAppearanceFromProps(appearance?: AppearanceProps) {
     applyAppearance(appearance?.theme ?? 'system', {
         primary_color: appearance?.primary_color,
         secondary_color: appearance?.secondary_color,
+        accent_color: appearance?.accent_color,
         favicon_path: appearance?.favicon_path,
     });
 }

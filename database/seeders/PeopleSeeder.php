@@ -2,16 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\Student;
-use App\Domain\People\Models\Guardian;
-use App\Domain\People\Models\GuardianRelationship;
-use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Academics\Models\AcademicYear;
+use App\Domain\Academics\Models\Enrollment;
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Section;
-use App\Domain\Academics\Models\Enrollment;
-use App\Models\User;
+use App\Domain\People\Models\Guardian;
+use App\Domain\People\Models\GuardianRelationship;
+use App\Domain\People\Models\Student;
+use App\Domain\People\Models\TeacherProfile;
+use App\Domain\Schools\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -77,8 +76,8 @@ class PeopleSeeder extends Seeder
                     'first_name' => $first,
                     'last_name' => $last,
                     'employee_id' => $employeeId,
-                    'phone' => '+9665022232' . str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
-                    'hire_date' => '2021-08-' . str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
+                    'phone' => '+9665022232'.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
+                    'hire_date' => '2021-08-'.str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT),
                     'qualification' => 'B.Ed',
                     'specialization' => $specialization,
                     'bio' => "$first $last teaches $specialization at Al Noor School.",
@@ -92,7 +91,8 @@ class PeopleSeeder extends Seeder
             $section = Section::firstOrCreate(
                 ['school_id' => $school->id, 'academic_year_id' => $academicYear->id, 'grade_level_id' => $gradeLevel->id, 'code' => 'A'],
                 [
-                    'name' => 'Section A',
+                    'name_ar' => 'شعبة أ',
+                    'name_en' => 'Section A',
                     'capacity' => 30,
                     'current_count' => 0,
                 ]
@@ -102,13 +102,13 @@ class PeopleSeeder extends Seeder
                 $student = Student::create([
                     'school_id' => $school->id,
                     'first_name' => 'Student',
-                    'last_name' => $gradeLevel->name . ' ' . $i,
+                    'last_name' => $gradeLevel->name.' '.$i,
                     'student_id_number' => strtoupper(Str::random(8)),
                     'date_of_birth' => now()->subYears(10 + $gradeLevel->level)->format('Y-m-d'),
                     'gender' => $i % 2 === 0 ? 'female' : 'male',
                     'nationality' => 'Saudi',
                     'address' => '123 Education Street, Riyadh',
-                    'phone' => '+966500000000' . $i,
+                    'phone' => '+966500000000'.$i,
                     'enrollment_date' => now()->format('Y-m-d'),
                     'status' => 'active',
                 ]);

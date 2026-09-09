@@ -24,8 +24,8 @@ class EnrollmentController extends Controller
     public function create(): Response
     {
         $students = Student::orderBy('first_name')->get();
-        $sections = Section::with('gradeLevel')->orderBy('name')->get();
-        $academicYears = AcademicYear::orderBy('name', 'desc')->get();
+        $sections = Section::with('gradeLevel')->orderBy('name_en')->get();
+        $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
         return inertia('enrollments/create', ['students' => $students, 'sections' => $sections, 'academicYears' => $academicYears]);
     }
 
@@ -53,8 +53,8 @@ class EnrollmentController extends Controller
     public function edit(Enrollment $enrollment): Response
     {
         $students = Student::orderBy('first_name')->get();
-        $sections = Section::with('gradeLevel')->orderBy('name')->get();
-        $academicYears = AcademicYear::orderBy('name', 'desc')->get();
+        $sections = Section::with('gradeLevel')->orderBy('name_en')->get();
+        $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
         return inertia('enrollments/edit', ['enrollment' => $enrollment, 'students' => $students, 'sections' => $sections, 'academicYears' => $academicYears]);
     }
 

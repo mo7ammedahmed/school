@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function StudentsShow({ student }: { student: { id: number; first_name: string; last_name: string; email: string; phone: string; date_of_birth: string; gender: string; address: string; guardian: { first_name: string; last_name: string; email: string; phone: string }; enrollment_date: string; status: string } }) {
+export default function StudentsShow({ student }: { student: { id: number; first_name: string; last_name: string; email: string; phone: string; date_of_birth: string; gender: string; address: string; student_id_number: string; guardian?: { first_name: string; last_name: string; email: string; phone: string } | null; enrollment_date: string; status: string } }) {
     return (
         <AppShell
             title="Student Details"
@@ -43,6 +43,10 @@ export default function StudentsShow({ student }: { student: { id: number; first
                             <p className="text-base">{student.first_name} {student.last_name}</p>
                         </div>
                         <div>
+                            <span className="text-sm font-medium text-muted-foreground">Student ID</span>
+                            <p className="text-base">{student.student_id_number}</p>
+                        </div>
+                        <div>
                             <span className="text-sm font-medium text-muted-foreground">Email</span>
                             <p className="text-base">{student.email}</p>
                         </div>
@@ -71,20 +75,24 @@ export default function StudentsShow({ student }: { student: { id: number; first
                     <CardTitle>Guardian Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Guardian Name</span>
-                            <p className="text-base">{student.guardian.first_name} {student.guardian.last_name}</p>
+                    {student.guardian ? (
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Guardian Name</span>
+                                <p className="text-base">{student.guardian.first_name} {student.guardian.last_name}</p>
+                            </div>
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Guardian Email</span>
+                                <p className="text-base">{student.guardian.email}</p>
+                            </div>
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Guardian Phone</span>
+                                <p className="text-base">{student.guardian.phone || '-'}</p>
+                            </div>
                         </div>
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Guardian Email</span>
-                            <p className="text-base">{student.guardian.email}</p>
-                        </div>
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Guardian Phone</span>
-                            <p className="text-base">{student.guardian.phone}</p>
-                        </div>
-                    </div>
+                    ) : (
+                        <p className="text-base text-muted-foreground">No guardian information available.</p>
+                    )}
                 </CardContent>
             </Card>
         </AppShell>

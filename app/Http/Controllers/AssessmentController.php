@@ -20,7 +20,7 @@ class AssessmentController extends Controller
 
     public function create(): View
     {
-        $sections = Section::orderBy('name')->get();
+        $sections = Section::orderBy('name_en')->get();
         return view('assessments.create', ['sections' => $sections]);
     }
 
@@ -49,7 +49,7 @@ class AssessmentController extends Controller
 
     public function edit(Assessment $assessment): View
     {
-        $sections = Section::orderBy('name')->get();
+        $sections = Section::orderBy('name_en')->get();
         return view('assessments.edit', ['assessment' => $assessment, 'sections' => $sections]);
     }
 

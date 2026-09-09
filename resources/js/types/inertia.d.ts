@@ -9,14 +9,13 @@ declare module '@inertiajs/core' {
                 email: string;
                 roles: string[];
                 permissions: string[];
-                school?: {
-                    id: number;
-                    name: string;
-                    locale: string;
-                    timezone: string;
-                };
-            };
+                school?: App.School | null;
+            } | null;
         };
+        school?: App.School | null;
+        appearance?: App.Appearance;
+        themeConfig?: App.ThemeConfig;
+        navLabels?: Record<string, { en?: string | null; ar?: string | null }>;
         locale: string;
         flash: {
             success?: string;

@@ -13,8 +13,8 @@ class NewsController
     public function index(): Response
     {
         $articles = News::where('is_published', true)
-            ->where('publish_date', '<=', now())
-            ->latest('publish_date')
+            ->where('published_at', '<=', now())
+            ->latest('published_at')
             ->paginate(10)
             ->withQueryString();
 

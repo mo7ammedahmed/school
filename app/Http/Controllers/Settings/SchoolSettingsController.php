@@ -31,8 +31,10 @@ class SchoolSettingsController extends Controller
         $school = auth()->user()->currentSchool;
         abort_unless($school, 404);
 
+        
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_ar' => 'required|string|max:255',
+            'name_en' => 'required|string|max:255',
             'logo' => 'nullable|image|max:2048',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
@@ -40,12 +42,15 @@ class SchoolSettingsController extends Controller
             'website' => 'nullable|url|max:255',
             'primary_color' => 'nullable|string|max:7',
             'secondary_color' => 'nullable|string|max:7',
+            'accent_color' => 'nullable|string|max:7',
         ]);
 
+
         if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo')->store('school-logos', 'public');
+            $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');
         }
 
+        unset($validated['logo']);
         $school->update($validated);
 
         return redirect()->route('settings.school')->with('success', 'School settings updated successfully.');
@@ -56,3 +61,4 @@ class SchoolSettingsController extends Controller
         return $this->update($request);
     }
 }
+

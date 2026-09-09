@@ -32,8 +32,8 @@ class TimetableController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $teachers = TeacherProfile::where('school_id', $schoolId)->orderBy('first_name')->get();
 
         return inertia('timetable/create', ['sections' => $sections, 'subjects' => $subjects, 'teachers' => $teachers]);
@@ -84,8 +84,8 @@ class TimetableController extends Controller
     {
         $this->authorizeSchool($timetable);
         $schoolId = session('school_id');
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $teachers = TeacherProfile::where('school_id', $schoolId)->orderBy('first_name')->get();
 
         return inertia('timetable/edit', [

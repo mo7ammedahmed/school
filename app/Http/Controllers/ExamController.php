@@ -31,8 +31,8 @@ class ExamController extends Controller
     public function create(): Response
     {
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('exams/create', ['subjects' => $subjects, 'sections' => $sections]);
     }
@@ -84,8 +84,8 @@ class ExamController extends Controller
     {
         $this->authorizeSchool($exam);
         $schoolId = session('school_id');
-        $subjects = Subject::where('school_id', $schoolId)->orderBy('name')->get();
-        $sections = Section::where('school_id', $schoolId)->orderBy('name')->get();
+        $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
+        $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
 
         return inertia('exams/edit', [
             'exam' => $exam->load(['offering.subject', 'offering.section']),

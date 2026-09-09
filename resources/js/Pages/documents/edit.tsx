@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function DocumentsEdit({ document }: { document: { id: number; name: string; document_type: string; description: string } }) {
+export default function DocumentsEdit({ document }: { document: { id: number; title: string; classification: string; description: string } }) {
     return (
         <AppShell
             title="Edit Document"
@@ -19,7 +19,7 @@ export default function DocumentsEdit({ document }: { document: { id: number; na
         >
             <PageHeader
                 title="Edit Document"
-                description={document.name}
+                description={document.title}
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/documents"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
@@ -36,12 +36,12 @@ export default function DocumentsEdit({ document }: { document: { id: number; na
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">Document Name</Label>
-                                <Input id="name" name="name" defaultValue={document.name} required />
+                                <Label htmlFor="title">Document Name</Label>
+                                <Input id="title" name="title" defaultValue={document.title} required />
                             </div>
                             <div>
-                                <Label htmlFor="document_type">Document Type</Label>
-                                <select id="document_type" name="document_type" className="input" required defaultValue={document.document_type}>
+                                <Label htmlFor="classification">Document Type</Label>
+                                <select id="classification" name="classification" className="input" required defaultValue={document.classification}>
                                     <option value="transcript">Transcript</option>
                                     <option value="certificate">Certificate</option>
                                     <option value="report">Report</option>

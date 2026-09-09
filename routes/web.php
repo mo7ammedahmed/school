@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\SchoolController;
-use App\Http\Controllers\Platform\OrganizationController;
-use App\Http\Controllers\Platform\HealthController;
-use App\Http\Controllers\Platform\SupportAccessController;
 use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\Admissions\ReviewController;
 use App\Http\Controllers\AdmissionsController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AssessmentController;
@@ -14,7 +11,13 @@ use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceSessionController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\SchoolSelectionController;
+use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\ContentPageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EnrollmentController;
@@ -22,38 +25,39 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\ExamResultController;
 use App\Http\Controllers\FeeStructureController;
+use App\Http\Controllers\Finance\DiscountController as FinanceDiscountController;
+use App\Http\Controllers\Finance\InvoiceController as FinanceInvoiceController;
+use App\Http\Controllers\Finance\PaymentController as FinancePaymentController;
+use App\Http\Controllers\Finance\RefundController as FinanceRefundController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GradeLevelController;
+use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Platform\HealthController;
+use App\Http\Controllers\Platform\OrganizationController;
+use App\Http\Controllers\Platform\SupportAccessController;
+use App\Http\Controllers\Public\AboutController;
+use App\Http\Controllers\Public\AdmissionsController as PublicAdmissionsController;
+use App\Http\Controllers\Public\ContactController;
+use App\Http\Controllers\Public\EventsController as PublicEventsController;
+use App\Http\Controllers\Public\FacilitiesController;
+use App\Http\Controllers\Public\FaqController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\NewsController as PublicNewsController;
+use App\Http\Controllers\Public\PageController;
+use App\Http\Controllers\Public\ProgramsController;
+use App\Http\Controllers\Public\TeachersController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SemesterController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\SubmissionController;
-use App\Http\Controllers\TeacherController;
-use App\Http\Controllers\TimetableController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\Admissions\ReviewController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\ResetPasswordController;
-use App\Http\Controllers\Auth\SchoolSelectionController;
-use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
-use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\Finance\DiscountController as FinanceDiscountController;
-use App\Http\Controllers\Finance\InvoiceController as FinanceInvoiceController;
-use App\Http\Controllers\Finance\PaymentController as FinancePaymentController;
-use App\Http\Controllers\Finance\RefundController as FinanceRefundController;
-use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\Settings\AcademicSettingsController;
 use App\Http\Controllers\Settings\AppearanceSettingsController;
 use App\Http\Controllers\Settings\AttendanceSettingsController;
@@ -70,17 +74,15 @@ use App\Http\Controllers\Settings\SchoolSettingsController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SecuritySettingsController;
 use App\Http\Controllers\Settings\SmsSettingsController;
+use App\Http\Controllers\Settings\NavigationSettingsController;
 use App\Http\Controllers\Student\PortalController as StudentPortalController;
-use App\Http\Controllers\Public\HomeController;
-use App\Http\Controllers\Public\AboutController;
-use App\Http\Controllers\Public\ProgramsController;
-use App\Http\Controllers\Public\AdmissionsController as PublicAdmissionsController;
-use App\Http\Controllers\Public\FacilitiesController;
-use App\Http\Controllers\Public\TeachersController;
-use App\Http\Controllers\Public\NewsController as PublicNewsController;
-use App\Http\Controllers\Public\EventsController as PublicEventsController;
-use App\Http\Controllers\Public\ContactController;
-use App\Http\Controllers\Public\FaqController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -99,6 +101,7 @@ Route::get('/events/{event}', [PublicEventsController::class, 'show'])->name('ev
 Route::get('/contact', [ContactController::class, 'index'])->name('public.contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('public.contact.submit');
 Route::get('/faq', [FaqController::class, 'index'])->name('public.faq');
+Route::get('/pages/{slug}', [PageController::class, 'show'])->name('public.page');
 
 // Apply / Admissions
 Route::get('/apply', [PublicAdmissionsController::class, 'apply'])->name('apply');
@@ -276,11 +279,12 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     // Documents
     Route::resource('documents', DocumentController::class);
     Route::get('/documents/upload', [DocumentController::class, 'create'])->name('documents.upload');
-    Route::post('/documents/upload', [DocumentController::class, 'store'])->name('documents.store');
+    Route::post('/documents/upload', [DocumentController::class, 'store']);
     Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
 
     // Content management (admin)
-    Route::middleware('permission:manage-content')->group(function () {
+    Route::middleware('permission:manage-content|manage-content-pages')->group(function () {
+        Route::resource('content/pages', ContentPageController::class)->except(['show']);
         Route::resource('content/news', NewsController::class);
         Route::resource('content/events', EventController::class);
     });
@@ -290,7 +294,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Settings
-    Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings')->group(function () {
+    Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings|manage-schools')->group(function () {
         Route::get('/general', [SchoolSettingsController::class, 'index'])->name('general');
         Route::post('/general', [SchoolSettingsController::class, 'store']);
         Route::get('/school', [SchoolSettingsController::class, 'index'])->name('school');
@@ -313,10 +317,17 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/localization', [LocalizationSettingsController::class, 'store']);
         Route::get('/appearance', [AppearanceSettingsController::class, 'index'])->name('appearance');
         Route::post('/appearance', [AppearanceSettingsController::class, 'store'])->name('appearance.store');
+        Route::get('/navigation', [NavigationSettingsController::class, 'index'])->name('navigation');
+        Route::post('/navigation', [NavigationSettingsController::class, 'store']);
         Route::get('/payments', [PaymentSettingsController::class, 'index'])->name('payments');
         Route::post('/payments', [PaymentSettingsController::class, 'store']);
         Route::get('/payments/logs', [PaymentSettingsController::class, 'logs'])->name('payments.logs');
 
+        Route::resource('users', UserController::class)->middleware('permission:manage-users');
+    });
+
+    // Personal settings are available to every authenticated user.
+    Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::post('/profile', [ProfileController::class, 'store']);
         Route::get('/password', [PasswordController::class, 'index'])->name('password');
@@ -326,8 +337,6 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/security/two-factor', [SecurityController::class, 'index'])->name('security.two-factor');
         Route::post('/security/two-factor/enable', [SecurityController::class, 'enable'])->name('security.two-factor.enable');
         Route::post('/security/two-factor/disable', [SecurityController::class, 'disable'])->name('security.two-factor.disable');
-
-        Route::resource('users', UserController::class)->middleware('permission:manage-users');
     });
 
     // Administration
@@ -369,22 +378,8 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
 Route::middleware(['auth', 'can:access-platform'])->prefix('platform')->name('platform.')->group(function () {
     Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations.index');
     Route::get('/organizations/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
-    Route::get('/schools', [\App\Http\Controllers\Platform\SchoolController::class, 'index'])->name('schools.index');
-    Route::get('/schools/{school}', [\App\Http\Controllers\Platform\SchoolController::class, 'show'])->name('schools.show');
+    Route::get('/schools', [App\Http\Controllers\Platform\SchoolController::class, 'index'])->name('schools.index');
+    Route::get('/schools/{school}', [App\Http\Controllers\Platform\SchoolController::class, 'show'])->name('schools.show');
     Route::get('/health', [HealthController::class, 'index'])->name('health');
     Route::get('/support-access', [SupportAccessController::class, 'index'])->name('support-access');
-});
-
-Route::get('/debug-db', function () {
-    $connection = DB::connection()->getDatabaseName();
-    return response()->json(['database' => $connection]);
-});
-
-
-Route::get('/debug-env', function () {
-    return response()->json([
-        'DB_CONNECTION' => env('DB_CONNECTION'),
-        'DB_DATABASE' => env('DB_DATABASE'),
-        'APP_ENV' => env('APP_ENV'),
-    ]);
 });
