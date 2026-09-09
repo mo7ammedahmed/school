@@ -32,7 +32,6 @@ import {
     Menu,
     X,
     Sparkles,
-    TrendingUp,
 } from 'lucide-react';
 
 interface AppShellProps {
@@ -58,24 +57,6 @@ const STAFF = ['school_admin', 'super_admin', 'principal', 'registrar', 'teacher
 const ADMINS = ['school_admin', 'super_admin'];
 
 const NAV_GROUPS: NavGroup[] = [
-    {
-        labelKey: 'shell.group.studentPortal',
-        items: [
-            { key: 'nav.studentDashboard', href: '/student/dashboard', icon: GraduationCap, roles: ['student'] },
-            { key: 'nav.studentSchedule', href: '/student/schedule', icon: Calendar, roles: ['student'] },
-            { key: 'nav.studentAttendance', href: '/student/attendance', icon: CalendarCheck, roles: ['student'] },
-            { key: 'nav.studentGrades', href: '/student/grades', icon: TrendingUp, roles: ['student'] },
-            { key: 'nav.studentAssignments', href: '/student/assignments', icon: ClipboardList, roles: ['student'] },
-            { key: 'nav.studentFees', href: '/student/fees', icon: DollarSign, roles: ['student'] },
-        ],
-    },
-    {
-        labelKey: 'shell.group.guardianPortal',
-        items: [
-            { key: 'nav.guardianDashboard', href: '/guardian/dashboard', icon: Users2, roles: ['guardian'] },
-            { key: 'nav.guardianChildren', href: '/guardian/children', icon: Users, roles: ['guardian'] },
-        ],
-    },
     {
         items: [{ key: 'nav.dashboard', href: '/dashboard', icon: BarChart3, roles: STAFF }],
     },
@@ -157,10 +138,10 @@ function BrandLockup({ compact = false }: { compact?: boolean }) {
             </span>
             {!compact && (
                 <span className="flex min-w-0 flex-col leading-none">
-                    <span className="truncate text-sm font-medium text-foreground">
+                    <span className="truncate text-[0.95rem] font-semibold tracking-[-0.01em] text-foreground">
                         {t(locale, 'brand.aether')}
                     </span>
-                    <span className="mt-0.5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                    <span className="mt-0.5 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                         {locale === 'ar' ? 'نظام إدارة المدارس' : 'School OS'}
                     </span>
                 </span>
@@ -183,18 +164,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
     return (
         <div className="flex h-full flex-col">
-            <div className="flex h-16 shrink-0 items-center border-b border-border/80 px-4">
+            <div className="flex h-16 shrink-0 items-center border-b border-border/70 px-5">
                 <BrandLockup />
             </div>
 
             <nav
-                className="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 py-4"
+                className="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 py-5"
                 aria-label={locale === 'ar' ? 'التنقل الجانبي' : 'Sidebar navigation'}
             >
                 {visibleGroups.map((group, gi) => (
                     <div key={gi} className="space-y-0.5">
                         {group.labelKey && (
-                            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">{t(locale, group.labelKey)}</p>
+                            <p className="px-3 pb-1.5 text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                                {t(locale, group.labelKey)}
+                            </p>
                         )}
                         <ul className="space-y-0.5">
                             {group.items.map((item) => {
@@ -207,10 +190,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                                             onClick={onNavigate}
                                             aria-current={active ? 'page' : undefined}
                                             className={cn(
-                                                'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+                                                'group flex items-center gap-3 rounded-lg px-3 py-2 text-[0.875rem] font-medium transition-all duration-150',
                                                 active
-                                                    ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(10,92,66,0.04)]'
-                                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                                                    ? 'bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(10,92,66,0.06)]'
+                                                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                                             )}
                                         >
                                             <Icon
@@ -230,16 +213,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 ))}
             </nav>
 
-            <div className="shrink-0 border-t border-border/70 p-2">
-                <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pine-500 to-pine-700 text-sm font-semibold text-white shadow-sm">
+            <div className="shrink-0 border-t border-border/70 p-3">
+                <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pine-600 to-pine-900 text-sm font-semibold text-white shadow-sm">
                         {auth.user?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">
+                        <p className="truncate text-[0.8125rem] font-semibold text-foreground">
                             {auth.user?.name}
                         </p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="truncate text-[0.6875rem] text-muted-foreground">
                             {userRoles[0]?.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') ||
                                 auth.user?.email}
                         </p>
@@ -284,7 +267,7 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
         <div className="min-h-screen bg-background">
             <div className="flex min-h-screen">
                 {/* Desktop sidebar */}
-                <aside className="sticky top-0 hidden h-screen w-[16rem] shrink-0 border-e border-border/80 bg-card/60 backdrop-blur md:block">
+                <aside className="sticky top-0 hidden h-screen w-[17rem] shrink-0 border-e border-border/70 bg-card/70 backdrop-blur-sm md:block">
                     <SidebarContent />
                 </aside>
 
@@ -294,15 +277,15 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                         <button
                             type="button"
                             aria-label="Close menu"
-                            className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px]"
+                            className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]"
                             onClick={() => setDrawerOpen(false)}
                         />
-                        <div className="absolute inset-y-0 start-0 w-[80vw] max-w-[24rem] bg-card shadow-[var(--shadow-panel)]">
+                        <div className="absolute inset-y-0 start-0 w-[85vw] max-w-[20rem] bg-card shadow-[var(--shadow-panel)]">
                             <button
                                 type="button"
                                 aria-label="Close menu"
                                 onClick={() => setDrawerOpen(false)}
-                                className="absolute end-3 top-4 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                className="absolute end-3 top-4 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
                                 <X className="size-4" aria-hidden="true" />
                             </button>
@@ -312,8 +295,8 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                 )}
 
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border/80 bg-background/90 px-4 backdrop-blur-md md:px-8">
-                        <div className="flex min-w-0 items-center gap-2">
+                    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-background/85 px-4 backdrop-blur-md md:px-8">
+                        <div className="flex min-w-0 items-center gap-3">
                             <Button
                                 variant="ghost"
                                 size="icon-sm"
@@ -324,12 +307,12 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                                 <Menu className="size-5" aria-hidden="true" />
                             </Button>
                             {title && (
-                                <h2 className="truncate text-sm font-medium md:hidden">
+                                <h2 className="truncate text-[0.9375rem] font-semibold tracking-[-0.01em] md:hidden">
                                     {title}
                                 </h2>
                             )}
                             <span className="hidden items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-1 text-xs text-muted-foreground md:inline-flex">
-                                <Sparkles className="size-3 text-gold-400" aria-hidden="true" />
+                                <Sparkles className="size-3 text-gold-500" aria-hidden="true" />
                                 <span>{locale === 'ar' ? 'العام الدراسي ٢٠٢٦–٢٠٢٧' : 'Academic Year 2026–2027'}</span>
                             </span>
                         </div>
@@ -346,7 +329,7 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                                 >
                                     <Link href="/announcements">
                                         <Bell className="size-[1.1rem]" aria-hidden="true" />
-                                        <span className="pointer-events-none absolute -0.5 -0.5 size-2 rounded-full bg-gold-400 ring-2 ring-background" aria-hidden="true" />
+                                        <span className="pointer-events-none absolute end-1.5 top-1.5 size-1.5 rounded-full bg-gold-500 ring-2 ring-background" aria-hidden="true" />
                                     </Link>
                                 </Button>
                             )}
@@ -370,11 +353,11 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                         </div>
                     </header>
 
-                    <main className="flex-1 px-3 py-4 md:px-4 md:py-6">
+                    <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
                         <div className="mx-auto w-full max-w-[96rem]">
                             {breadcrumbs && breadcrumbs.length > 0 && (
                                 <nav
-                                    className="mb-5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
+                                    className="mb-5 flex flex-wrap items-center gap-1.5 text-[0.8125rem] text-muted-foreground"
                                     aria-label="Breadcrumb"
                                 >
                                     {breadcrumbs.map((crumb, index) => (

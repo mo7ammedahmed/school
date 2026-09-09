@@ -23,7 +23,7 @@ export default function MaterialsIndex({ materials }: {    materials: { id: numb
         {
             accessorKey: 'file_type',
             header: 'File Type',
-            cell: ({ row }) => row.original.file_type.toUpperCase(),
+            cell: ({ row }) => row.original.file_type ? row.original.file_type.toUpperCase() : '—',
         },
         {
             accessorKey: 'file_size',

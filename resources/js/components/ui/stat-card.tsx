@@ -18,7 +18,7 @@ export function StatCard({
     trend,
     icon,
     className,
-    accentClassName = 'bg-primary/8 text-primary',
+    accentClassName = 'bg-primary text-primary-foreground',
 }: StatCardProps) {
     const positive = (trend?.value ?? 0) >= 0;
 
@@ -32,10 +32,10 @@ export function StatCard({
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="truncate text-[0.8125rem] font-medium text-muted-foreground">
+                    <p className="truncate text-xs font-medium text-muted-foreground">
                         {title}
                     </p>
-                    <p className="mt-2.5 text-[1.75rem] font-semibold leading-none tracking-[-0.02em] tabular-nums text-foreground">
+                    <p className="mt-2.5 text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums text-foreground">
                         {value}
                     </p>
                 </div>
@@ -56,7 +56,7 @@ export function StatCard({
                     {trend && (
                         <span
                             className={cn(
-                                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[0.6875rem] font-semibold',
+                                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-semibold',
                                 positive ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
                             )}
                         >

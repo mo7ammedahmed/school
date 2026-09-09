@@ -31,29 +31,29 @@ export default function GuardianDashboard({ guardian, children }: { guardian: { 
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-sm text-muted-foreground">Attendance</span>
-                                    <span className="text-sm font-medium">{Number(child.attendance_rate).toFixed(1)}%</span>
+                                    <span className="text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums">{Number(child.attendance_rate).toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-muted-foreground">Average Grade</span>
-                                    <span className="text-sm font-medium">{Number(child.average_grade).toFixed(2)}</span>
+                                    <span className="text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums">{Number(child.average_grade).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-muted-foreground">Outstanding Fees</span>
-                                    <span className="text-sm font-medium">${Number(child.outstanding_fees).toFixed(2)}</span>
+                                    <span className="text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums">${Number(child.outstanding_fees).toFixed(2)}</span>
                                 </div>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/guardian/child/${child.id}/schedule`}>Schedule</Link>
+                                    <Link href={`/guardian/children/${child.id}/schedule`}>Schedule</Link>
                                 </Button>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/guardian/child/${child.id}/attendance`}>Attendance</Link>
+                                    <Link href={`/guardian/children/${child.id}/attendance`}>Attendance</Link>
                                 </Button>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/guardian/child/${child.id}/grades`}>Grades</Link>
+                                    <Link href={`/guardian/children/${child.id}/grades`}>Grades</Link>
                                 </Button>
                                 <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/guardian/child/${child.id}/fees`}>Fees</Link>
+                                    <Link href={`/guardian/children/${child.id}/fees`}>Fees</Link>
                                 </Button>
                             </div>
                         </CardContent>

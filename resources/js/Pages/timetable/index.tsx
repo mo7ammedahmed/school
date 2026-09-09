@@ -24,7 +24,10 @@ export default function TimetableIndex({ timetables }: { timetables: { id: numbe
         {
             accessorKey: 'day_of_week',
             header: 'Day',
-            cell: ({ row }) => row.original.day_of_week.charAt(0).toUpperCase() + row.original.day_of_week.slice(1),
+            cell: ({ row }) => {
+                const day = row.original.day_of_week;
+                return day ? day.charAt(0).toUpperCase() + day.slice(1) : '—';
+            },
         },
         {
             accessorKey: 'start_time',

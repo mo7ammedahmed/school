@@ -25,9 +25,9 @@ export function EmptyState({ title, description, action, icon, className }: Empt
                     className="absolute -end-1 -top-1 size-2.5 rounded-full bg-gold-300/80"
                 />
             </div>
-            <h3 className="text-[0.9375rem] font-semibold text-foreground">{title}</h3>
+            <h3 className="text-base font-semibold text-foreground">{title}</h3>
             {description && (
-                <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-1.5 max-w-sm text-base leading-[1.5] text-muted-foreground">
                     {description}
                 </p>
             )}

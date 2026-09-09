@@ -14,7 +14,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-foreground">
+                    <label htmlFor={selectId} className="mb-1.5 block text-sm font-semibold text-foreground">
                         {label}
                     </label>
                 )}
@@ -24,7 +24,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                         ref={ref}
                         className={cn(
                             [
-                                'flex h-11 w-full appearance-none rounded-lg border border-input bg-card ps-3.5 pe-10 text-[0.9375rem] text-foreground',
+                                'flex h-11 w-full appearance-none rounded-lg border border-input bg-card px-3.5 text-sm text-foreground',
                                 'shadow-[inset_0_1px_2px_rgba(28,26,22,0.03)] transition-[border-color,box-shadow] duration-200',
                                 'focus-visible:outline-none focus-visible:border-ring/50 focus-visible:ring-[3px] focus-visible:ring-ring/15',
                                 'disabled:cursor-not-allowed disabled:opacity-55',

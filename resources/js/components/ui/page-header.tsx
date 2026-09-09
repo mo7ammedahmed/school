@@ -14,7 +14,7 @@ export function PageHeader({ title, description, actions, breadcrumbs, className
     return (
         <div className={cn('space-y-5', className)}>
             {breadcrumbs && breadcrumbs.length > 0 && (
-                <nav className="flex items-center gap-1.5 text-[0.8125rem] text-muted-foreground">
+                <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     {breadcrumbs.map((crumb, index) => (
                         <React.Fragment key={index}>
                             {index > 0 && (
@@ -31,7 +31,7 @@ export function PageHeader({ title, description, actions, breadcrumbs, className
                                     {crumb.label}
                                 </a>
                             ) : (
-                                <span className="font-medium text-foreground/80">{crumb.label}</span>
+                                <span className="text-xs font-medium text-foreground/60">{crumb.label}</span>
                             )}
                         </React.Fragment>
                     ))}
@@ -39,11 +39,11 @@ export function PageHeader({ title, description, actions, breadcrumbs, className
             )}
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
                 <div className="min-w-0">
-                    <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground md:text-[1.75rem] md:leading-tight">
+                    <h1 className="text-[2.25rem] font-semibold tracking-[-0.02em] text-foreground md:text-[2rem] md:leading-[1.2]">
                         {title}
                     </h1>
                     {description && (
-                        <p className="mt-1.5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted-foreground">
+                        <p className="mt-1.5 max-w-2xl text-base leading-[1.5] text-muted-foreground">
                             {description}
                         </p>
                     )}

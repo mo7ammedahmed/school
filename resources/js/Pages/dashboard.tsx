@@ -26,7 +26,7 @@ interface DashboardStats {
     pending_payments: number;
 }
 
-const ADMINS = ['school_admin', 'super_admin'];
+const ADMINS = ['school_admin', 'super_admin',];
 
 const canEnroll = (roles: string[]) => roles.some((r) => [...ADMINS, 'registrar'].includes(r));
 const canTeach = (roles: string[]) => roles.some((r) => [...ADMINS, 'teacher'].includes(r));
@@ -92,7 +92,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
     ].filter((tile) => tile.visible);
 
     const roleLabel = auth.user?.roles?.[0]?.split('_').join(' ') ?? '';
-    const primaryTile = tiles[0];
+    const primaryTile = tiles.length > 0 ? tiles[0] : null;
     const quickLinks = [
         {
             label: 'Attendance sessions',
@@ -101,7 +101,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             visible: canTeach(roles),
         },
         { label: 'Announcements', meta: 'Share updates', href: '/announcements', visible: canTeach(roles) },
-        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: roles.some((r) => ADMINS.includes(r)) },
+        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: !!auth.user?.permissions?.includes('manage-content') },
         { label: 'Documents', meta: 'Policies & forms', href: '/documents', visible: canTeach(roles) },
     ].filter((item) => item.visible);
 
@@ -128,12 +128,12 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                 {/* Greeting */}
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div>
-                        <p className="mb-1.5 flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
+                        <p className="mb-1.5 flex items-center gap-2 text-xs text-muted-foreground">
                             <Badge variant="neutral" className="normal-case tracking-normal">
                                 {roleLabel || 'School admin'}
                             </Badge>
                         </p>
-                        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground md:text-[1.75rem]">
+                        <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground md:text-[2.25rem]">
                             {new Date().getHours() < 12
                                 ? 'Good morning'
                                 : new Date().getHours() < 18
@@ -141,7 +141,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                                   : 'Good evening'}
                             {auth.user?.name ? `, ${auth.user.name.split(' ')[0]}` : ''}
                         </h1>
-                        <p className="mt-1.5 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
+                        <p className="mt-1.5 max-w-xl text-base leading-normal text-muted-foreground">
                             Here is what is happening across {auth.user?.school?.name ?? 'your school'} today.
                         </p>
                     </div>
@@ -168,10 +168,10 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <p className="text-[0.8125rem] font-medium text-muted-foreground">
+                                        <p className="text-sm font-semibold text-muted-foreground">
                                             {tile.title}
                                         </p>
-                                        <p className="mt-2.5 text-[1.9rem] font-semibold leading-none tracking-[-0.02em] tabular-nums text-foreground">
+                                        <p className="mt-2.5 text-2xl font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums text-foreground">
                                             {tile.value}
                                         </p>
                                     </div>
@@ -184,7 +184,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                                         <Icon className="size-5" aria-hidden="true" />
                                     </span>
                                 </div>
-                                <span className="mt-4 inline-flex items-center gap-1 text-[0.8125rem] font-medium text-muted-foreground transition-colors group-hover:text-primary">
+                                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground transition-colors group-hover:text-primary">
                                     Open module
                                     <ArrowUpRight
                                         className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100"
@@ -197,17 +197,17 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                 </div>
 
                 {/* Assistant / quick panel */}
-                <Card className="overflow-hidden border-border/70">
+                <Card className="overflow-hidden border-border/80">
                     <div className="grid lg:grid-cols-[1fr_1.6fr]">
-                        <div className="relative overflow-hidden bg-gradient-to-br from-pine-900 via-pine-950 to-[#04231b] p-8 text-white">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-pine-900 via-pine-950 to-pine-950 p-8 text-white">
                             <div
                                 aria-hidden="true"
                                 className="pointer-events-none absolute -end-16 -top-16 size-48 rounded-full bg-gold-400/15 blur-[70px]"
                             />
-                            <p className="font-display text-2xl leading-snug tracking-[-0.01em]">
+                            <p className="font-display text-[3rem] leading-[1.1] tracking-[-0.02em]">
                                 Start the academic year with confidence.
                             </p>
-                            <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/65">
+                            <p className="mt-3 max-w-xs text-base leading-normal text-white/65">
                                 Set up classrooms, sections and timetables so every day runs smoothly from day one.
                             </p>
                             {primaryTile && (
@@ -227,7 +227,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                                         href={item.href}
                                         className="group rounded-xl p-4 transition-colors hover:bg-muted/60"
                                     >
-                                        <p className="flex items-center justify-between gap-2 text-[0.875rem] font-medium text-foreground">
+                                        <p className="flex items-center justify-between gap-2 text-sm font-semibold text-foreground">
                                             {item.label}
                                             <ArrowUpRight
                                                 className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 rtl:-scale-x-100"
@@ -249,3 +249,4 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
         </AppShell>
     );
 }
+

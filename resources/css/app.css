@@ -139,6 +139,31 @@
 }
 
 @layer base {
+    :root {
+        color-scheme: light;
+        --color-primary-foreground: #ffffff;
+        --color-secondary-foreground: #29261f;
+    }
+
+    .dark {
+        color-scheme: dark;
+        --color-background: #171a19;
+        --color-foreground: #f4f5f2;
+        --color-card: #202523;
+        --color-card-foreground: #f4f5f2;
+        --color-secondary: #2a302d;
+        --color-secondary-foreground: #f4f5f2;
+        --color-muted: #2a302d;
+        --color-muted-foreground: #b1bbb4;
+        --color-accent: #303a35;
+        --color-accent-foreground: #f4f5f2;
+        --color-border: #3b4540;
+        --color-input: #4a5750;
+        --color-ring: var(--color-primary);
+        --color-primary-foreground: #ffffff;
+        --color-paper: #171a19;
+    }
+
     * {
         border-color: var(--color-border);
     }

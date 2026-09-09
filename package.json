@@ -29,6 +29,7 @@
         "date-fns": "^4.1.0",
         "gsap": "^3.15.0",
         "lucide-react": "^0.468.0",
+        "react-bits": "^1.0.5",
         "react-hook-form": "^7.87.0",
         "shepherd.js": "^15.3.0",
         "tailwind-merge": "^2.5.0"

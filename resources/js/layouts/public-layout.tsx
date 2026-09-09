@@ -54,7 +54,7 @@ function BrandMark({ dark = false }: { dark?: boolean }) {
             <span className="flex flex-col leading-none">
                 <span
                     className={cn(
-                        'font-display text-[1.02rem] font-semibold tracking-[-0.01em]',
+                        'font-display text-base font-semibold tracking-normal',
                         dark ? 'text-white' : 'text-ink'
                     )}
                 >
@@ -62,7 +62,7 @@ function BrandMark({ dark = false }: { dark?: boolean }) {
                 </span>
                 <span
                     className={cn(
-                        'mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.22em]',
+                        'mt-1 text-2xs font-semibold uppercase tracking-widest',
                         dark ? 'text-white/45' : 'text-muted-foreground'
                     )}
                 >
@@ -154,7 +154,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 )}
             >
                 <div className="public-header-inner">
-                    <div className="mx-auto flex h-[4.5rem] max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+                    <div className="mx-auto flex h-18 max-w-360 items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
                         <BrandMark />
 
                         {/* Desktop nav */}
@@ -167,7 +167,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                     key={link.key}
                                     href={link.href}
                                     className={cn(
-                                        'link-quiet rounded-full px-3.5 py-2 text-[0.875rem] font-medium',
+                                        'link-quiet rounded-full px-3.5 py-2 text-sm font-medium',
                                         url.startsWith(link.href) && link.href !== '/' && 'text-foreground'
                                     )}
                                 >
@@ -185,7 +185,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                             ) : (
                                 <Link
                                     href="/login"
-                                    className="hidden text-[0.875rem] font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+                                    className="hidden text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
                                 >
                                     {t(locale, 'public.login')}
                                 </Link>
@@ -219,7 +219,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <div
                     className={cn(
                         'overflow-hidden border-b border-border/60 bg-paper transition-[max-height,opacity] duration-300 ease-out lg:hidden',
-                        menuOpen ? 'max-h-[32rem] opacity-100' : 'max-h-0 border-b-0 opacity-0'
+                        menuOpen ? 'max-h-128 opacity-100' : 'max-h-0 border-b-0 opacity-0'
                     )}
                 >
                     <nav className="space-y-1 px-4 py-4" aria-label="Mobile navigation">
@@ -227,7 +227,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                             <Link
                                 key={link.key}
                                 href={link.href}
-                                className="block rounded-lg px-3 py-2.5 text-[0.9375rem] font-medium text-foreground/85 transition-colors hover:bg-accent"
+                                className="block rounded-lg px-3 py-2.5 text-base font-medium text-foreground/85 transition-colors hover:bg-accent"
                             >
                                 {t(locale, link.key)}
                             </Link>
@@ -260,19 +260,19 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px hairline-dark" />
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute -end-40 -top-52 size-[34rem] rounded-full bg-pine-800/30 blur-[110px]"
+                    className="pointer-events-none absolute -end-40 -top-52 size-136 rounded-full bg-pine-800/30 blur-[110px]"
                 />
                 <div
                     aria-hidden="true"
                     className="pointer-events-none absolute -start-32 bottom-0 size-96 rounded-full bg-gold-600/10 blur-[100px]"
                 />
 
-                <div className="relative mx-auto max-w-[90rem] px-4 pb-10 pt-16 sm:px-6 lg:px-10 lg:pt-20">
+                <div className="relative mx-auto max-w-360 px-4 pb-10 pt-16 sm:px-6 lg:px-10 lg:pt-20">
                     <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1.1fr]">
                         {/* Brand */}
                         <div>
                             <BrandMark dark />
-                            <p className="mt-6 max-w-sm text-[0.9375rem] leading-relaxed text-white/60">
+                            <p className="mt-6 max-w-sm text-base leading-relaxed text-white/60">
                                 {t(locale, 'footer.tagline')}
                             </p>
                             <div className="mt-8 space-y-3 text-sm text-white/60">
@@ -296,7 +296,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         {/* Link columns */}
                         {FOOTER_COLUMNS.map((col) => (
                             <div key={col.heading}>
-                                <h3 className="text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white/40">
+                                <h3 className="text-sm font-semibold uppercase tracking-widest text-white/40">
                                     {t(locale, col.heading)}
                                 </h3>
                                 <ul className="mt-5 space-y-3">
@@ -304,7 +304,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         <li key={link.key}>
                                             <Link
                                                 href={link.href}
-                                                className="text-[0.9375rem] text-white/70 transition-colors hover:text-gold-200"
+                                                className="text-base text-white/70 transition-colors hover:text-gold-200"
                                             >
                                                 {t(locale, link.key)}
                                             </Link>
@@ -316,10 +316,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
                         {/* Admissions blurb */}
                         <div>
-                            <h3 className="text-[0.8125rem] font-semibold uppercase tracking-[0.16em] text-white/40">
+                            <h3 className="text-sm font-semibold uppercase tracking-widest text-white/40">
                                 {locale === 'ar' ? 'القبول ٢٠٢٦–٢٠٢٧' : 'Admissions 2026–2027'}
                             </h3>
-                            <p className="mt-5 text-[0.9375rem] leading-relaxed text-white/60">
+                            <p className="mt-5 text-base leading-relaxed text-white/60">
                                 {locale === 'ar'
                                     ? 'التقديم مفتوح الآن للعام الدراسي القادم. نسعد باستقبالكم في جولة تعرّف على حرمنا المدرسي.'
                                     : 'Applications are open for the coming academic year. Visit us for a personal tour of campus.'}
@@ -334,10 +334,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                     </div>
 
                     <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
-                        <p className="text-[0.8125rem] text-white/40">
+                        <p className="text-sm text-white/40">
                             © {new Date().getFullYear()} {schoolName}. {t(locale, 'footer.rights')}
                         </p>
-                        <div className="flex items-center gap-2 text-[0.8125rem] text-white/40">
+                        <div className="flex items-center gap-2 text-sm text-white/40">
                             <span className="size-1.5 rounded-full bg-gold-300/80" aria-hidden="true" />
                             <span>{locale === 'ar' ? 'العربية · English' : 'English · العربية'}</span>
                         </div>

@@ -33,7 +33,9 @@ export default function TeachersIndex({ teachers }: { teachers: { id: number; fi
             accessorKey: 'status',
             header: 'Status',
             cell: ({ row }) => {
-                const status = row.original.status;
+                const status = typeof row.original.status === 'string'
+                    ? row.original.status
+                    : 'unknown';
                 const variant = status === 'active' ? 'default' : status === 'on_leave' ? 'secondary' : 'destructive';
                 return <Badge variant={variant}>{status.replace('_', ' ')}</Badge>;
             },

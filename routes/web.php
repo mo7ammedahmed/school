@@ -239,8 +239,8 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])->name('fee-assignments.index');
         Route::resource('discounts', FinanceDiscountController::class);
         Route::resource('invoices', FinanceInvoiceController::class);
-        Route::resource('payments', FinancePaymentController::class);
         Route::get('/payments/offline', [FinancePaymentController::class, 'offline'])->name('payments.offline');
+        Route::resource('payments', FinancePaymentController::class);
         Route::get('/payments/{payment}/return', [FinancePaymentController::class, 'return'])->name('payments.return');
         Route::resource('refunds', FinanceRefundController::class);
         Route::get('/my-fees', [FinanceController::class, 'myFees'])->name('my-fees');
@@ -312,7 +312,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/localization', [LocalizationSettingsController::class, 'index'])->name('localization');
         Route::post('/localization', [LocalizationSettingsController::class, 'store']);
         Route::get('/appearance', [AppearanceSettingsController::class, 'index'])->name('appearance');
-        Route::post('/appearance', [AppearanceSettingsController::class, 'store']);
+        Route::post('/appearance', [AppearanceSettingsController::class, 'store'])->name('appearance.store');
         Route::get('/payments', [PaymentSettingsController::class, 'index'])->name('payments');
         Route::post('/payments', [PaymentSettingsController::class, 'store']);
         Route::get('/payments/logs', [PaymentSettingsController::class, 'logs'])->name('payments.logs');

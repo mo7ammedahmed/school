@@ -15,7 +15,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
     return (
         <nav
             aria-label="Breadcrumb"
-            className={cn('flex flex-wrap items-center gap-1.5 text-[0.8125rem] text-muted-foreground', className)}
+            className={cn('flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground', className)}
         >
             {items.map((item, index) => (
                 <span key={index} className="flex items-center gap-1.5">
@@ -27,7 +27,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                             {item.label}
                         </a>
                     ) : (
-                        <span className="font-medium text-foreground/80">{item.label}</span>
+                        <span className="text-xs font-medium text-foreground/60">{item.label}</span>
                     )}
                 </span>
             ))}

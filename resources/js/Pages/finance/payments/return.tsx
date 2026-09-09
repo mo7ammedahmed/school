@@ -11,7 +11,7 @@ export default function FinancePaymentReturn({ payment }: { payment: { id: numbe
             title="Process Payment"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/payments' },
                 { label: 'Payments', href: '/finance/payments' },
                 { label: 'Offline Payments', href: '/finance/payments/offline' },
                 { label: 'Process Payment' },

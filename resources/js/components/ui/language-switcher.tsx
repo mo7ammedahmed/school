@@ -33,7 +33,7 @@ export function LanguageSwitcher({ variant = 'ghost', className }: LanguageSwitc
             className={cn('gap-2', className)}
         >
             <Languages className="size-4" aria-hidden="true" />
-            <span>{label}</span>
+            <span className="text-sm">{label}</span>
         </Button>
     );
 }

@@ -23,7 +23,10 @@ export default function EventsIndex({ events }: { events: { id: number; title: s
         {
             accessorKey: 'target_audience',
             header: 'Audience',
-            cell: ({ row }) => row.original.target_audience.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            cell: ({ row }) => {
+                const audience = row.original.target_audience;
+                return audience ? audience.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : '—';
+            },
         },
         {
             accessorKey: 'is_active',

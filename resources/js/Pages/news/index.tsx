@@ -15,7 +15,10 @@ export default function NewsIndex({ news }: { news: { id: number; title: string;
         {
             accessorKey: 'category',
             header: 'Category',
-            cell: ({ row }) => row.original.category.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            cell: ({ row }) => {
+                const category = row.original.category;
+                return category ? category.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : '—';
+            },
         },
         {
             accessorKey: 'publish_date',

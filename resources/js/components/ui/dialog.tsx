@@ -15,7 +15,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
                 onClose={onOpenChange ? () => onOpenChange(false) : undefined}
                 className={cn(
                     'm-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-border/80 bg-card p-0 text-card-foreground shadow-[var(--shadow-panel)]',
-                    'backdrop:bg-ink/30 backdrop:backdrop-blur-[2px]',
+                    'backdrop:bg-foreground/30 backdrop:backdrop-blur-[2px]',
                     className
                 )}
                 {...props}
@@ -50,7 +50,7 @@ export const DialogTitle = forwardRef<HTMLHeadingElement, React.HTMLAttributes<H
         return (
             <h2
                 ref={ref}
-                className={cn('text-lg font-semibold tracking-[-0.01em] text-foreground', className)}
+                className={cn('text-[1.875rem] font-semibold tracking-[-0.01em] text-foreground', className)}
                 {...props}
             />
         );
@@ -61,7 +61,7 @@ DialogTitle.displayName = 'DialogTitle';
 export const DialogDescription = forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
     ({ className, ...props }, ref) => {
         return (
-            <p ref={ref} className={cn('text-sm leading-relaxed text-muted-foreground', className)} {...props} />
+            <p ref={ref} className={cn('text-sm leading-[1.4] text-muted-foreground', className)} {...props} />
         );
     }
 );

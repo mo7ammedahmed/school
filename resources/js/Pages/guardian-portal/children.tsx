@@ -27,10 +27,10 @@ export default function GuardianChildren({ guardian, children }: { guardian: { n
             cell: ({ row }) => (
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/guardian/child/${row.original.id}/schedule`}>Schedule</Link>
+                        <Link href={`/guardian/children/${row.original.id}/schedule`}>Schedule</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/guardian/child/${row.original.id}/grades`}>Grades</Link>
+                        <Link href={`/guardian/children/${row.original.id}/grades`}>Grades</Link>
                     </Button>
                 </div>
             ),
@@ -41,7 +41,7 @@ export default function GuardianChildren({ guardian, children }: { guardian: { n
         <AppShell
             title="My Children"
             breadcrumbs={[
-                { label: 'Guardian Portal', href: '/guardian' },
+                { label: 'Guardian Portal', href: '/guardian/dashboard' },
                 { label: 'Children' },
             ]}
         >
