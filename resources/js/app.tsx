@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client';
+﻿import { createRoot } from 'react-dom/client';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
@@ -122,3 +122,4 @@ createInertiaApp({
         color: '#046A38',
     },
 });
+
