@@ -43,14 +43,15 @@ class TransferStudent
             $enrollment->update([
                 'section_id' => $targetSection->id,
                 'notes' => $enrollment->notes
-                    ? $enrollment->notes . "\nTransferred from section {$sourceSection->name} on " . ($transferDate ?? now()->toDateString())
-                    : "Transferred from section {$sourceSection->name} on " . ($transferDate ?? now()->toDateString()),
+                    ? $enrollment->notes."\nTransferred from section {$sourceSection->name} on ".($transferDate ?? now()->toDateString())
+                    : "Transferred from section {$sourceSection->name} on ".($transferDate ?? now()->toDateString()),
             ]);
 
             if ($sourceSection->current_count > 0) {
                 $sourceSection->decrement('current_count');
             }
             $targetSection->increment('current_count');
+
             return $enrollment->fresh();
         });
     }

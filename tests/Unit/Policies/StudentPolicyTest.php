@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Policies;
 
-use App\Models\User;
-use App\Domain\Schools\Models\School;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Policies\StudentPolicy;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ class StudentPolicyTest extends TestCase
             'school_id' => $school->id,
         ]);
 
-        $policy = new StudentPolicy();
+        $policy = new StudentPolicy;
         $this->assertTrue($policy->view($user, $student));
     }
 
@@ -46,7 +46,7 @@ class StudentPolicyTest extends TestCase
 
         $this->app['session']->put('school_id', $schoolA->id);
 
-        $policy = new StudentPolicy();
+        $policy = new StudentPolicy;
         $this->assertFalse($policy->view($user, $student));
     }
 
@@ -60,7 +60,7 @@ class StudentPolicyTest extends TestCase
             'status' => 'graduated',
         ]);
 
-        $policy = new StudentPolicy();
+        $policy = new StudentPolicy;
         $this->assertFalse($policy->delete($user, $student));
     }
 }

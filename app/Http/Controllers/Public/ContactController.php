@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use Inertia\Response;
-use Inertia\Inertia;
+use App\Mail\ContactFormMail;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ContactFormMail;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ContactController
 {
@@ -17,7 +18,7 @@ class ContactController
         return Inertia::render('public/contact');
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',

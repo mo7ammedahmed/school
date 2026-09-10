@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
-use App\Models\Refund;
-use App\Models\Invoice;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Invoice;
+use App\Models\Refund;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class RefundController extends Controller
@@ -16,6 +16,7 @@ class RefundController extends Controller
     public function index()
     {
         $refunds = Refund::with(['invoice.student'])->latest()->paginate(15);
+
         return Inertia::render('finance/refunds/index', [
             'refunds' => $refunds,
         ]);
@@ -24,6 +25,7 @@ class RefundController extends Controller
     public function create()
     {
         $invoices = Invoice::with('student')->orderBy('created_at', 'desc')->get();
+
         return Inertia::render('finance/refunds/create', [
             'invoices' => $invoices,
         ]);
@@ -46,6 +48,7 @@ class RefundController extends Controller
     public function show(Refund $refund)
     {
         $refund->load('invoice.student');
+
         return Inertia::render('finance/refunds/show', [
             'refund' => $refund,
         ]);
@@ -54,6 +57,7 @@ class RefundController extends Controller
     public function edit(Refund $refund)
     {
         $invoices = Invoice::with('student')->orderBy('created_at', 'desc')->get();
+
         return Inertia::render('finance/refunds/edit', [
             'refund' => $refund,
             'invoices' => $invoices,

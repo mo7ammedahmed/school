@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Student;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InvoiceController extends Controller
@@ -16,6 +16,7 @@ class InvoiceController extends Controller
     public function index()
     {
         $invoices = Invoice::with('student')->latest()->paginate(15);
+
         return Inertia::render('finance/invoices/index', [
             'invoices' => $invoices,
         ]);
@@ -24,6 +25,7 @@ class InvoiceController extends Controller
     public function create()
     {
         $students = Student::orderBy('first_name')->get();
+
         return Inertia::render('finance/invoices/create', [
             'students' => $students,
         ]);
@@ -64,6 +66,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         $invoice->load('student', 'lines', 'payments');
+
         return Inertia::render('finance/invoices/show', [
             'invoice' => $invoice,
         ]);
@@ -72,6 +75,7 @@ class InvoiceController extends Controller
     public function edit(Invoice $invoice)
     {
         $students = Student::orderBy('first_name')->get();
+
         return Inertia::render('finance/invoices/edit', [
             'invoice' => $invoice,
             'students' => $students,
@@ -86,7 +90,7 @@ class InvoiceController extends Controller
 
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
-            'invoice_number' => 'required|string|max:255|unique:invoices,invoice_number,' . $invoice->id,
+            'invoice_number' => 'required|string|max:255|unique:invoices,invoice_number,'.$invoice->id,
             'issue_date' => 'nullable|date',
             'due_date' => 'required|date',
             'subtotal' => 'required|numeric|min:0',

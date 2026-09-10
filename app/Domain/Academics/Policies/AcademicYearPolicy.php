@@ -28,6 +28,6 @@ class AcademicYearPolicy
     {
         return $user->hasPermissionTo('manage-academic-years') &&
             $academicYear->school_id === session('school_id') &&
-            !$academicYear->is_current;
+            ! $academicYear->is_current;
     }
 }

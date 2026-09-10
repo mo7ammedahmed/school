@@ -39,6 +39,7 @@ class GradeSubmission
                 'graded_by' => $grader?->id,
                 'graded_at' => now(),
             ]);
+
             return $submission->fresh();
         });
     }

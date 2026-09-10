@@ -11,7 +11,5 @@ class SectionCreated
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $sectionId, public string $name, public int $gradeLevelId)
-    {
-    }
+    public function __construct(public int $sectionId, public string $name, public int $gradeLevelId) {}
 }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\Content\Models\Event;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
 
 class EventController extends Controller
 {
@@ -42,10 +42,10 @@ class EventController extends Controller
         $event = Event::create([
             'school_id' => session('school_id'),
             'title' => $validated['title'],
-            'slug' => Str::slug($validated['title']) . '-' . Str::lower(Str::random(4)),
+            'slug' => Str::slug($validated['title']).'-'.Str::lower(Str::random(4)),
             'description' => $validated['description'] ?? null,
-            'start_date' => $validated['event_date'] . ' ' . $validated['start_time'],
-            'end_date' => $validated['event_date'] . ' ' . $validated['end_time'],
+            'start_date' => $validated['event_date'].' '.$validated['start_time'],
+            'end_date' => $validated['event_date'].' '.$validated['end_time'],
             'location' => $validated['location'],
             'event_type' => $validated['target_audience'] ?? 'all',
             'featured_image_path' => null,
@@ -88,8 +88,8 @@ class EventController extends Controller
         $event->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'start_date' => $validated['event_date'] . ' ' . $validated['start_time'],
-            'end_date' => $validated['event_date'] . ' ' . $validated['end_time'],
+            'start_date' => $validated['event_date'].' '.$validated['start_time'],
+            'end_date' => $validated['event_date'].' '.$validated['end_time'],
             'location' => $validated['location'],
             'event_type' => $validated['target_audience'] ?? 'all',
             'is_published' => $active,

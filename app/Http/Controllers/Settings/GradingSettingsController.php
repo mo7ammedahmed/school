@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use Inertia\Response;
-use App\Http\Controllers\Controller;
 use App\Domain\Academics\Models\GradingCategory;
 use App\Domain\Academics\Models\GradingScale;
 use App\Domain\Schools\Models\SchoolSetting;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Inertia\Inertia;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class GradingSettingsController extends Controller
 {
@@ -20,7 +19,7 @@ class GradingSettingsController extends Controller
         // Get the current school from the request (set by school.context middleware)
         $school = $request->attributes->get('school');
 
-        if (!$school) {
+        if (! $school) {
             // Fallback for when school context is not available
             $school = $request->user()->currentSchool ?? $request->user()->schools()->first();
         }
@@ -30,7 +29,7 @@ class GradingSettingsController extends Controller
             ->orderBy('is_default', 'desc')
             ->orderBy('name')
             ->get()
-            ->map(fn($scale) => [
+            ->map(fn ($scale) => [
                 'id' => $scale->id,
                 'name' => $scale->name,
                 'description' => $scale->description,
@@ -42,7 +41,7 @@ class GradingSettingsController extends Controller
         $gradingCategories = GradingCategory::where('school_id', $school->id)
             ->orderBy('name')
             ->get()
-            ->map(fn($category) => [
+            ->map(fn ($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'code' => $category->code,
@@ -82,7 +81,7 @@ class GradingSettingsController extends Controller
         // Get the current school from the request (set by school.context middleware)
         $school = $request->attributes->get('school');
 
-        if (!$school) {
+        if (! $school) {
             // Fallback for when school context is not available
             $school = $request->user()->currentSchool ?? $request->user()->schools()->first();
         }
@@ -150,12 +149,20 @@ class GradingSettingsController extends Controller
 
         // Handle updating existing grading scales
         if ($request->has('gradingScales')) {
+            // Fetch all existing grading scales in one query to avoid N+1 problem
+            $scaleIds = array_column(array_filter($request->input('gradingScales'), fn($scale) => isset($scale['id'])), 'id');
+            $scales = collect();
+            if (!empty($scaleIds)) {
+                $scales = GradingScale::whereIn('id', $scaleIds)
+                    ->where('school_id', $school->id)
+                    ->get()
+                    ->keyBy('id');
+            }
+
             foreach ($request->input('gradingScales') as $scaleData) {
                 if (isset($scaleData['id'])) {
                     // Update existing scale
-                    $scale = GradingScale::where('id', $scaleData['id'])
-                        ->where('school_id', $school->id)
-                        ->first();
+                    $scale = $scales->get($scaleData['id']);
 
                     if ($scale) {
                         $scale->update([
@@ -198,12 +205,20 @@ class GradingSettingsController extends Controller
 
         // Handle updating existing grading categories
         if ($request->has('gradingCategories')) {
+            // Fetch all existing grading categories in one query to avoid N+1 problem
+            $categoryIds = array_column(array_filter($request->input('gradingCategories'), fn($category) => isset($category['id'])), 'id');
+            $categories = collect();
+            if (!empty($categoryIds)) {
+                $categories = GradingCategory::whereIn('id', $categoryIds)
+                    ->where('school_id', $school->id)
+                    ->get()
+                    ->keyBy('id');
+            }
+
             foreach ($request->input('gradingCategories') as $categoryData) {
                 if (isset($categoryData['id'])) {
                     // Update existing category
-                    $category = GradingCategory::where('id', $categoryData['id'])
-                        ->where('school_id', $school->id)
-                        ->first();
+                    $category = $categories->get($categoryData['id']);
 
                     if ($category) {
                         $category->update([
@@ -291,7 +306,7 @@ class GradingSettingsController extends Controller
                 'id' => $school->id,
                 'name' => $school->name,
             ],
-            'gradingScales' => [$scale]->map(fn($s) => [
+            'gradingScales' => [$scale]->map(fn ($s) => [
                 'id' => $s->id,
                 'name' => $s->name,
                 'description' => $s->description,
@@ -301,7 +316,7 @@ class GradingSettingsController extends Controller
             'gradingCategories' => GradingCategory::where('school_id', $school->id)
                 ->orderBy('name')
                 ->get()
-                ->map(fn($category) => [
+                ->map(fn ($category) => [
                     'id' => $category->id,
                     'name' => $category->name,
                     'code' => $category->code,
@@ -432,14 +447,14 @@ class GradingSettingsController extends Controller
                 ->orderBy('is_default', 'desc')
                 ->orderBy('name')
                 ->get()
-                ->map(fn($scale) => [
+                ->map(fn ($scale) => [
                     'id' => $scale->id,
                     'name' => $scale->name,
                     'description' => $scale->description,
                     'scale' => json_decode($scale->scale, true),
                     'is_default' => $scale->is_default,
                 ]),
-            'gradingCategories' => [$category]->map(fn($c) => [
+            'gradingCategories' => [$category]->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
                 'code' => $c->code,

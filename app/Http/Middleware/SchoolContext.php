@@ -6,7 +6,6 @@ use App\Domain\Schools\Models\School;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 class SchoolContext
@@ -14,15 +13,14 @@ class SchoolContext
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): \Illuminate\Http\Response  $next
+     * @param  Closure(Request): \Illuminate\Http\Response  $next
      * @return \Illuminate\Http\Response
      */
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -48,11 +46,11 @@ class SchoolContext
 
         $isPlatformAdmin = $user->hasRole('super_admin');
 
-        if (!$hasMembership && !$isPlatformAdmin) {
+        if (! $hasMembership && ! $isPlatformAdmin) {
             return redirect()->route('school.select');
         }
 
-        if ($schoolId !== null && !School::find((int) $schoolId)) {
+        if ($schoolId !== null && ! School::find((int) $schoolId)) {
             session()->forget('school_id');
 
             return redirect()->route('school.select');

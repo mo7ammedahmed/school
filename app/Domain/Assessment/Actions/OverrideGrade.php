@@ -35,9 +35,10 @@ class OverrideGrade
             $score->update([
                 'score' => $newScore,
                 'feedback' => $reason
-                    ? ($score->feedback ?? '') . "\n[Grade overridden: {$reason}]"
+                    ? ($score->feedback ?? '')."\n[Grade overridden: {$reason}]"
                     : $score->feedback,
             ]);
+
             return $score->fresh();
         });
     }

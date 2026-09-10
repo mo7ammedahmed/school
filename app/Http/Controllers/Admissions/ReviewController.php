@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admissions;
 
-use Inertia\Response;
-use App\Http\Controllers\Controller;
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Admissions\Services\AdmissionReviewService;
-use App\Domain\People\Models\User;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ReviewController extends Controller
 {
@@ -37,34 +37,34 @@ class ReviewController extends Controller
                 $q->where('name', 'manage-admissions');
             });
         })->get(['id', 'first_name', 'last_name'])
-        ->map(fn($user) => [
-            'id' => $user->id,
-            'name' => trim($user->first_name . ' ' . $user->last_name),
-        ]);
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => trim($user->first_name.' '.$user->last_name),
+            ]);
 
         $statistics = $this->reviewService->getReviewStatistics($schoolId);
 
         return Inertia::render('admissions/review/index', [
-            'applications' => $applications->map(fn($app) => [
+            'applications' => $applications->map(fn ($app) => [
                 'id' => $app->id,
                 'reference' => $app->reference,
                 'status' => $app->status,
                 'priority' => $app->priority ?? 'medium',
-                'student_name' => trim($app->student_first_name . ' ' . $app->student_last_name),
+                'student_name' => trim($app->student_first_name.' '.$app->student_last_name),
                 'guardian_email' => $app->guardian_email,
                 'grade_applying' => $app->grade_applying,
                 'submitted_at' => $app->submitted_at,
                 'assigned_to' => $app->assignedTo
                     ? [
                         'id' => $app->assignedTo->id,
-                        'name' => trim($app->assignedTo->first_name . ' ' . $app->assignedTo->last_name),
-                      ]
+                        'name' => trim($app->assignedTo->first_name.' '.$app->assignedTo->last_name),
+                    ]
                     : null,
                 'reviewer' => $app->reviewer
                     ? [
                         'id' => $app->reviewer->id,
-                        'name' => trim($app->reviewer->first_name . ' ' . $app->reviewer->last_name),
-                      ]
+                        'name' => trim($app->reviewer->first_name.' '.$app->reviewer->last_name),
+                    ]
                     : null,
                 'internal_notes' => $app->internal_notes,
             ]),
@@ -175,10 +175,10 @@ class ReviewController extends Controller
                 $q->where('name', 'manage-admissions');
             });
         })->get(['id', 'first_name', 'last_name'])
-        ->map(fn($user) => [
-            'id' => $user->id,
-            'name' => trim($user->first_name . ' ' . $user->last_name),
-        ]);
+            ->map(fn ($user) => [
+                'id' => $user->id,
+                'name' => trim($user->first_name.' '.$user->last_name),
+            ]);
 
         $this->authorize('manage-admissions');
 
@@ -210,7 +210,7 @@ class ReviewController extends Controller
                 'submitted_at' => $application->submitted_at,
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at,
-                'events' => $application->events->map(fn($event) => [
+                'events' => $application->events->map(fn ($event) => [
                     'id' => $event->id,
                     'event_type' => $event->event_type,
                     'notes' => $event->notes,
@@ -218,8 +218,8 @@ class ReviewController extends Controller
                     'user' => $event->user
                         ? [
                             'id' => $event->user->id,
-                            'name' => trim($event->user->first_name . ' ' . $event->user->last_name),
-                          ]
+                            'name' => trim($event->user->first_name.' '.$event->user->last_name),
+                        ]
                         : null,
                 ]),
             ],

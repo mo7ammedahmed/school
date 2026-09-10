@@ -27,8 +27,8 @@ class RegisterStudent
         }
 
         $userData = [
-            'name' => trim($data['first_name'] . ' ' . $data['last_name']),
-            'email' => $data['email'] ?? Str::lower($data['first_name'] . '.' . $data['last_name'] . '@student.local'),
+            'name' => trim($data['first_name'].' '.$data['last_name']),
+            'email' => $data['email'] ?? Str::lower($data['first_name'].'.'.$data['last_name'].'@student.local'),
             'password' => bcrypt(Str::random(16)),
         ];
 
@@ -61,16 +61,17 @@ class RegisterStudent
 
     private function generateStudentIdNumber(): string
     {
-        $prefix = 'STU-' . date('Y') . '-';
-        $lastStudent = Student::where('student_id_number', 'like', $prefix . '%')
+        $prefix = 'STU-'.date('Y').'-';
+        $lastStudent = Student::where('student_id_number', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->first();
 
         if ($lastStudent) {
             $lastNumber = (int) str_replace($prefix, '', $lastStudent->student_id_number);
-            return $prefix . str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
+
+            return $prefix.str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
         }
 
-        return $prefix . str_pad('1', 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad('1', 6, '0', STR_PAD_LEFT);
     }
 }

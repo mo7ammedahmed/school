@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Guardian;
 
-use App\Http\Controllers\Controller;
+use App\Domain\Assessment\Models\ReportCard;
+use App\Domain\Attendance\Models\AttendanceRecord;
+use App\Domain\Finance\Models\Invoice;
+use App\Domain\Learning\Models\Assignment;
 use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\Student;
 use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Attendance\Models\AttendanceRecord;
-use App\Domain\Assessment\Models\ReportCard;
-use App\Domain\Learning\Models\Assignment;
-use App\Domain\Finance\Models\Invoice;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class PortalController extends Controller
 {
@@ -25,9 +24,9 @@ class PortalController extends Controller
 
         $children = $guardian->students()->get();
 
-        $childrenSummary = $children->map(fn($child) => [
+        $childrenSummary = $children->map(fn ($child) => [
             'id' => $child->id,
-            'name' => $child->first_name . ' ' . $child->last_name,
+            'name' => $child->first_name.' '.$child->last_name,
             'attendance_rate' => $this->calculateAttendanceRate($child),
             'average_grade' => $this->calculateAverageGrade($child),
             'outstanding_fees' => (float) Invoice::where('student_id', $child->id)->whereNotIn('status', ['paid', 'voided'])->sum('total_amount'),
@@ -57,7 +56,7 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $timetable = TimetableEntry::whereHas('section.students', fn($q) => $q->where('students.id', $child->id))
+        $timetable = TimetableEntry::whereHas('section.students', fn ($q) => $q->where('students.id', $child->id))
             ->with(['offering.subject', 'teacher.user', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')
@@ -103,7 +102,7 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $assignments = Assignment::whereHas('offering.section.students', fn($q) => $q->where('students.id', $child->id))
+        $assignments = Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $child->id))
             ->with(['offering.subject'])
             ->latest()
             ->paginate(15);
@@ -134,7 +133,7 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        if (!$guardian->students()->where('students.id', $child->id)->exists()) {
+        if (! $guardian->students()->where('students.id', $child->id)->exists()) {
             abort(403, 'Unauthorized access to child records.');
         }
     }
@@ -154,6 +153,7 @@ class PortalController extends Controller
     private function calculateAverageGrade(Student $student): float
     {
         $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
+
         return $reportCard?->gpa ?? 0.0;
     }
 }

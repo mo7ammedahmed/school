@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\Student;
-use App\Domain\People\Models\Guardian;
-use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Identity\Models\UserMembership;
+use App\Domain\People\Models\Guardian;
+use App\Domain\People\Models\Student;
+use App\Domain\People\Models\TeacherProfile;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 /**
  * Creates portal-linked users (student/guardian accounts) and memberships

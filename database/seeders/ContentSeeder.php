@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Domain\Schools\Models\School;
-use App\Domain\Content\Models\News;
-use App\Domain\Content\Models\Event;
-use App\Domain\Content\Models\Faq;
-use App\Domain\Content\Models\StaffProfile;
-use App\Domain\Content\Models\ContactLead;
-use App\Domain\Content\Models\ContentPage;
-use App\Domain\Admissions\Models\AdmissionPeriod;
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Admissions\Models\AdmissionApplicationEvent;
+use App\Domain\Admissions\Models\AdmissionPeriod;
+use App\Domain\Content\Models\ContactLead;
+use App\Domain\Content\Models\ContentPage;
+use App\Domain\Content\Models\Event;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\News;
+use App\Domain\Content\Models\StaffProfile;
+use App\Domain\Schools\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 

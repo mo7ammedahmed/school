@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use Inertia\Response;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class FaqController
 {

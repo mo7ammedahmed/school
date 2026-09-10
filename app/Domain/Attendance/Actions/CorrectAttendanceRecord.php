@@ -27,8 +27,8 @@ class CorrectAttendanceRecord
         }
 
         $validStatuses = ['present', 'absent', 'late', 'excused'];
-        if (!in_array($newStatus, $validStatuses, true)) {
-            throw new Exception("Invalid attendance status. Must be one of: " . implode(', ', $validStatuses) . ".");
+        if (! in_array($newStatus, $validStatuses, true)) {
+            throw new Exception('Invalid attendance status. Must be one of: '.implode(', ', $validStatuses).'.');
         }
 
         return DB::transaction(function () use ($record, $newStatus, $notes) {
@@ -36,6 +36,7 @@ class CorrectAttendanceRecord
                 'status' => $newStatus,
                 'notes' => $notes ?? $record->notes,
             ]);
+
             return $record->fresh();
         });
     }

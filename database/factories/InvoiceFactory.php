@@ -21,7 +21,7 @@ class InvoiceFactory extends Factory
         return [
             'school_id' => School::factory(),
             'student_id' => Student::factory(),
-            'invoice_number' => 'INV-' . date('Y') . '-' . str_pad(fake()->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
+            'invoice_number' => 'INV-'.date('Y').'-'.str_pad(fake()->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
             'issue_date' => fake()->date('Y-m-d'),
             'due_date' => fake()->date('Y-m-d', '+30 days'),
             'subtotal' => $subtotal,

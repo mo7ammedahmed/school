@@ -20,15 +20,15 @@ class ColorService
         $hex = ltrim($hex, '#');
 
         if (strlen($hex) === 3) {
-            $hex = str_repeat(substr($hex, 0, 1), 2) .
-                   str_repeat(substr($hex, 1, 1), 2) .
+            $hex = str_repeat(substr($hex, 0, 1), 2).
+                   str_repeat(substr($hex, 1, 1), 2).
                    str_repeat(substr($hex, 2, 1), 2);
         }
 
         return [
             'r' => hexdec(substr($hex, 0, 2)),
             'g' => hexdec(substr($hex, 2, 2)),
-            'b' => hexdec(substr($hex, 4, 2))
+            'b' => hexdec(substr($hex, 4, 2)),
         ];
     }
 
@@ -79,6 +79,7 @@ class ColorService
     public static function getContrastingColor(string $hexColor): string
     {
         $lum = self::calculateLuminance(self::hexToRgb($hexColor));
+
         return ($lum > 0.179) ? '#000000' : '#ffffff';
     }
 
@@ -91,6 +92,7 @@ class ColorService
     {
         $contrast = self::calculateContrast($foreground, $background);
         $required = $isLargeText ? 3.0 : 4.5;
+
         return $contrast >= $required;
     }
 

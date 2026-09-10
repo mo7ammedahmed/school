@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\People\Models\Student;
-use App\Domain\Academics\Models\AcademicYear;
-use App\Domain\Academics\Models\Section;
-use App\Domain\Schools\Models\School;
 use App\Domain\Finance\Models\FeeAssignment;
+use App\Domain\People\Models\Student;
+use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -53,6 +51,7 @@ class Enrollment extends Model
     {
         return $this->hasMany(FeeAssignment::class);
     }
+
     protected function casts(): array
     {
         return [

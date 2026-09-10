@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Policies;
 
-use App\Models\User;
-use App\Domain\Schools\Models\School;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Policies\InvoicePolicy;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ class InvoicePolicyTest extends TestCase
             'school_id' => $school->id,
         ]);
 
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
         $this->assertTrue($policy->view($user, $invoice));
     }
 
@@ -46,7 +46,7 @@ class InvoicePolicyTest extends TestCase
 
         $this->app['session']->put('school_id', $schoolA->id);
 
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
         $this->assertFalse($policy->view($user, $invoice));
     }
 
@@ -60,7 +60,7 @@ class InvoicePolicyTest extends TestCase
             'status' => 'paid',
         ]);
 
-        $policy = new InvoicePolicy();
+        $policy = new InvoicePolicy;
         $this->assertFalse($policy->update($user, $invoice));
     }
 }

@@ -38,6 +38,7 @@ class FinalizeAttendanceSession
 
         return DB::transaction(function () use ($session) {
             $session->update(['is_finalized' => true]);
+
             return $session->fresh();
         });
     }

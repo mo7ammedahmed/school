@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Domain\People\Models\Student;
-use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Academics\Models\Section;
-use App\Domain\Finance\Models\Payment;
 use App\Domain\Attendance\Models\AttendanceRecord;
 use App\Domain\Finance\Models\Invoice;
-use Illuminate\Http\Request;
+use App\Domain\Finance\Models\Payment;
+use App\Domain\People\Models\Student;
+use App\Domain\People\Models\TeacherProfile;
 use Inertia\Inertia;
 
 class DashboardController extends Controller

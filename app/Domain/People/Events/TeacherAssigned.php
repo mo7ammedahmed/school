@@ -11,7 +11,5 @@ class TeacherAssigned
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $teacherId, public int $sectionId, public int $subjectId)
-    {
-    }
+    public function __construct(public int $teacherId, public int $sectionId, public int $subjectId) {}
 }

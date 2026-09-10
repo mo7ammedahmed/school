@@ -11,7 +11,5 @@ class AcademicYearCreated
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $academicYearId, public string $name)
-    {
-    }
+    public function __construct(public int $academicYearId, public string $name) {}
 }

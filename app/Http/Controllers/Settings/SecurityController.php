@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use Inertia\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Response;
 use PragmaRX\Google2FA\Google2FA;
 
 class SecurityController extends Controller
@@ -33,9 +32,9 @@ class SecurityController extends Controller
         ]);
 
         $user = Auth::user();
-        $google2fa = new Google2FA();
+        $google2fa = new Google2FA;
 
-        if (!$google2fa->verifyKey($user->two_factor_secret, $request->input('code'))) {
+        if (! $google2fa->verifyKey($user->two_factor_secret, $request->input('code'))) {
             return back()->withErrors(['code' => 'Invalid two-factor authentication code.']);
         }
 
@@ -43,7 +42,7 @@ class SecurityController extends Controller
             'two_factor_enabled' => true,
         ])->save();
 
-        Cache::forget('two-factor-codes:' . $user->id);
+        Cache::forget('two-factor-codes:'.$user->id);
 
         return redirect()->route('settings.security.two-factor')->with('success', 'Two-factor authentication enabled.');
     }

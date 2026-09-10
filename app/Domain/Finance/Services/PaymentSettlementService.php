@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Services;
 
-use Exception;
+use App\Domain\Compliance\Models\AuditLog;
 use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\WebhookEvent;
-use App\Domain\Compliance\Models\AuditLog;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -48,8 +48,9 @@ class PaymentSettlementService
     {
         $eventId = $payload['id'] ?? null;
 
-        if (!$eventId) {
+        if (! $eventId) {
             Log::warning('Webhook received without event ID', ['payload' => $payload]);
+
             return;
         }
 
@@ -59,6 +60,7 @@ class PaymentSettlementService
 
         if ($existingEvent) {
             Log::info('Duplicate webhook event received', ['event_id' => $eventId]);
+
             return;
         }
 
@@ -75,13 +77,13 @@ class PaymentSettlementService
             try {
                 $payment = Payment::where('payment_number', $payload['metadata']['payment_id'] ?? '')->first();
 
-                if (!$payment) {
+                if (! $payment) {
                     throw new Exception('Payment not found for webhook');
                 }
 
                 $transaction = GatewayTransaction::where('gateway_transaction_id', $eventId)->first();
 
-                if (!$transaction) {
+                if (! $transaction) {
                     $transaction = GatewayTransaction::create([
                         'school_id' => $payment->school_id,
                         'payment_id' => $payment->id,

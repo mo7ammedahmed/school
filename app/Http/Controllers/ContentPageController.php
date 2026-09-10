@@ -7,8 +7,8 @@ namespace App\Http\Controllers;
 use App\Domain\Content\Models\ContentPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Response;
 use Illuminate\Validation\Rule;
+use Inertia\Response;
 
 class ContentPageController extends Controller
 {

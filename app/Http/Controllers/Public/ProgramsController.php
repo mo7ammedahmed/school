@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Models\Subject;
 use App\Models\GradeLevel;
-use Inertia\Response;
+use App\Models\Subject;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ProgramsController
 {
@@ -28,7 +28,7 @@ class ProgramsController
     public function show(int $id): Response
     {
         $program = Subject::with('gradeLevel')->findOrFail($id);
-        
+
         return Inertia::render('public/programs/show', [
             'program' => $program,
         ]);

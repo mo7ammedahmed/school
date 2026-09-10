@@ -35,7 +35,7 @@ class CreateInvoice
         $lines = [];
 
         foreach ($lineData as $line) {
-            if (empty($line['description']) || !isset($line['amount']) || $line['amount'] <= 0) {
+            if (empty($line['description']) || ! isset($line['amount']) || $line['amount'] <= 0) {
                 throw new Exception('Each invoice line must have a description and a positive amount.');
             }
 
@@ -84,16 +84,17 @@ class CreateInvoice
 
     private function generateInvoiceNumber(): string
     {
-        $prefix = 'INV-' . date('Y') . '-';
-        $lastInvoice = Invoice::where('invoice_number', 'like', $prefix . '%')
+        $prefix = 'INV-'.date('Y').'-';
+        $lastInvoice = Invoice::where('invoice_number', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->first();
 
         if ($lastInvoice) {
             $lastNumber = (int) str_replace($prefix, '', $lastInvoice->invoice_number);
-            return $prefix . str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
+
+            return $prefix.str_pad((string) ($lastNumber + 1), 6, '0', STR_PAD_LEFT);
         }
 
-        return $prefix . str_pad('1', 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad('1', 6, '0', STR_PAD_LEFT);
     }
 }

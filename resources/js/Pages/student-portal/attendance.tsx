@@ -50,7 +50,7 @@ export default function StudentAttendance({ student, records }: { student: { fir
         <AppShell
             title="My Attendance"
             breadcrumbs={[
-                { label: 'Student Portal', href: '/student' },
+                { label: 'Student Portal', href: '/student/dashboard' },
                 { label: 'Attendance' },
             ]}
         >

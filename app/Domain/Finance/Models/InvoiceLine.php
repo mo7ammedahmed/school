@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\Finance\Models\FeeAssignment;
-use App\Domain\Finance\Models\Invoice;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -39,6 +37,7 @@ class InvoiceLine extends Model
     {
         return $this->belongsTo(FeeAssignment::class);
     }
+
     protected function casts(): array
     {
         return [

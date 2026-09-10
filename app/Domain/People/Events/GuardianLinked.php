@@ -11,7 +11,5 @@ class GuardianLinked
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $guardianId, public int $studentId)
-    {
-    }
+    public function __construct(public int $guardianId, public int $studentId) {}
 }

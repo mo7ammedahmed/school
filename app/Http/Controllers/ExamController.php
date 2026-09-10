@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Assessment\Models\Exam;
-use App\Domain\Assessment\Models\ExamResult;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\Subject;
+use App\Domain\Assessment\Models\Exam;
+use App\Domain\Assessment\Models\ExamResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class ExamController extends Controller
 {

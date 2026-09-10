@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Domain\Finance\Models\Payment;
+use App\Domain\Finance\Models\Refund;
 use App\Http\Requests\StoreRefundRequest;
 use App\Http\Requests\UpdateRefundRequest;
-use App\Domain\Finance\Models\Refund;
-use App\Domain\Finance\Models\Payment;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class RefundController extends Controller
 {
@@ -28,7 +28,7 @@ class RefundController extends Controller
 
         $refunds = $query->get();
 
-        $refunds->transform(fn($refund) => [
+        $refunds->transform(fn ($refund) => [
             'id' => $refund->id,
             'payment' => ['payment_number' => $refund->payment->payment_number],
             'amount' => $refund->amount,
@@ -47,7 +47,7 @@ class RefundController extends Controller
         $payments = Payment::where('school_id', $schoolId)
             ->where('status', '!=', 'refunded')
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'id' => $p->id,
                 'payment_number' => $p->payment_number,
                 'amount' => $p->amount,

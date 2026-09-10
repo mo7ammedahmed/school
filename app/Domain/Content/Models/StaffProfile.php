@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,6 +36,7 @@ class StaffProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     protected function casts(): array
     {
         return [

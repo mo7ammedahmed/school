@@ -53,7 +53,7 @@ export default function StudentSchedule({ student, timetable }: { student: { fir
         <AppShell
             title="My Schedule"
             breadcrumbs={[
-                { label: 'Student Portal', href: '/student' },
+                { label: 'Student Portal', href: '/student/dashboard' },
                 { label: 'Schedule' },
             ]}
         >

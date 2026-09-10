@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 declare(strict_types=1);
 
@@ -41,7 +41,7 @@ class AppearanceSettingsController extends Controller
         abort_unless($school, 404);
 
         $validated = $request->validate([
-            'theme' => 'nullable|in:light',
+            'theme' => 'nullable|in:light,dark,system',
             'primary_color' => [
                 'required',
                 'regex:/^#[0-9a-fA-F]{6}$/',
@@ -184,4 +184,3 @@ class AppearanceSettingsController extends Controller
         return School::find($schoolId);
     }
 }
-

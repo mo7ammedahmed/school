@@ -57,7 +57,7 @@ interface NavGroup {
 const STAFF = ['school_admin', 'super_admin', 'principal', 'registrar', 'teacher', 'accountant'];
 const ADMINS = ['school_admin', 'super_admin'];
 
-const NAV_GROUPS: NavGroup[] = [
+export const NAV_GROUPS: NavGroup[] = [
     {
         labelKey: 'shell.group.studentPortal',
         items: [

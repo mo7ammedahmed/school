@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
@@ -23,12 +23,12 @@ class RoleSeeder extends Seeder
 
         $superAdmin->syncPermissions($allPermissions);
 
-        $schoolAdminPermissions = $allPermissions->filter(fn($p) => !in_array($p->name, [
+        $schoolAdminPermissions = $allPermissions->filter(fn ($p) => ! in_array($p->name, [
             'manage-schools',
         ]));
         $schoolAdmin->syncPermissions($schoolAdminPermissions);
 
-        $principalPermissions = $allPermissions->filter(fn($p) => !in_array($p->name, [
+        $principalPermissions = $allPermissions->filter(fn ($p) => ! in_array($p->name, [
             'manage-schools',
             'manage-users',
             'manage-roles',
@@ -42,7 +42,7 @@ class RoleSeeder extends Seeder
         ]));
         $principal->syncPermissions($principalPermissions);
 
-        $registrarPermissions = $allPermissions->filter(fn($p) => !in_array($p->name, [
+        $registrarPermissions = $allPermissions->filter(fn ($p) => ! in_array($p->name, [
             'manage-schools',
             'manage-users',
             'manage-roles',
@@ -57,7 +57,7 @@ class RoleSeeder extends Seeder
         ]));
         $registrar->syncPermissions($registrarPermissions);
 
-        $teacherPermissions = $allPermissions->filter(fn($p) => !in_array($p->name, [
+        $teacherPermissions = $allPermissions->filter(fn ($p) => ! in_array($p->name, [
             'manage-schools',
             'manage-users',
             'manage-roles',
@@ -84,7 +84,7 @@ class RoleSeeder extends Seeder
         ]));
         $teacher->syncPermissions($teacherPermissions);
 
-        $accountantPermissions = $allPermissions->filter(fn($p) => !in_array($p->name, [
+        $accountantPermissions = $allPermissions->filter(fn ($p) => ! in_array($p->name, [
             'manage-schools',
             'manage-users',
             'manage-roles',
@@ -119,7 +119,7 @@ class RoleSeeder extends Seeder
         ]));
         $accountant->syncPermissions($accountantPermissions);
 
-        $studentPermissions = $allPermissions->filter(fn($p) => in_array($p->name, [
+        $studentPermissions = $allPermissions->filter(fn ($p) => in_array($p->name, [
             'view-dashboard',
             'view-own-grades',
             'view-own-attendance',
@@ -130,7 +130,7 @@ class RoleSeeder extends Seeder
         ]));
         $student->syncPermissions($studentPermissions);
 
-        $guardianPermissions = $allPermissions->filter(fn($p) => in_array($p->name, [
+        $guardianPermissions = $allPermissions->filter(fn ($p) => in_array($p->name, [
             'view-dashboard',
             'view-own-children',
             'view-own-grades',

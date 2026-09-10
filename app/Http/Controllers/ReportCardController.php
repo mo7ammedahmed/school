@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
+use App\Models\AcademicYear;
 use App\Models\ReportCard;
 use App\Models\Student;
-use App\Models\AcademicYear;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class ReportCardController extends Controller
 {
     public function index(): Response
     {
         $reportCards = ReportCard::with(['student', 'academicYear'])->latest()->paginate(15);
+
         return inertia('report-cards/index', ['reportCards' => $reportCards]);
     }
 
@@ -24,6 +24,7 @@ class ReportCardController extends Controller
     {
         $students = Student::orderBy('first_name')->get();
         $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
+
         return inertia('report-cards/create', ['students' => $students, 'academicYears' => $academicYears]);
     }
 
@@ -46,6 +47,7 @@ class ReportCardController extends Controller
     public function show(ReportCard $reportCard): Response
     {
         $reportCard->load('student', 'academicYear');
+
         return inertia('report-cards/show', ['reportCard' => $reportCard]);
     }
 
@@ -53,6 +55,7 @@ class ReportCardController extends Controller
     {
         $students = Student::orderBy('first_name')->get();
         $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
+
         return inertia('report-cards/edit', ['reportCard' => $reportCard, 'students' => $students, 'academicYears' => $academicYears]);
     }
 

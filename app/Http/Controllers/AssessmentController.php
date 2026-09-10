@@ -6,21 +6,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\Section;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class AssessmentController extends Controller
 {
     public function index(): View
     {
         $assessments = Assessment::with('section')->latest()->paginate(15);
+
         return view('assessments.index', ['assessments' => $assessments]);
     }
 
     public function create(): View
     {
         $sections = Section::orderBy('name_en')->get();
+
         return view('assessments.create', ['sections' => $sections]);
     }
 
@@ -44,12 +46,14 @@ class AssessmentController extends Controller
     public function show(Assessment $assessment): View
     {
         $assessment->load('section');
+
         return view('assessments.show', ['assessment' => $assessment]);
     }
 
     public function edit(Assessment $assessment): View
     {
         $sections = Section::orderBy('name_en')->get();
+
         return view('assessments.edit', ['assessment' => $assessment, 'sections' => $sections]);
     }
 

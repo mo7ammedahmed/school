@@ -11,7 +11,5 @@ class AnnouncementPublished
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $announcementId, public string $audience)
-    {
-    }
+    public function __construct(public int $announcementId, public string $audience) {}
 }

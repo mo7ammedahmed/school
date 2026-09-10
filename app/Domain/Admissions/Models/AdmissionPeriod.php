@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Admissions\Models;
 
+use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Schools\Models\School;
 
 #[Fillable([
     'school_id',

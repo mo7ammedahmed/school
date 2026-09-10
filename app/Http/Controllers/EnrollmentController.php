@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Models\Enrollment;
-use App\Models\Student;
-use App\Models\Section;
 use App\Models\AcademicYear;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Models\Enrollment;
+use App\Models\Section;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class EnrollmentController extends Controller
 {
     public function index(): Response
     {
         $enrollments = Enrollment::with(['student', 'section', 'academicYear'])->latest()->paginate(15);
+
         return inertia('enrollments/index', ['enrollments' => $enrollments]);
     }
 
@@ -26,6 +26,7 @@ class EnrollmentController extends Controller
         $students = Student::orderBy('first_name')->get();
         $sections = Section::with('gradeLevel')->orderBy('name_en')->get();
         $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
+
         return inertia('enrollments/create', ['students' => $students, 'sections' => $sections, 'academicYears' => $academicYears]);
     }
 
@@ -47,6 +48,7 @@ class EnrollmentController extends Controller
     public function show(Enrollment $enrollment): Response
     {
         $enrollment->load('student', 'section.gradeLevel', 'academicYear');
+
         return inertia('enrollments/show', ['enrollment' => $enrollment]);
     }
 
@@ -55,6 +57,7 @@ class EnrollmentController extends Controller
         $students = Student::orderBy('first_name')->get();
         $sections = Section::with('gradeLevel')->orderBy('name_en')->get();
         $academicYears = AcademicYear::orderBy('name_en', 'desc')->get();
+
         return inertia('enrollments/edit', ['enrollment' => $enrollment, 'students' => $students, 'sections' => $sections, 'academicYears' => $academicYears]);
     }
 

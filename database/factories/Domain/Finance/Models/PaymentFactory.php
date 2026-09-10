@@ -2,9 +2,8 @@
 
 namespace Database\Factories\Domain\Finance\Models;
 
-use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\Invoice;
-use App\Domain\Schools\Models\School;
+use App\Domain\Finance\Models\Payment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PaymentFactory extends Factory

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Attendance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

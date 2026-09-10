@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
-use App\Models\FeeStructure;
-use App\Models\GradeLevel;
-use App\Models\FeeType;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\FeeStructure;
+use App\Domain\Finance\Models\FeeType;
+use App\Models\GradeLevel;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class FeeStructureController extends Controller
@@ -17,6 +17,7 @@ class FeeStructureController extends Controller
     public function index()
     {
         $feeStructures = FeeStructure::with(['feeType', 'gradeLevel'])->latest()->paginate(15);
+
         return Inertia::render('finance/fee-structures/index', [
             'feeStructures' => $feeStructures,
         ]);
@@ -26,6 +27,7 @@ class FeeStructureController extends Controller
     {
         $gradeLevels = GradeLevel::orderBy('name_en')->get();
         $feeTypes = FeeType::orderBy('name')->get();
+
         return Inertia::render('finance/fee-structures/create', [
             'gradeLevels' => $gradeLevels,
             'feeTypes' => $feeTypes,
@@ -49,6 +51,7 @@ class FeeStructureController extends Controller
     public function show(FeeStructure $feeStructure)
     {
         $feeStructure->load('feeType', 'gradeLevel');
+
         return Inertia::render('finance/fee-structures/show', [
             'feeStructure' => $feeStructure,
         ]);
@@ -58,6 +61,7 @@ class FeeStructureController extends Controller
     {
         $gradeLevels = GradeLevel::orderBy('name_en')->get();
         $feeTypes = FeeType::orderBy('name')->get();
+
         return Inertia::render('finance/fee-structures/edit', [
             'feeStructure' => $feeStructure,
             'gradeLevels' => $gradeLevels,

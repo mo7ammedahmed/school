@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace App\Domain\People\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\UseFactory;
-use App\Models\User;
 use App\Domain\Academics\Models\Enrollment;
-use App\Domain\Attendance\Models\AttendanceRecord;
 use App\Domain\Assessment\Models\AssessmentScore;
 use App\Domain\Assessment\Models\ExamResult;
 use App\Domain\Assessment\Models\ReportCard;
+use App\Domain\Attendance\Models\AttendanceRecord;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
-use App\Domain\Schools\Models\School;
 use App\Domain\Learning\Models\Submission;
-use Illuminate\Database\Eloquent\Model;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
+use Database\Factories\StudentFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Database\Factories\StudentFactory;
 
 #[Fillable([
     'school_id',
@@ -47,8 +47,7 @@ use Database\Factories\StudentFactory;
 #[UseFactory(StudentFactory::class)]
 class Student extends Model
 {
-    use SoftDeletes, HasFactory;
-
+    use HasFactory, SoftDeletes;
 
     public function school(): BelongsTo
     {
@@ -117,6 +116,7 @@ class Student extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
     protected function casts(): array
     {
         return [

@@ -11,7 +11,5 @@ class InvoiceCreated
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $invoiceId, public int $studentId, public float $total)
-    {
-    }
+    public function __construct(public int $invoiceId, public int $studentId, public float $total) {}
 }

@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\Student;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\GradeLevel;
-use App\Domain\Finance\Models\FeeType;
-use App\Domain\Finance\Models\FeeStructure;
-use App\Domain\Finance\Models\FeeAssignment;
 use App\Domain\Finance\Models\Discount;
+use App\Domain\Finance\Models\FeeAssignment;
+use App\Domain\Finance\Models\FeeStructure;
+use App\Domain\Finance\Models\FeeType;
+use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\InvoiceLine;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Finance\Models\Refund;
-use App\Domain\Finance\Models\GatewayTransaction;
+use App\Domain\People\Models\Student;
+use App\Domain\Schools\Models\School;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -79,7 +79,7 @@ class FinanceSeeder extends Seeder
             ->first();
 
         foreach ($students->take(10) as $student) {
-            if (!$tuitionStructure) {
+            if (! $tuitionStructure) {
                 break;
             }
             FeeAssignment::firstOrCreate(

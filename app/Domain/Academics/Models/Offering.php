@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\Academics\Models\Assessment;
-use App\Domain\Academics\Models\Exam;
+use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Material;
 use App\Domain\Learning\Models\Quiz;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Academics\Models\AcademicYear;
-use App\Domain\Academics\Models\Section;
 use App\Domain\Schools\Models\School;
-use App\Domain\Attendance\Models\AttendanceSession;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domain\Assessment\Models\Assessment;
+use App\Domain\Assessment\Models\Exam;
 
 #[Fillable([
     'school_id',

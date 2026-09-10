@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Schools\Models;
 
+use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Database\Factories\OrganizationFactory;
 
 #[Fillable([
     'name',
@@ -24,13 +24,13 @@ use Database\Factories\OrganizationFactory;
 #[UseFactory(OrganizationFactory::class)]
 class Organization extends Model
 {
-    use SoftDeletes, HasFactory;
-
+    use HasFactory, SoftDeletes;
 
     public function schools(): HasMany
     {
         return $this->hasMany(School::class);
     }
+
     protected function casts(): array
     {
         return [

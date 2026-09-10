@@ -13,9 +13,9 @@ class SchoolFactory extends Factory
     public function definition(): array
     {
         return [
-            'organization_id' => \App\Domain\Schools\Models\Organization::factory(),
-            'name_ar' => fake()->company() . ' School',
-            'name_en' => fake()->company() . ' School',
+            'organization_id' => Organization::factory(),
+            'name_ar' => fake()->company().' School',
+            'name_en' => fake()->company().' School',
             'slug' => fake()->slug(),
             'email' => fake()->optional()->safeEmail(),
             'phone' => fake()->optional()->phoneNumber(),
@@ -33,4 +33,3 @@ class SchoolFactory extends Factory
         ];
     }
 }
-

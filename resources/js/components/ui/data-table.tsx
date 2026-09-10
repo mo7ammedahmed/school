@@ -1,11 +1,13 @@
 import * as React from 'react';
 import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    flexRender,
+    createCoreRowModel,
+    createSortedRowModel,
+} from '@tanstack/table-core';
+import {
     type ColumnDef,
     type SortingState,
+    flexRender,
+    useTable,
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,11 +36,11 @@ export function DataTable<TData extends Record<string, any>>({
     // Accept both plain arrays and Laravel paginator payloads ({ data: [...] }).
     const rows = Array.isArray(data) ? data : data?.data ?? [];
 
-    const table = useReactTable({
+    const table = useTable({
         data: rows,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
+        getCoreRowModel: createCoreRowModel(),
+        getSortedRowModel: createSortedRowModel(),
         onSortingChange: setSorting,
         state: { sorting },
     });

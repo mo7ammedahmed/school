@@ -11,7 +11,5 @@ class AssignmentSubmitted
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $submissionId, public int $assignmentId, public int $studentId)
-    {
-    }
+    public function __construct(public int $submissionId, public int $assignmentId, public int $studentId) {}
 }

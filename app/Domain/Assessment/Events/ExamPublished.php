@@ -11,7 +11,5 @@ class ExamPublished
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $examId, public int $publishedBy)
-    {
-    }
+    public function __construct(public int $examId, public int $publishedBy) {}
 }

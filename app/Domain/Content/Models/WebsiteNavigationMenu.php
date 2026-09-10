@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Append;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'slug',
     'enabled',
 ])]
-#[Append([
+#[Appends([
     'name',
 ])]
 class WebsiteNavigationMenu extends Model
@@ -39,6 +39,7 @@ class WebsiteNavigationMenu extends Model
     public function getNameAttribute(): string
     {
         $locale = app()->getLocale();
+
         return $this->{"name_$locale"} ?? $this->name_en;
     }
 }

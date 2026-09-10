@@ -11,7 +11,5 @@ class AttendanceFinalized
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $sessionId, public int $teacherId)
-    {
-    }
+    public function __construct(public int $sessionId, public int $teacherId) {}
 }

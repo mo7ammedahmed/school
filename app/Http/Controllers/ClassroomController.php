@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Models\Classroom;
 use App\Models\Section;
 use App\Models\Teacher;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class ClassroomController extends Controller
 {
     public function index(): Response
     {
         $classrooms = Classroom::with(['section', 'teacher'])->latest()->paginate(15);
+
         return inertia('classrooms/index', ['classrooms' => $classrooms]);
     }
 
@@ -24,6 +24,7 @@ class ClassroomController extends Controller
     {
         $sections = Section::orderBy('name_en')->get();
         $teachers = Teacher::orderBy('first_name')->get();
+
         return inertia('classrooms/create', ['sections' => $sections, 'teachers' => $teachers]);
     }
 
@@ -46,6 +47,7 @@ class ClassroomController extends Controller
     public function show(Classroom $classroom): Response
     {
         $classroom->load('section', 'teacher');
+
         return inertia('classrooms/show', ['classroom' => $classroom]);
     }
 
@@ -53,6 +55,7 @@ class ClassroomController extends Controller
     {
         $sections = Section::orderBy('name_en')->get();
         $teachers = Teacher::orderBy('first_name')->get();
+
         return inertia('classrooms/edit', ['classroom' => $classroom, 'sections' => $sections, 'teachers' => $teachers]);
     }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'app_name' => 'نظام إدارة المدرسة',
     'school_name' => 'مدرسة النور',
-    
+
     // Navigation
     'dashboard' => 'لوحة التحكم',
     'students' => 'الطلاب',
@@ -40,7 +40,7 @@ return [
     'roles' => 'الأدوار',
     'audit_logs' => 'سجلات التدقيق',
     'onboarding' => 'إعداد',
-    
+
     // Actions
     'create' => 'إنشاء',
     'edit' => 'تعديل',
@@ -67,7 +67,7 @@ return [
     'reject' => 'رفض',
     'finalize' => 'إنهاء',
     'issue' => 'إصدار',
-    
+
     // Status
     'active' => 'نشط',
     'inactive' => 'غير نشط',
@@ -79,7 +79,7 @@ return [
     'unpaid' => 'غير مدفوع',
     'completed' => 'مكتمل',
     'cancelled' => 'ملغى',
-    
+
     // Messages
     'success' => 'نجاح',
     'error' => 'خطأ',
@@ -95,7 +95,7 @@ return [
     'no_records_found' => 'لم يتم العثور على سجلات',
     'loading' => 'جارٍ التحميل...',
     'processing' => 'جارٍ المعالجة...',
-    
+
     // Auth
     'login' => 'تسجيل الدخول',
     'logout' => 'تسجيل الخروج',
@@ -107,13 +107,13 @@ return [
     'remember_me' => 'تذكرني',
     'sign_in' => 'تسجيل الدخول',
     'sign_out' => 'تسجيل الخروج',
-    
+
     // Language
     'language' => 'اللغة',
     'switch_language' => 'تبديل اللغة',
     'english' => 'الإنجليزية',
     'arabic' => 'العربية',
-    
+
     // Common
     'name' => 'الاسم',
     'email' => 'البريد الإلكتروني',
@@ -135,14 +135,14 @@ return [
     'due_date' => 'تاريخ الاستحقاق',
     'created_at' => 'تاريخ الإنشاء',
     'updated_at' => 'تاريخ التحديث',
-    
+
     // Dashboard
     'welcome_back' => 'مرحباً بعودتك',
     'overview' => 'نظرة عامة',
     'statistics' => 'الإحصائيات',
     'recent_activity' => 'النشاط الأخير',
     'quick_actions' => 'إجراءات سريعة',
-    
+
     // Settings
     'general_settings' => 'الإعدادات العامة',
     'school_settings' => 'إعدادات المدرسة',
@@ -154,7 +154,7 @@ return [
     'light' => 'فاتح',
     'dark' => 'داكن',
     'system' => 'النظام',
-    
+
     // Public website
     'home' => 'الرئيسية',
     'about' => 'عن المدرسة',
@@ -170,7 +170,7 @@ return [
     'upcoming_events' => 'الفعاليات القادمة',
     'latest_news' => 'آخر الأخبار',
     'get_in_touch' => 'تواصل معنا',
-    
+
     // Errors
     'not_found' => 'غير موجود',
     'unauthorized' => 'غير مصرح',
@@ -178,7 +178,7 @@ return [
     'server_error' => 'خطف في الخادم',
     'page_not_found' => 'الصفحة التي تبحث عنها غير موجودة.',
     'return_home' => 'العودة للرئيسية',
-    
+
     // Forms
     'required_field' => 'هذا الحقل مطلوب',
     'invalid_email' => 'يرجى إدخال بريد إلكتروني صالح',

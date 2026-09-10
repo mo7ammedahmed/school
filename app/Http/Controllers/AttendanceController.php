@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\Attendance\Models\AttendanceRecord;
 use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\People\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Response;
 
 class AttendanceController extends Controller
 {

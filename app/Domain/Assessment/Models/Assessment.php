@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Assessment\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
+use App\Domain\Academics\Models\AcademicYear;
+use App\Domain\Academics\Models\GradingCategory;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Semester;
-use App\Domain\Academics\Models\GradingCategory;
-use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -61,6 +61,7 @@ class Assessment extends Model
     {
         return $this->hasMany(AssessmentScore::class);
     }
+
     protected function casts(): array
     {
         return [

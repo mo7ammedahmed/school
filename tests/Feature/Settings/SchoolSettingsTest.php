@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Settings;
 
-use App\Models\User;
-use App\Domain\Schools\Models\School;
 use App\Domain\Identity\Models\UserMembership;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -63,4 +63,3 @@ class SchoolSettingsTest extends TestCase
         ]);
     }
 }
-

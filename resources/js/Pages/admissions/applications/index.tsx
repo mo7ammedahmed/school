@@ -153,8 +153,7 @@ export default function AdmissionsApplicationsIndex({ applications, filters }: P
                                 className={`rounded px-3 py-1 text-sm ${
                                     link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                                 } disabled:opacity-50`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                                > {link.label}</button>
                         ))}
                     </div>
                 )}

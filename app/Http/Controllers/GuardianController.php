@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Models\Guardian;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class GuardianController extends Controller
 {
@@ -73,7 +72,7 @@ class GuardianController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:guardians,email,' . $guardian->id,
+            'email' => 'required|email|unique:guardians,email,'.$guardian->id,
             'phone' => 'required|string|max:20',
             'relationship' => 'required|in:father,mother,guardian,other',
             'occupation' => 'nullable|string|max:255',

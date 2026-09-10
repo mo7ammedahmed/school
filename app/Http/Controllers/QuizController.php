@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Learning\Models\Quiz;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
-use Illuminate\Http\Request;
+use App\Domain\Learning\Models\Quiz;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class QuizController extends Controller
 {

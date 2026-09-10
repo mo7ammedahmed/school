@@ -11,7 +11,5 @@ class PaymentReceived
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $paymentId, public int $invoiceId, public float $amount)
-    {
-    }
+    public function __construct(public int $paymentId, public int $invoiceId, public float $amount) {}
 }

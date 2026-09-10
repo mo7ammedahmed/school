@@ -11,7 +11,5 @@ class ReportCardGenerated
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $reportCardId, public int $studentId)
-    {
-    }
+    public function __construct(public int $reportCardId, public int $studentId) {}
 }

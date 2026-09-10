@@ -46,7 +46,7 @@ export default function GuardianChildSchedule({ child, timetable }: { child: { f
         <AppShell
             title="Child Schedule"
             breadcrumbs={[
-                { label: 'Guardian Portal', href: '/guardian' },
+                { label: 'Guardian Portal', href: '/guardian/dashboard' },
                 { label: 'Children', href: '/guardian/children' },
                 { label: `${child.first_name}'s Schedule` },
             ]}

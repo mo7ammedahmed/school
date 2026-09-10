@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Services;
 
-use Exception;
 use App\Domain\Finance\Models\Payment;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MoyasarGateway implements PaymentGatewayInterface
 {
     protected ?string $apiKey;
+
     protected ?string $secretKey;
+
     protected string $baseUrl;
 
     public function __construct()

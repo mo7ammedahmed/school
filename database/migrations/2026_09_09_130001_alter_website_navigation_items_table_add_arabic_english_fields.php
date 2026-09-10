@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -23,7 +23,7 @@ return new class extends Migration
             $arExpr = "label_translation ->> '$.ar'";
             $enExpr = "label_translation ->> '$.en'";
         } else {
-            throw new \Exception("Unsupported database driver: {$driver}");
+            throw new Exception("Unsupported database driver: {$driver}");
         }
 
         DB::table('website_navigation_items')->update([
@@ -56,7 +56,7 @@ return new class extends Migration
                 'label_translation' => DB::raw("json_object('ar', label_ar, 'en', label_en)"),
             ]);
         } else {
-            throw new \Exception("Unsupported database driver: {$driver}");
+            throw new Exception("Unsupported database driver: {$driver}");
         }
 
         Schema::table('website_navigation_items', function (Blueprint $table) {

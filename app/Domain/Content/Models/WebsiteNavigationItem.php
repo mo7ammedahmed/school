@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Append;
 use App\Domain\Schools\Models\School;
-use App\Domain\Content\Models\WebsiteNavigationMenu;
-use App\Domain\Content\Models\ContentPage;
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,7 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'dropdown',
     'settings',
 ])]
-#[Append([
+#[Appends([
     'label',
 ])]
 class WebsiteNavigationItem extends Model
@@ -54,6 +52,7 @@ class WebsiteNavigationItem extends Model
     public function getLabelAttribute(): string
     {
         $locale = app()->getLocale();
+
         return $this->{"label_$locale"} ?? $this->label_en;
     }
 }

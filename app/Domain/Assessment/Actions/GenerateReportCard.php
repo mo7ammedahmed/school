@@ -25,7 +25,7 @@ class GenerateReportCard
 
         $query = ExamResult::whereHas('exam', function ($q) use ($academicYearId, $semesterId) {
             $q->where('academic_year_id', $academicYearId)
-              ->when($semesterId, fn ($q) => $q->where('semester_id', $semesterId));
+                ->when($semesterId, fn ($q) => $q->where('semester_id', $semesterId));
         })->where('student_id', $student->id);
 
         $results = $query->get();
@@ -46,7 +46,7 @@ class GenerateReportCard
         $totalMax = $results->sum(fn ($r) => $r->exam->max_score);
         $gpa = $totalMax > 0 ? round(($totalScore / $totalMax) * 5, 2) : 0;
 
-        return DB::transaction(fn() => ReportCard::create([
+        return DB::transaction(fn () => ReportCard::create([
             'school_id' => $this->school->id,
             'student_id' => $student->id,
             'academic_year_id' => $academicYearId,

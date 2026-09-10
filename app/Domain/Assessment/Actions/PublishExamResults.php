@@ -32,6 +32,7 @@ class PublishExamResults
 
         return DB::transaction(function () use ($exam) {
             $exam->update(['is_published' => true]);
+
             return $exam->fresh();
         });
     }

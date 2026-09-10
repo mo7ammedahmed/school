@@ -16,6 +16,8 @@ use App\Domain\People\Models\Student;
 use App\Domain\Academics\Models\Enrollment;
 use App\Domain\Compliance\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -27,7 +29,7 @@ class AdmissionsController extends Controller
         $this->middleware('can:manage-admissions')->except([]);
     }
 
-    public function periods(Request $request)
+    public function periods(Request $request): Response
     {
         $periods = AdmissionPeriod::where('school_id', $request->session()->get('school_id'))
             ->withCount('applications')
@@ -39,7 +41,7 @@ class AdmissionsController extends Controller
         ]);
     }
 
-    public function applications(Request $request)
+    public function applications(Request $request): Response
     {
         $schoolId = $request->session()->get('school_id');
 
@@ -63,7 +65,7 @@ class AdmissionsController extends Controller
         ]);
     }
 
-    public function applicationShow(Request $request, int $id)
+    public function applicationShow(Request $request, int $id): Response
     {
         $application = AdmissionApplication::where('school_id', $request->session()->get('school_id'))
             ->with('events')
@@ -77,7 +79,7 @@ class AdmissionsController extends Controller
     /**
      * Review decision endpoint: approve or reject an application.
      */
-    public function applicationDecide(Request $request, int $id)
+    public function applicationDecide(Request $request, int $id): Response
     {
         $validated = $request->validate([
             'decision' => ['required', 'in:approved,rejected'],
@@ -113,7 +115,7 @@ class AdmissionsController extends Controller
      * Convert an approved application into Guardian + Student + Enrollment.
      * Runs in a transaction, prevents duplicate identity creation.
      */
-    public function applicationConvert(Request $request, int $id)
+    public function applicationConvert(Request $request, int $id): RedirectResponse
     {
         $application = AdmissionApplication::where('school_id', $request->session()->get('school_id'))
             ->where('status', 'approved')

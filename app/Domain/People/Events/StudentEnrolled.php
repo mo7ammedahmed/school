@@ -11,7 +11,5 @@ class StudentEnrolled
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $studentId, public int $sectionId, public int $academicYearId)
-    {
-    }
+    public function __construct(public int $studentId, public int $sectionId, public int $academicYearId) {}
 }

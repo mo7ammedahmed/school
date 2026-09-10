@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Student;
 
-use App\Http\Controllers\Controller;
+use App\Domain\Assessment\Models\ReportCard;
+use App\Domain\Attendance\Models\AttendanceRecord;
+use App\Domain\Finance\Models\Invoice;
+use App\Domain\Learning\Models\Assignment;
 use App\Domain\People\Models\Student;
 use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Attendance\Models\AttendanceRecord;
-use App\Domain\Assessment\Models\ReportCard;
-use App\Domain\Learning\Models\Assignment;
-use App\Domain\Finance\Models\Invoice;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class PortalController extends Controller
 {
@@ -25,7 +24,7 @@ class PortalController extends Controller
         $stats = [
             'attendance_rate' => $this->calculateAttendanceRate($student),
             'average_grade' => $this->calculateAverageGrade($student),
-            'pending_assignments' => Assignment::whereHas('offering.section.students', fn($q) => $q->where('students.id', $student->id))->count(),
+            'pending_assignments' => Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))->count(),
             'outstanding_fees' => (float) Invoice::where('student_id', $student->id)->whereNotIn('status', ['paid', 'voided'])->sum('total_amount'),
         ];
 
@@ -41,7 +40,7 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $timetable = TimetableEntry::whereHas('section.students', fn($q) => $q->where('students.id', $student->id))
+        $timetable = TimetableEntry::whereHas('section.students', fn ($q) => $q->where('students.id', $student->id))
             ->with(['offering.subject', 'teacher.user', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')
@@ -93,7 +92,7 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $assignments = Assignment::whereHas('offering.section.students', fn($q) => $q->where('students.id', $student->id))
+        $assignments = Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))
             ->with(['offering.subject'])
             ->latest()
             ->paginate(15);
@@ -135,6 +134,7 @@ class PortalController extends Controller
     private function calculateAverageGrade(Student $student): float
     {
         $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
+
         return $reportCard?->gpa ?? 0.0;
     }
 }

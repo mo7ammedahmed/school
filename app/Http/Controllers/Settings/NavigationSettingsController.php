@@ -43,18 +43,43 @@ class NavigationSettingsController extends Controller
             'labels.*.ar' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // Fetch existing labels to minimize database queries
+        $existingLabels = SchoolNavigationLabel::where('school_id', $school->id)
+            ->get()
+            ->keyBy('key');
+
+        $toUpdate = [];
+        $toCreate = [];
+
         foreach ($validated['labels'] as $key => $values) {
             if (! is_string($key) || $key === '') {
                 continue;
             }
 
-            SchoolNavigationLabel::updateOrCreate(
-                ['school_id' => $school->id, 'key' => $key],
-                [
-                    'name_en' => $values['en'] ?? null,
-                    'name_ar' => $values['ar'] ?? null,
-                ]
-            );
+            $labelData = [
+                'name_en' => $values['en'] ?? null,
+                'name_ar' => $values['ar'] ?? null,
+            ];
+
+            if ($existingLabels->has($key)) {
+                // Update existing label
+                $toUpdate[$key] = $labelData;
+            } else {
+                // Create new label
+                $toCreate[] = array_merge(['school_id' => $school->id, 'key' => $key], $labelData);
+            }
+        }
+
+        // Batch update existing labels
+        foreach ($toUpdate as $key => $labelData) {
+            SchoolNavigationLabel::where('school_id', $school->id)
+                ->where('key', $key)
+                ->update($labelData);
+        }
+
+        // Batch create new labels
+        if (!empty($toCreate)) {
+            SchoolNavigationLabel::insert($toCreate);
         }
 
         return redirect()->route('settings.navigation')->with('success', 'Navigation labels updated successfully.');

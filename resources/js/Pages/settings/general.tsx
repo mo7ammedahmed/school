@@ -11,8 +11,7 @@ export default function SettingsGeneral() {
             title="General Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
-                { label: 'General' },
+                { label: 'Settings' },
             ]}
         >
             <PageHeader

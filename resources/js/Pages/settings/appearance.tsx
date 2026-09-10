@@ -190,7 +190,7 @@ export default function AppearanceSettings({ appearance, themeConfig }: Appearan
             breadcrumbs={[
                 {
                     label: 'Settings',
-                    href: '/settings',
+                    href: '/settings/general',
                 },
                 {
                     label: 'Appearance',

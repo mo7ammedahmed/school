@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\Content\Models\News;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
 
 class NewsController extends Controller
 {
@@ -39,7 +39,7 @@ class NewsController extends Controller
         $article = News::create([
             'school_id' => session('school_id'),
             'title' => $validated['title'],
-            'slug' => Str::slug($validated['title']) . '-' . Str::lower(Str::random(4)),
+            'slug' => Str::slug($validated['title']).'-'.Str::lower(Str::random(4)),
             'excerpt' => Str::limit(strip_tags($validated['content']), 160),
             'content' => $validated['content'],
             'seo_metadata' => [],

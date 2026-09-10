@@ -11,7 +11,5 @@ class QuizCompleted
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $attemptId, public int $quizId, public int $studentId)
-    {
-    }
+    public function __construct(public int $attemptId, public int $quizId, public int $studentId) {}
 }

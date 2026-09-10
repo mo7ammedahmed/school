@@ -27,7 +27,7 @@ class SubmitAssignment
             throw new Exception('Student does not belong to this school.');
         }
 
-        if (!$assignment->is_published) {
+        if (! $assignment->is_published) {
             throw new Exception('Assignment is not yet published.');
         }
 
@@ -40,7 +40,7 @@ class SubmitAssignment
         }
 
         $isLate = $assignment->due_date && now()->greaterThan($assignment->due_date);
-        if ($isLate && !$assignment->allow_late_submission) {
+        if ($isLate && ! $assignment->allow_late_submission) {
             throw new Exception('Late submissions are not allowed for this assignment.');
         }
 
@@ -48,7 +48,7 @@ class SubmitAssignment
             throw new Exception('Submission must include content or a file attachment.');
         }
 
-        return DB::transaction(fn() => Submission::create([
+        return DB::transaction(fn () => Submission::create([
             'school_id' => $this->school->id,
             'assignment_id' => $assignment->id,
             'student_id' => $student->id,

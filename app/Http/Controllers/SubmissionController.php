@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Submission;
 use App\Domain\People\Models\Student;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Response;
 
 class SubmissionController extends Controller
 {

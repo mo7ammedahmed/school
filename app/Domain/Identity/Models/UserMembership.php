@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Identity\Models;
 
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Database\Factories\UserMembershipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
-use App\Domain\Schools\Models\School;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([

@@ -45,6 +45,6 @@ class LinkGuardianToStudent
             'notes' => $relationshipData['notes'] ?? null,
         ];
 
-        return DB::transaction(fn() => GuardianRelationship::create($data));
+        return DB::transaction(fn () => GuardianRelationship::create($data));
     }
 }

@@ -6,7 +6,7 @@ return [
     'app_name' => 'Aether School OS',
     'school_name' => 'Al Noor School',
     'tagline' => 'Modern School Management System',
-    
+
     // Navigation
     'dashboard' => 'Dashboard',
     'students' => 'Students',
@@ -41,7 +41,7 @@ return [
     'roles' => 'Roles',
     'audit_logs' => 'Audit Logs',
     'onboarding' => 'Onboarding',
-    
+
     // Actions
     'create' => 'Create',
     'edit' => 'Edit',
@@ -68,7 +68,7 @@ return [
     'reject' => 'Reject',
     'finalize' => 'Finalize',
     'issue' => 'Issue',
-    
+
     // Status
     'active' => 'Active',
     'inactive' => 'Inactive',
@@ -80,7 +80,7 @@ return [
     'unpaid' => 'Unpaid',
     'completed' => 'Completed',
     'cancelled' => 'Cancelled',
-    
+
     // Messages
     'success' => 'Success',
     'error' => 'Error',
@@ -96,7 +96,7 @@ return [
     'no_records_found' => 'No records found',
     'loading' => 'Loading...',
     'processing' => 'Processing...',
-    
+
     // Auth
     'login' => 'Login',
     'logout' => 'Logout',
@@ -108,13 +108,13 @@ return [
     'remember_me' => 'Remember Me',
     'sign_in' => 'Sign In',
     'sign_out' => 'Sign Out',
-    
+
     // Language
     'language' => 'Language',
     'switch_language' => 'Switch Language',
     'english' => 'English',
     'arabic' => 'Arabic',
-    
+
     // Common
     'name' => 'Name',
     'email' => 'Email',
@@ -136,14 +136,14 @@ return [
     'due_date' => 'Due Date',
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',
-    
+
     // Dashboard
     'welcome_back' => 'Welcome back',
     'overview' => 'Overview',
     'statistics' => 'Statistics',
     'recent_activity' => 'Recent Activity',
     'quick_actions' => 'Quick Actions',
-    
+
     // Settings
     'general_settings' => 'General Settings',
     'school_settings' => 'School Settings',
@@ -155,7 +155,7 @@ return [
     'light' => 'Light',
     'dark' => 'Dark',
     'system' => 'System',
-    
+
     // Public website
     'home' => 'Home',
     'about' => 'About',
@@ -171,7 +171,7 @@ return [
     'upcoming_events' => 'Upcoming Events',
     'latest_news' => 'Latest News',
     'get_in_touch' => 'Get In Touch',
-    
+
     // Errors
     'not_found' => 'Not Found',
     'unauthorized' => 'Unauthorized',
@@ -179,7 +179,7 @@ return [
     'server_error' => 'Server Error',
     'page_not_found' => 'The page you are looking for could not be found.',
     'return_home' => 'Return Home',
-    
+
     // Forms
     'required_field' => 'This field is required',
     'invalid_email' => 'Please enter a valid email address',

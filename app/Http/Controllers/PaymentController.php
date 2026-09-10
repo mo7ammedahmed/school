@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Exception;
-use App\Http\Requests\StorePaymentRequest;
-use App\Http\Requests\UpdatePaymentRequest;
+use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\PaymentAllocation;
-use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\People\Models\Student;
-use Inertia\Inertia;
+use App\Http\Requests\StorePaymentRequest;
+use App\Http\Requests\UpdatePaymentRequest;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
@@ -116,7 +116,7 @@ class PaymentController extends Controller
     private function generatePaymentNumber(int $schoolId): string
     {
         do {
-            $number = 'PAY-' . date('Y') . '-' . str_pad((string) random_int(1, 999999), 6, '0', STR_PAD_LEFT);
+            $number = 'PAY-'.date('Y').'-'.str_pad((string) random_int(1, 999999), 6, '0', STR_PAD_LEFT);
         } while (Payment::where('school_id', $schoolId)->where('payment_number', $number)->exists());
 
         return $number;

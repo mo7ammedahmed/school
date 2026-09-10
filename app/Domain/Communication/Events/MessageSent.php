@@ -11,7 +11,5 @@ class MessageSent
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $messageId, public int $conversationId, public int $senderId)
-    {
-    }
+    public function __construct(public int $messageId, public int $conversationId, public int $senderId) {}
 }

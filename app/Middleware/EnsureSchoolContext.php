@@ -15,7 +15,7 @@ class EnsureSchoolContext
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -25,11 +25,11 @@ class EnsureSchoolContext
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             session()->forget('school_id');
             $membership = $user->memberships()->where('is_active', true)->first();
 
-            if (!$membership) {
+            if (! $membership) {
                 return redirect()->route('school.select')->with('error', 'No active school membership found.');
             }
         }

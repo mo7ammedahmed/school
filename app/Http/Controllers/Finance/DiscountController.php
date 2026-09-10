@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
-use App\Models\Discount;
-use App\Models\Student;
-use App\Models\GradeLevel;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Discount;
+use App\Models\GradeLevel;
+use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DiscountController extends Controller
@@ -17,6 +17,7 @@ class DiscountController extends Controller
     public function index()
     {
         $discounts = Discount::latest()->paginate(15);
+
         return Inertia::render('finance/discounts/index', [
             'discounts' => $discounts,
         ]);
@@ -26,6 +27,7 @@ class DiscountController extends Controller
     {
         $students = Student::orderBy('name')->get();
         $gradeLevels = GradeLevel::orderBy('name_en')->get();
+
         return Inertia::render('finance/discounts/create', [
             'students' => $students,
             'gradeLevels' => $gradeLevels,
@@ -61,6 +63,7 @@ class DiscountController extends Controller
     {
         $students = Student::orderBy('name')->get();
         $gradeLevels = GradeLevel::orderBy('name_en')->get();
+
         return Inertia::render('finance/discounts/edit', [
             'discount' => $discount,
             'students' => $students,

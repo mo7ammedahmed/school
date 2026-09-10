@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Admissions\Services;
 
 use App\Domain\Admissions\Models\AdmissionApplication;
-use App\Domain\People\Models\User;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -76,9 +76,9 @@ class AdmissionReviewService
      */
     public function updatePriority(AdmissionApplication $application, string $priority, User $currentUser): void
     {
-        if (!array_key_exists($priority, $application::PRIORITY_LEVELS)) {
+        if (! array_key_exists($priority, $application::PRIORITY_LEVELS)) {
             throw ValidationException::withMessages([
-                'priority' => 'Invalid priority level.'
+                'priority' => 'Invalid priority level.',
             ]);
         }
 
@@ -102,7 +102,7 @@ class AdmissionReviewService
     {
         DB::transaction(function () use ($application, $notes, $currentUser) {
             $currentNotes = $application->internal_notes ?? '';
-            $newNotes = trim($currentNotes . "\n\n[$notes]") ?? '';
+            $newNotes = trim($currentNotes."\n\n[$notes]") ?? '';
 
             $application->update([
                 'internal_notes' => $newNotes,
@@ -134,7 +134,7 @@ class AdmissionReviewService
         $avgReviewTime = null;
         $reviewedApps = $applications->whereNotNull('reviewed_at');
         if ($reviewedApps->count() > 0) {
-            $totalSeconds = $reviewedApps->sum(fn($app) => $app->submitted_at ?
+            $totalSeconds = $reviewedApps->sum(fn ($app) => $app->submitted_at ?
                 $app->reviewed_at->getTimestamp() - $app->submitted_at->getTimestamp() : 0);
             $avgReviewTime = $totalSeconds / $reviewedApps->count();
         }
@@ -155,9 +155,9 @@ class AdmissionReviewService
      */
     public function bulkUpdateStatus(array $applicationIds, string $status, User $currentUser, ?string $notes = null): int
     {
-        if (!in_array($status, AdmissionApplication::STATUSES)) {
+        if (! in_array($status, AdmissionApplication::STATUSES)) {
             throw ValidationException::withMessages([
-                'status' => 'Invalid application status.'
+                'status' => 'Invalid application status.',
             ]);
         }
 
@@ -171,16 +171,17 @@ class AdmissionReviewService
                     'review_notes' => $status === 'approved' || $status === 'rejected' ? $notes : null,
                 ]);
 
-            // Create events for each updated application
-            foreach ($applicationIds as $id) {
-                $application = AdmissionApplication::find($id);
-                if ($application && in_array($application->status, ['submitted', 'under_review'])) {
-                    $application->events()->create([
-                        'user_id' => $currentUser->id,
-                        'event_type' => "bulk_{$status}",
-                        'notes' => $notes ?? "Bulk updated to {$status}",
-                    ]);
-                }
+            // Create events for each updated application - fetch all applications in one query to avoid N+1
+            $applications = AdmissionApplication::whereIn('id', $applicationIds)
+                ->whereIn('status', ['submitted', 'under_review'])
+                ->get();
+
+            foreach ($applications as $application) {
+                $application->events()->create([
+                    'user_id' => $currentUser->id,
+                    'event_type' => "bulk_{$status}",
+                    'notes' => $notes ?? "Bulk updated to {$status}",
+                ]);
             }
 
             return $updated;

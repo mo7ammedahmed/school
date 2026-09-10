@@ -31,7 +31,7 @@ export default function GuardianChildAssignments({ child, assignments }: { child
         <AppShell
             title="Child Assignments"
             breadcrumbs={[
-                { label: 'Guardian Portal', href: '/guardian' },
+                { label: 'Guardian Portal', href: '/guardian/dashboard' },
                 { label: 'Children', href: '/guardian/children' },
                 { label: `${child.first_name}'s Assignments` },
             ]}

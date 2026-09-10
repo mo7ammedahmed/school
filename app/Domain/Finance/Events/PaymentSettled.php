@@ -11,7 +11,5 @@ class PaymentSettled
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $paymentId, public string $status)
-    {
-    }
+    public function __construct(public int $paymentId, public string $status) {}
 }

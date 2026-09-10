@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use Inertia\Response;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class AttendanceSettingsController extends Controller
 {
@@ -43,7 +42,7 @@ class AttendanceSettingsController extends Controller
 
         $settingsPath = config_path('settings.php');
 
-        if (!file_exists($settingsPath)) {
+        if (! file_exists($settingsPath)) {
             file_put_contents($settingsPath, "<?php\n\nreturn [\n    'attendance' => [],\n];\n");
         }
 
@@ -51,7 +50,7 @@ class AttendanceSettingsController extends Controller
         $settings['attendance'] = $validated;
 
         $export = var_export($settings, true);
-        $content = "<?php\n\nreturn " . $export . ";\n";
+        $content = "<?php\n\nreturn ".$export.";\n";
 
         file_put_contents($settingsPath, $content);
 

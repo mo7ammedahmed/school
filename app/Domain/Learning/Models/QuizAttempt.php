@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Learning\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -39,6 +39,7 @@ class QuizAttempt extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
     protected function casts(): array
     {
         return [

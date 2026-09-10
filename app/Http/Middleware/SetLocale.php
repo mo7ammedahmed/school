@@ -19,7 +19,7 @@ class SetLocale
             ?? $request->getPreferredLanguage($this->availableLocales)
             ?? 'en';
 
-        if (!in_array($locale, $this->availableLocales, true)) {
+        if (! in_array($locale, $this->availableLocales, true)) {
             $locale = 'en';
         }
 

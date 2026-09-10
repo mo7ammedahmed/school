@@ -38,7 +38,7 @@ export default function GuardianChildAttendance({ child, records }: { child: { f
         <AppShell
             title="Child Attendance"
             breadcrumbs={[
-                { label: 'Guardian Portal', href: '/guardian' },
+                { label: 'Guardian Portal', href: '/guardian/dashboard' },
                 { label: 'Children', href: '/guardian/children' },
                 { label: `${child.first_name}'s Attendance` },
             ]}

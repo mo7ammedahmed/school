@@ -3,7 +3,6 @@
 namespace Database\Factories\Domain\Schools\Models;
 
 use App\Domain\Schools\Models\School;
-use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SchoolFactory extends Factory
@@ -14,7 +13,7 @@ class SchoolFactory extends Factory
     {
         return [
             'organization_id' => Organization::factory(),
-            'name' => fake()->company() . ' School',
+            'name' => fake()->company().' School',
             'slug' => fake()->slug(),
             'email' => fake()->optional()->safeEmail(),
             'phone' => fake()->optional()->phoneNumber(),

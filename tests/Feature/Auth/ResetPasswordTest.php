@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Auth;
 
-use Illuminate\Support\Facades\Password;
-use App\Models\User;
-use App\Domain\Schools\Models\School;
 use App\Domain\Identity\Models\UserMembership;
+use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -34,7 +34,7 @@ class ResetPasswordTest extends TestCase
 
         $token = Password::createToken($user);
 
-        $response = $this->get('/reset-password/' . $token . '?email=' . urlencode($user->email));
+        $response = $this->get('/reset-password/'.$token.'?email='.urlencode($user->email));
         $response->assertStatus(200);
     }
 
@@ -46,7 +46,7 @@ class ResetPasswordTest extends TestCase
 
         $token = Password::createToken($user);
 
-        $response = $this->post('/reset-password/' . $token, [
+        $response = $this->post('/reset-password/'.$token, [
             'token' => $token,
             'email' => 'test@example.com',
             'password' => 'NewPassword123!',

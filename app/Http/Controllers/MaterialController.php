@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Learning\Models\Material;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
+use App\Domain\Learning\Models\Material;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class MaterialController extends Controller
 {

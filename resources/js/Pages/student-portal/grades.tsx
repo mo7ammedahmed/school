@@ -27,7 +27,7 @@ export default function StudentGrades({ student, reportCards }: { student: { fir
         <AppShell
             title="My Grades"
             breadcrumbs={[
-                { label: 'Student Portal', href: '/student' },
+                { label: 'Student Portal', href: '/student/dashboard' },
                 { label: 'Grades' },
             ]}
         >

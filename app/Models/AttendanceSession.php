@@ -7,4 +7,3 @@ namespace App\Models;
 use App\Domain\Attendance\Models\AttendanceSession as DomainAttendanceSession;
 
 class AttendanceSession extends DomainAttendanceSession {}
-

@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Domain\Identity\Models\UserMembership;
-use App\Models\User;
 use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserMembershipFactory extends Factory

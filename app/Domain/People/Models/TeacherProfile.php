@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\People\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\Academics\Models\Offering;
-use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\Academics\Models\Section;
+use App\Domain\Attendance\Models\AttendanceSession;
+use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -64,6 +64,7 @@ class TeacherProfile extends Model
     {
         return $this->hasMany(Section::class, 'homeroom_teacher_id');
     }
+
     protected function casts(): array
     {
         return [

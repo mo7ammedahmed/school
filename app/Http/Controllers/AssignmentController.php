@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Learning\Models\Assignment;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Domain\Learning\Models\Assignment;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class AssignmentController extends Controller
 {

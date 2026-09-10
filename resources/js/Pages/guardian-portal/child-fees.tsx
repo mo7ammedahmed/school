@@ -43,7 +43,7 @@ export default function GuardianChildFees({ child, invoices }: { child: { first_
         <AppShell
             title="Child Fees"
             breadcrumbs={[
-                { label: 'Guardian Portal', href: '/guardian' },
+                { label: 'Guardian Portal', href: '/guardian/dashboard' },
                 { label: 'Children', href: '/guardian/children' },
                 { label: `${child.first_name}'s Fees` },
             ]}

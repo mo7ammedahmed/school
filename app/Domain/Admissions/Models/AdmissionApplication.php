@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Admissions\Models;
 
+use App\Models\User;
+use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\User;
 
 #[Fillable([
     'school_id',
@@ -114,6 +114,6 @@ class AdmissionApplication extends Model
 
     public function isConvertible(): bool
     {
-        return $this->status === 'approved' && !$this->converted_student_id;
+        return $this->status === 'approved' && ! $this->converted_student_id;
     }
 }

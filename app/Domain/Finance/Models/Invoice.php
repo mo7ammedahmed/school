@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\UseFactory;
-use App\Domain\Finance\Models\InvoiceLine;
-use App\Domain\Finance\Models\Payment;
-use App\Domain\Finance\Models\Refund;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use Database\Factories\InvoiceFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Database\Factories\InvoiceFactory;
 
 #[Fillable([
     'school_id',
@@ -41,8 +38,7 @@ use Database\Factories\InvoiceFactory;
 #[UseFactory(InvoiceFactory::class)]
 class Invoice extends Model
 {
-    use SoftDeletes, HasFactory;
-
+    use HasFactory, SoftDeletes;
 
     public function school(): BelongsTo
     {
@@ -68,6 +64,7 @@ class Invoice extends Model
     {
         return $this->hasMany(Refund::class);
     }
+
     protected function casts(): array
     {
         return [

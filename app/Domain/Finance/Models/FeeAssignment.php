@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\Finance\Models\InvoiceLine;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +43,7 @@ class FeeAssignment extends Model
     {
         return $this->hasMany(InvoiceLine::class);
     }
+
     protected function casts(): array
     {
         return [

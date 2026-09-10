@@ -22,7 +22,7 @@ class EnsureSchoolContext
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -48,11 +48,11 @@ class EnsureSchoolContext
 
         $isPlatformAdmin = $user->hasRole('super_admin');
 
-        if (!$hasMembership && !$isPlatformAdmin) {
+        if (! $hasMembership && ! $isPlatformAdmin) {
             return redirect()->route('school.select');
         }
 
-        if ($schoolId !== null && !School::find((int) $schoolId)) {
+        if ($schoolId !== null && ! School::find((int) $schoolId)) {
             session()->forget('school_id');
 
             return redirect()->route('school.select');

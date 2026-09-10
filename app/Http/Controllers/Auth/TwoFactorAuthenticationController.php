@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
 
 class TwoFactorAuthenticationController extends Controller
 {
@@ -23,7 +22,7 @@ class TwoFactorAuthenticationController extends Controller
             'code' => ['required', 'string'],
         ]);
 
-        if (!Auth::validateOtp($request->input('code'))) {
+        if (! Auth::validateOtp($request->input('code'))) {
             throw ValidationException::withMessages([
                 'code' => ['The provided code is invalid.'],
             ]);

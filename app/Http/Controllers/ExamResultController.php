@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\Assessment\Models\Exam;
 use App\Domain\Assessment\Models\ExamResult;
 use App\Domain\People\Models\Student;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class ExamResultController extends Controller
 {

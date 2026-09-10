@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
 use App\Domain\People\Models\TeacherProfile;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Response;
 
 class TeacherController extends Controller
 {
@@ -73,9 +72,9 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:teacher_profiles,email,' . $teacher->id,
+            'email' => 'nullable|email|max:255|unique:teacher_profiles,email,'.$teacher->id,
             'phone' => 'nullable|string|max:20',
-            'employee_id' => 'nullable|string|max:255|unique:teacher_profiles,employee_id,' . $teacher->id,
+            'employee_id' => 'nullable|string|max:255|unique:teacher_profiles,employee_id,'.$teacher->id,
             'specialization' => 'nullable|string|max:255',
             'qualification' => 'nullable|string|max:255',
             'hire_date' => 'nullable|date',

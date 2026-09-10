@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Domain\Academics\Models\GradeLevel;
+use App\Domain\Finance\Models\FeeStructure;
+use App\Domain\Finance\Models\FeeType;
 use App\Http\Requests\StoreFeeStructureRequest;
 use App\Http\Requests\UpdateFeeStructureRequest;
-use App\Domain\Finance\Models\FeeStructure;
-use App\Domain\Academics\Models\GradeLevel;
-use App\Domain\Finance\Models\FeeType;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class FeeStructureController extends Controller
 {
@@ -27,7 +27,7 @@ class FeeStructureController extends Controller
 
         $feeStructures = $query->get();
 
-        $feeStructures->transform(fn($fee) => [
+        $feeStructures->transform(fn ($fee) => [
             'id' => $fee->id,
             'name' => $fee->name,
             'fee_type' => ['name' => $fee->feeType->name],

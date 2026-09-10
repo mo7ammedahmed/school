@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Finance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Domain\Finance\Models\Payment;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,6 +35,7 @@ class GatewayTransaction extends Model
     {
         return $this->belongsTo(Payment::class);
     }
+
     protected function casts(): array
     {
         return [

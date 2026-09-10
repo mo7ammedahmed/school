@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Scheduling\Models\TimetableEntry;
-use App\Domain\Scheduling\Models\Room;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\People\Models\TeacherProfile;
-use Illuminate\Http\Request;
+use App\Domain\Scheduling\Models\Room;
+use App\Domain\Scheduling\Models\TimetableEntry;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class TimetableController extends Controller
 {
@@ -208,7 +208,7 @@ class TimetableController extends Controller
             $room = Room::create([
                 'school_id' => session('school_id'),
                 'name' => $roomName,
-                'code' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $roomName), 0, 6)) . '-' . random_int(100, 999),
+                'code' => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $roomName), 0, 6)).'-'.random_int(100, 999),
                 'room_type' => 'classroom',
                 'capacity' => 30,
             ]);

@@ -37,18 +37,27 @@ class AllocatePayment
         $created = [];
 
         return DB::transaction(function () use ($payment, $allocations, &$created): array {
+            // Validate all allocations first
             foreach ($allocations as $allocation) {
-                if (empty($allocation['invoice_id']) || !isset($allocation['amount']) || $allocation['amount'] <= 0) {
+                if (empty($allocation['invoice_id']) || ! isset($allocation['amount']) || $allocation['amount'] <= 0) {
                     throw new Exception('Each allocation must have an invoice_id and a positive amount.');
                 }
+            }
 
-                $invoice = Invoice::where('school_id', $this->school->id)
-                    ->where('id', $allocation['invoice_id'])
-                    ->first();
+            // Fetch all invoices in one query to avoid N+1 problem
+            $invoiceIds = array_column($allocations, 'invoice_id');
+            $invoices = Invoice::where('school_id', $this->school->id)
+                ->whereIn('id', $invoiceIds)
+                ->get()
+                ->keyBy('id');
 
-                if (!$invoice) {
-                    throw new Exception("Invoice not found for allocation.");
+            foreach ($allocations as $allocation) {
+                $invoiceId = $allocation['invoice_id'];
+                if (! $invoices->has($invoiceId)) {
+                    throw new Exception('Invoice not found for allocation.');
                 }
+
+                $invoice = $invoices->get($invoiceId);
 
                 $paymentAllocation = PaymentAllocation::create([
                     'school_id' => $this->school->id,

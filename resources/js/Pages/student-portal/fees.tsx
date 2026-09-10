@@ -40,7 +40,7 @@ export default function StudentFees({ student, invoices }: { student: { first_na
         <AppShell
             title="My Fees"
             breadcrumbs={[
-                { label: 'Student Portal', href: '/student' },
+                { label: 'Student Portal', href: '/student/dashboard' },
                 { label: 'Fees' },
             ]}
         >

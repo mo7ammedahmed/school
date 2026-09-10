@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Inertia\Response;
-use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\Subject;
+use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\People\Models\TeacherProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Response;
 
 class AttendanceSessionController extends Controller
 {

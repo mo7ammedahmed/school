@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Models\News;
-use Inertia\Response;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class AboutController
 {

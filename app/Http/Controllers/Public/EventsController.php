@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Models\Event;
-use Inertia\Response;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class EventsController
 {

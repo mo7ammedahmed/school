@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Finance;
 
 use App\Domain\Finance\Actions\CreateInvoice;
-use App\Domain\Schools\Models\School;
-use App\Domain\People\Models\Student;
 use App\Domain\Finance\Models\Invoice;
+use App\Domain\People\Models\Student;
+use App\Domain\Schools\Models\School;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

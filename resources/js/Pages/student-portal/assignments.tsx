@@ -28,7 +28,7 @@ export default function StudentAssignments({ student, assignments }: { student: 
         <AppShell
             title="My Assignments"
             breadcrumbs={[
-                { label: 'Student Portal', href: '/student' },
+                { label: 'Student Portal', href: '/student/dashboard' },
                 { label: 'Assignments' },
             ]}
         >

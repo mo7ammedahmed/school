@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Learning\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Schools\Models\School;
-use App\Domain\Learning\Models\QuizAttempt;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -74,6 +73,7 @@ class Quiz extends Model
     {
         return $this->hasMany(QuizAttempt::class);
     }
+
     protected function casts(): array
     {
         return [

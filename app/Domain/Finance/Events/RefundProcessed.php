@@ -11,7 +11,5 @@ class RefundProcessed
 {
     use Dispatchable, SerializesModels;
 
-    public function __construct(public int $refundId, public int $paymentId, public float $amount)
-    {
-    }
+    public function __construct(public int $refundId, public int $paymentId, public float $amount) {}
 }

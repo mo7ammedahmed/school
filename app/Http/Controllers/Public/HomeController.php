@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Models\News;
 use App\Models\Event;
-use Inertia\Response;
-use Inertia\Inertia;
+use App\Models\News;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController
 {
