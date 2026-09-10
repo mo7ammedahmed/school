@@ -11,7 +11,7 @@ export default function FinanceRefundsShow({ refund }: { refund: { id: number; a
             title="Refund Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Refunds', href: '/finance/refunds' },
                 { label: `Refund #${refund.id}` },
             ]}

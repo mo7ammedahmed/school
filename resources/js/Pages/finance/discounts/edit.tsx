@@ -13,7 +13,7 @@ export default function FinanceDiscountsEdit({ discount }: { discount: { id: num
             title="Edit Discount"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Discounts', href: '/finance/discounts' },
                 { label: 'Edit Discount' },
             ]}

@@ -13,7 +13,7 @@ export default function NewsCreate() {
             title="New Article"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'News', href: '/news' },
+                { label: 'News', href: '/content/news' },
                 { label: 'New Article' },
             ]}
         >

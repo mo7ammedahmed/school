@@ -13,7 +13,7 @@ export default function UsersEdit({ user }: { user: { id: number; name: string; 
             title="Edit User"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings' },
+                { label: 'Settings', href: '/settings/general' },
                 { label: 'Users', href: '/settings/users' },
                 { label: 'Edit User' },
             ]}

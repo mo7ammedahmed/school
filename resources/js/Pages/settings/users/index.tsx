@@ -50,7 +50,7 @@ export default function UsersIndex({ users }: { users: { id: number; name: strin
             title="Users"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings' },
+                { label: 'Settings', href: '/settings/general' },
                 { label: 'Users' },
             ]}
         >

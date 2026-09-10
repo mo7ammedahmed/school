@@ -46,7 +46,7 @@ export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStruct
             title="Fee Structures"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Fee Structures' },
             ]}
         >

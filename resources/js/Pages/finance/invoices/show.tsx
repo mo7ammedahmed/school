@@ -11,7 +11,7 @@ export default function FinanceInvoicesShow({ invoice }: { invoice: { id: number
             title="Invoice Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Invoices', href: '/finance/invoices' },
                 { label: invoice.invoice_number },
             ]}

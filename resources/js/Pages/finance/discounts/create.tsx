@@ -13,7 +13,7 @@ export default function FinanceDiscountsCreate() {
             title="Create Discount"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Discounts', href: '/finance/discounts' },
                 { label: 'Create Discount' },
             ]}

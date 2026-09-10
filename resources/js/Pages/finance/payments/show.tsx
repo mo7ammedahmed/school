@@ -11,7 +11,7 @@ export default function FinancePaymentsShow({ payment }: { payment: { id: number
             title="Payment Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Payments', href: '/finance/payments' },
                 { label: payment.payment_number },
             ]}

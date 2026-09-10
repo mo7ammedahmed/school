@@ -53,7 +53,7 @@ export default function FinanceRefundsIndex({ refunds }: { refunds: { id: number
             title="Refunds"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Refunds' },
             ]}
         >

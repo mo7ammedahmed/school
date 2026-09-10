@@ -13,7 +13,7 @@ export default function FinancePaymentsCreate({ invoices }: { invoices: { id: nu
             title="Create Payment"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Payments', href: '/finance/payments' },
                 { label: 'Create Payment' },
             ]}

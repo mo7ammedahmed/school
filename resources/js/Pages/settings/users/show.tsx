@@ -13,7 +13,7 @@ export default function UsersShow({ user }: { user: { id: number; name: string; 
             title={user.name}
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings' },
+                { label: 'Settings', href: '/settings/general' },
                 { label: 'Users', href: '/settings/users' },
                 { label: user.name },
             ]}

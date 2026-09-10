@@ -13,7 +13,7 @@ export default function FinanceInvoicesEdit({ invoice }: { invoice: { id: number
             title="Edit Invoice"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Invoices', href: '/finance/invoices' },
                 { label: 'Edit Invoice' },
             ]}

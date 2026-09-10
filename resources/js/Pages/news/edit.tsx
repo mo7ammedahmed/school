@@ -13,7 +13,7 @@ export default function NewsEdit({ article }: { article: { id: number; title: st
             title="Edit Article"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'News', href: '/news' },
+                { label: 'News', href: '/content/news' },
                 { label: 'Edit Article' },
             ]}
         >

@@ -13,7 +13,7 @@ export default function FinanceFeeStructuresEdit({ feeStructure, gradeLevels, fe
             title="Edit Fee Structure"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Fee Structures', href: '/finance/fee-structures' },
                 { label: 'Edit Fee Structure' },
             ]}

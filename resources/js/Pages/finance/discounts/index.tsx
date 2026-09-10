@@ -57,7 +57,7 @@ export default function FinanceDiscountsIndex({ discounts }: { discounts: { id: 
             title="Discounts"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Discounts' },
             ]}
         >

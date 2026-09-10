@@ -51,7 +51,7 @@ export default function FinanceOfflinePayments({ payments }: { payments: { id: n
             title="Offline Payments"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Payments', href: '/finance/payments' },
                 { label: 'Offline Payments' },
             ]}

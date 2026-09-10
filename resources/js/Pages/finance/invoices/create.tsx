@@ -13,7 +13,7 @@ export default function FinanceInvoicesCreate({ students }: { students: { id: nu
             title="Create Invoice"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Invoices', href: '/finance/invoices' },
                 { label: 'Create Invoice' },
             ]}

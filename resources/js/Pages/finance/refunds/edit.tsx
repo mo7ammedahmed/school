@@ -13,7 +13,7 @@ export default function FinanceRefundsEdit({ refund }: { refund: { id: number; a
             title="Edit Refund"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Refunds', href: '/finance/refunds' },
                 { label: 'Edit Refund' },
             ]}

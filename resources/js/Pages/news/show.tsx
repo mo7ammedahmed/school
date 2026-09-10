@@ -11,7 +11,7 @@ export default function NewsShow({ article }: { article: { id: number; title: st
             title="Article Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'News', href: '/news' },
+                { label: 'News', href: '/content/news' },
                 { label: article.title },
             ]}
         >

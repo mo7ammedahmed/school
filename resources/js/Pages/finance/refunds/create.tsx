@@ -13,7 +13,7 @@ export default function FinanceRefundsCreate({ invoices }: { invoices: { id: num
             title="Create Refund"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Refunds', href: '/finance/refunds' },
                 { label: 'Create Refund' },
             ]}

@@ -13,7 +13,7 @@ export default function UsersCreate() {
             title="New User"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings' },
+                { label: 'Settings', href: '/settings/general' },
                 { label: 'Users', href: '/settings/users' },
                 { label: 'New User' },
             ]}

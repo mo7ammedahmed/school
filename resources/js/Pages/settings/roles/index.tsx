@@ -28,7 +28,7 @@ export default function RolesIndex({ roles }: { roles: { id: number; name: strin
             title="Roles"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings' },
+                { label: 'Settings', href: '/settings/general' },
                 { label: 'Roles' },
             ]}
         >

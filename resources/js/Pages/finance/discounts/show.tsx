@@ -11,7 +11,7 @@ export default function FinanceDiscountsShow({ discount }: { discount: { id: num
             title="Discount Details"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance' },
+                { label: 'Finance', href: '/finance/invoices' },
                 { label: 'Discounts', href: '/finance/discounts' },
                 { label: discount.name },
             ]}
