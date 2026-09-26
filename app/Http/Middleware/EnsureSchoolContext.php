@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Laravel\Head\Enums\OgType;
+use Laravel\Head\Facades\Head;
 use App\Domain\Schools\Models\School;
 use Closure;
 use Illuminate\Http\Request;

@@ -32,6 +32,8 @@ class AppearanceSettingsController extends Controller
                 'favicon_path' => $school->favicon_path,
             ],
             'themeConfig' => $school->getThemeConfig(),
+            'themeModes' => $school->getThemeModes(),
+            'userThemeMode' => auth()->user()->theme ?? 'system',
         ]);
     }
 
@@ -77,6 +79,19 @@ class AppearanceSettingsController extends Controller
             'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
             'favicon' => 'nullable|image|mimes:png,ico,webp|max:512',
             'theme_config' => 'sometimes|string|json',
+            // Theme mode settings (light/dark palettes)
+            'light' => 'sometimes|array',
+            'dark' => 'sometimes|array',
+            'light.accent' => ['sometimes', 'required_with:light', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'light.background' => ['sometimes', 'required_with:light', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'light.surface' => ['sometimes', 'required_with:light', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'light.text' => ['sometimes', 'required_with:light', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'light.muted' => ['sometimes', 'required_with:light', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark.accent' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark.background' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark.surface' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark.text' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark.muted' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $oldLogo = $school->logo_path;
@@ -116,6 +131,14 @@ class AppearanceSettingsController extends Controller
         // If theme_config is provided, set the theme configuration
         if ($themeConfig !== null) {
             $school->setThemeConfig($themeConfig);
+        }
+
+        // Update theme modes if provided
+        if ($request->has('light') && $request->has('dark')) {
+            $school->setThemeModes([
+                'light' => $request->input('light'),
+                'dark' => $request->input('dark'),
+            ]);
         }
 
         // Update user's theme preference

@@ -26,7 +26,7 @@ class SecurityHeaders
 
         $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'".$viteOrigin;
         $styleSrc = "'self' 'unsafe-inline'".$viteOrigin." $fontOrigin";
-        $fontSrc = "'self' https:".$viteOrigin." $fontOrigin";
+        $fontSrc = "'self' https: data:".$viteOrigin." $fontOrigin";
         $viteWebSocketOrigin = $isLocal ? ' ws://localhost:'.$this->vitePort() : '';
         $connectSrc = "'self'".$viteOrigin.$viteWebSocketOrigin;
 
