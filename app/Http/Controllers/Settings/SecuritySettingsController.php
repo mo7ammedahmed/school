@@ -17,7 +17,7 @@ class SecuritySettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'password_min_length' => 8,
         'password_expiry_days' => 90,
         'password_require_uppercase' => true,

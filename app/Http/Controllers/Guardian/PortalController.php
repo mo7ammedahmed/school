@@ -24,7 +24,7 @@ class PortalController extends Controller
 
         $children = $guardian->students()->get();
 
-        $childrenSummary = $children->map(fn ($child) => [
+        $childrenSummary = $children->map(fn (Student $child) => [
             'id' => $child->id,
             'name' => $child->first_name.' '.$child->last_name,
             'attendance_rate' => $this->calculateAttendanceRate($child),

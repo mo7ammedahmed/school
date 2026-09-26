@@ -14,6 +14,7 @@
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
         @inertiaHead
+        @head
     </head>
     <body>
         @inertia

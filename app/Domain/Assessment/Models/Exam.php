@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Assessment\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Semester;
@@ -33,36 +35,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'questions',
     'is_published',
 ])]
+#[Appends(['subject', 'section', 'total_marks', 'passing_marks', 'status'])]
 class Exam extends Model
 {
     use SoftDeletes;
-
-    /** Legacy presentation aliases kept for the admin pages (source fields live on the offering + exam). */
-    protected $appends = ['subject', 'section', 'total_marks', 'passing_marks', 'status'];
-
-    public function getSubjectAttribute()
+    protected function subject(): Attribute
     {
-        return $this->offering?->subject;
+        return Attribute::make(get: fn() => $this->offering?->subject);
     }
-
-    public function getSectionAttribute()
+    protected function section(): Attribute
     {
-        return $this->offering?->section;
+        return Attribute::make(get: fn() => $this->offering?->section);
     }
-
-    public function getTotalMarksAttribute(): ?float
+    protected function totalMarks(): Attribute
     {
-        return $this->max_score !== null ? (float) $this->max_score : null;
+        return Attribute::make(get: fn() => $this->max_score !== null ? (float) $this->max_score : null);
     }
-
-    public function getPassingMarksAttribute(): ?float
+    protected function passingMarks(): Attribute
     {
-        return $this->max_score !== null ? (float) $this->max_score * 0.5 : null;
+        return Attribute::make(get: fn() => $this->max_score !== null ? (float) $this->max_score * 0.5 : null);
     }
-
-    public function getStatusAttribute(): string
+    protected function status(): Attribute
     {
-        return $this->is_published ? 'published' : 'draft';
+        return Attribute::make(get: fn() => $this->is_published ? 'published' : 'draft');
     }
 
     public function school(): BelongsTo

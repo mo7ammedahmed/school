@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Throwable;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
@@ -28,7 +29,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 class TimetableController extends Controller
 {
     /** School week: Sunday through Thursday. */
-    private const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
+    private const array DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
 
     public function __construct(private readonly TimetableConflictDetector $conflicts) {}
 
@@ -763,7 +764,7 @@ class TimetableController extends Controller
     {
         try {
             return $date !== '' ? Carbon::parse($date)->startOfMonth() : Carbon::today()->startOfMonth();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return Carbon::today()->startOfMonth();
         }
     }

@@ -28,7 +28,7 @@ class GatewaySettings
     public const CHANNELS = ['email', 'sms', 'inapp'];
 
     /** Keys that must never leave the server in plaintext. */
-    private const SECRETS = ['secret_key', 'webhook_secret'];
+    private const array SECRETS = ['secret_key', 'webhook_secret'];
 
     /** @var array<string, mixed>|null */
     private ?array $values = null;
@@ -64,9 +64,7 @@ class GatewaySettings
      */
     public function all(): array
     {
-        if ($this->values === null) {
-            $this->values = $this->load();
-        }
+        $this->values ??= $this->load();
 
         return $this->values;
     }

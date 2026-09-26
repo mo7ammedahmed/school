@@ -18,15 +18,15 @@ use Illuminate\Support\Collection;
  * obeys the school's provider, key and model, and it never overwrites a value an
  * operator typed.
  */
-final class BilingualBackfill
+final readonly class BilingualBackfill
 {
     /** Stop the run after this many failures so a broken key cannot hammer the provider. */
-    private const MAX_FAILURES = 3;
+    private const int MAX_FAILURES = 3;
 
     /** Rows read per query so a large table does not load at once. */
-    private const CHUNK = 200;
+    private const int CHUNK = 200;
 
-    public function __construct(private readonly TranslationService $translations) {}
+    public function __construct(private TranslationService $translations) {}
 
     /**
      * @return array{

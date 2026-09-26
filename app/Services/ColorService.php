@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 class ColorService
@@ -44,15 +46,15 @@ class ColorService
 
         $r = ($rsrgb <= 0.03928)
             ? $rsrgb / 12.92
-            : pow(($rsrgb + 0.055) / 1.055, 2.4);
+            : (($rsrgb + 0.055) / 1.055) ** 2.4;
 
         $g = ($gsrgb <= 0.03928)
             ? $gsrgb / 12.92
-            : pow(($gsrgb + 0.055) / 1.055, 2.4);
+            : (($gsrgb + 0.055) / 1.055) ** 2.4;
 
         $b = ($bsrgb <= 0.03928)
             ? $bsrgb / 12.92
-            : pow(($bsrgb + 0.055) / 1.055, 2.4);
+            : (($bsrgb + 0.055) / 1.055) ** 2.4;
 
         return 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;
     }

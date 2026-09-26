@@ -37,9 +37,7 @@ class SchoolSettingsStore
      */
     public function all(): array
     {
-        if ($this->values === null) {
-            $this->values = $this->load();
-        }
+        $this->values ??= $this->load();
 
         return $this->values;
     }

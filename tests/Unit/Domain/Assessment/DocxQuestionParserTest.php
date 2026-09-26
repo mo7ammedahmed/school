@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Assessment;
 
+use RuntimeException;
 use App\Domain\Assessment\Services\DocxQuestionParser;
 use PHPUnit\Framework\TestCase;
 
@@ -127,7 +128,7 @@ class DocxQuestionParserTest extends TestCase
         file_put_contents($path, 'plain text, not a zip archive');
 
         try {
-            $this->expectException(\RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $this->parser->extractText($path);
         } finally {
             @unlink($path);

@@ -27,10 +27,10 @@ use Illuminate\Support\Carbon;
  * read. All comparisons are done with datetime bounds rather than SQL date
  * functions, so the same queries work on MySQL and SQLite (Decision 4).
  */
-final class AcademicCalendar
+final readonly class AcademicCalendar
 {
     /** Types that can be requested from `between()`. */
-    public const TYPES = [
+    public const array TYPES = [
         'holiday',
         'closure',
         'term_start',
@@ -46,7 +46,7 @@ final class AcademicCalendar
         'announcement',
     ];
 
-    public function __construct(private readonly int $schoolId) {}
+    public function __construct(private int $schoolId) {}
 
     /**
      * @param  list<string>  $only  Limit to these item types.
@@ -72,9 +72,7 @@ final class AcademicCalendar
             ));
         }
 
-        usort($items, static function (CalendarItem $a, CalendarItem $b): int {
-            return [$a->date, $a->title] <=> [$b->date, $b->title];
-        });
+        usort($items, static fn(CalendarItem $a, CalendarItem $b): int => [$a->date, $a->title] <=> [$b->date, $b->title]);
 
         return $items;
     }

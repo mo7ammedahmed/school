@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
@@ -41,11 +42,12 @@ class Section extends Model
     /** @use HasFactory<SectionFactory> */
     use HasFactory, SoftDeletes;
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 
     public function school(): BelongsTo

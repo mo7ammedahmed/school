@@ -25,6 +25,9 @@ class SchoolSettingsController extends Controller
                 'name' => $school->name,
                 'name_en' => $school->name_en,
                 'name_ar' => $school->name_ar,
+                'description' => $school->description_en, // Default to English for now, could be localized
+                'description_en' => $school->description_en,
+                'description_ar' => $school->description_ar,
                 'email' => $school->email,
                 'phone' => $school->phone,
                 'address' => $school->address,
@@ -49,6 +52,8 @@ class SchoolSettingsController extends Controller
         $validated = $request->validate([
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'description_en' => ['nullable', 'string'],
+            'description_ar' => ['nullable', 'string'],
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
@@ -61,6 +66,7 @@ class SchoolSettingsController extends Controller
         // Fill whichever language was left blank, then drop the upload key so it
         // is never written to a column that does not exist.
         $validated = $this->translateBilingual($validated, ['name'], $school->id);
+        $validated = $this->translateBilingual($validated, ['description'], $school->id);
 
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');

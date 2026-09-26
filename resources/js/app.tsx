@@ -133,4 +133,5 @@ createInertiaApp({
     progress: {
         color: '#046A38',
     },
+    serverHead: true,
 });

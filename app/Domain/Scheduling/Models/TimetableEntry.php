@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Scheduling\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
@@ -29,16 +31,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'end_time',
     'is_published',
 ])]
+#[Appends(['subject'])]
 class TimetableEntry extends Model
 {
     use SoftDeletes;
-
-    /** Subject is surfaced through the owning offering (section/teacher/room live directly on the entry). */
-    protected $appends = ['subject'];
-
-    public function getSubjectAttribute()
+    protected function subject(): Attribute
     {
-        return $this->offering?->subject;
+        return Attribute::make(get: fn() => $this->offering?->subject);
     }
 
     public function school(): BelongsTo

@@ -25,7 +25,7 @@ class SmsSender
 
     public const PROVIDERS = ['log', 'unifonic', 'twilio'];
 
-    private const SECRETS = ['api_key', 'auth_token'];
+    private const array SECRETS = ['api_key', 'auth_token'];
 
     /** @var array<string, mixed>|null */
     private ?array $values = null;

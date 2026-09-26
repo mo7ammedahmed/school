@@ -41,13 +41,11 @@ class TranslationTest extends TestCase
 
         $response->assertOk()->assertJson(['translation' => 'الرياضيات']);
 
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), '/chat/completions')
-                && $request->hasHeader('Authorization', 'Bearer nvapi-deployment-key')
-                && str_contains($request['messages'][1]['content'], 'Mathematics')
-                && str_contains($request['messages'][1]['content'], 'English to Arabic')
-                && str_contains($request['messages'][0]['content'], 'Arabic');
-        });
+        Http::assertSent(fn($request) => str_contains($request->url(), '/chat/completions')
+            && $request->hasHeader('Authorization', 'Bearer nvapi-deployment-key')
+            && str_contains($request['messages'][1]['content'], 'Mathematics')
+            && str_contains($request['messages'][1]['content'], 'English to Arabic')
+            && str_contains($request['messages'][0]['content'], 'Arabic'));
     }
 
     public function test_the_translate_endpoint_requires_authentication(): void

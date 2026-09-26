@@ -17,7 +17,7 @@ class NotificationSettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'email_enrollment' => true,
         'email_attendance' => true,
         'email_exam' => true,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Finance\Models\FeeStructure;
 use App\Domain\Schools\Models\School;
 use Database\Factories\Domain\Academics\Models\GradeLevelFactory;
@@ -33,11 +34,12 @@ class GradeLevel extends Model
     /** @use HasFactory<GradeLevelFactory> */
     use HasFactory, SoftDeletes;
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 
     public function school(): BelongsTo

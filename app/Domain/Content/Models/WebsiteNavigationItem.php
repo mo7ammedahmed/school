@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -49,10 +50,11 @@ class WebsiteNavigationItem extends Model
         return $this->belongsTo(ContentPage::class);
     }
 
-    public function getLabelAttribute(): string
+    protected function label(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"label_$locale"} ?? $this->label_en ?? $this->label_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"label_$locale"} ?? $this->label_en ?? $this->label_ar ?? '';
+        });
     }
 }

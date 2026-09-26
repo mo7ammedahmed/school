@@ -17,7 +17,7 @@ class LocalizationSettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'default_locale' => 'en',
         'default_timezone' => 'Asia/Riyadh',
         'date_format' => 'Y-m-d',

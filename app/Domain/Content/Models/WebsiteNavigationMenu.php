@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -36,10 +37,11 @@ class WebsiteNavigationMenu extends Model
         return $this->hasMany(WebsiteNavigationItem::class);
     }
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 }

@@ -17,7 +17,7 @@ class AttendanceSettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'late_threshold_minutes' => 15,
         'excused_types' => ['sick', 'excused'],
     ];
@@ -50,7 +50,7 @@ class AttendanceSettingsController extends Controller
         ]);
 
         $types = array_values(array_filter(array_map(
-            static fn (string $type): string => trim($type),
+            trim(...),
             explode(',', (string) ($validated['excused_types'] ?? '')),
         )));
 

@@ -46,11 +46,9 @@ class PaymentSettlementTest extends TestCase
         $this->assertEqualsWithDelta(1150.0, (float) $invoice->amount_paid, 0.001);
         $this->assertNotNull($invoice->paid_at);
 
-        Mail::assertSent(InvoiceMail::class, function (InvoiceMail $mail) use ($invoice, $guardian) {
-            return $mail->kind === InvoiceMail::KIND_RECEIPT
-                && $mail->invoice->id === $invoice->id
-                && $mail->hasTo($guardian->email);
-        });
+        Mail::assertSent(InvoiceMail::class, fn(InvoiceMail $mail) => $mail->kind === InvoiceMail::KIND_RECEIPT
+            && $mail->invoice->id === $invoice->id
+            && $mail->hasTo($guardian->email));
     }
 
     public function test_a_partial_webhook_payment_leaves_the_invoice_partially_paid(): void

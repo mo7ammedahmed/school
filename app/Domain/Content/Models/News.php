@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -25,21 +27,17 @@ use Illuminate\Support\Carbon;
     'is_published',
     'published_at',
 ])]
+#[Appends(['category', 'publish_date'])]
 class News extends Model
 {
     use SoftDeletes;
-
-    /** Legacy admin-page aliases (the v2 schema tracks publish state + time explicitly). */
-    protected $appends = ['category', 'publish_date'];
-
-    public function getCategoryAttribute(): string
+    protected function category(): Attribute
     {
-        return 'updates';
+        return Attribute::make(get: fn() => 'updates');
     }
-
-    public function getPublishDateAttribute()
+    protected function publishDate(): Attribute
     {
-        return $this->published_at?->toDateString();
+        return Attribute::make(get: fn() => $this->published_at?->toDateString());
     }
 
     public function school(): BelongsTo

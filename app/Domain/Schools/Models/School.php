@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Schools\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Identity\Models\UserMembership;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'organization_id',
     'name_ar',
     'name_en',
+    'description_ar',
+    'description_en',
     'slug',
     'email',
     'phone',
@@ -48,11 +51,12 @@ class School extends Model
     /** @use HasFactory<SchoolFactory> */
     use HasFactory, SoftDeletes;
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 
     public function organization(): BelongsTo

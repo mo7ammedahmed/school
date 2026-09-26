@@ -26,7 +26,7 @@ class ReviewController extends Controller
     public function index(Request $request): Response
     {
         $schoolId = $request->session()->get('school_id');
-        $user = $request->user();
+        $request->user();
 
         $filters = $request->only(['status', 'assigned_to', 'priority', 'search']);
         $applications = $this->reviewService->getReviewQueue($schoolId, $filters);

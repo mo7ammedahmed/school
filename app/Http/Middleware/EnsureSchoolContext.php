@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use Laravel\Head\Enums\OgType;
 use App\Domain\Schools\Models\School;
 use Closure;
 use Illuminate\Http\Request;
@@ -64,6 +65,20 @@ class EnsureSchoolContext
         // re-derive tenant scope from the session themselves.
         if ($school) {
             $request->attributes->set('school', $school);
+
+            // Set Laravel Head values dynamically based on school data
+            Head::title($headline = $school->name)
+                ->description($school->description_en ?: 'Empowering education with Islamic values and academic excellence.')
+                ->canonical()
+                ->og(
+                    siteName: $headline,
+                    type: OgType::Website,
+                    title: $headline,
+                    description: $school->description_en ?: 'Empowering education with Islamic values and academic excellence.'
+                )
+                ->searchableByRobots()
+                ->preconnect('https://fonts.bunny.net')
+                ->preconnect('https://fonts.gstatic.com');
         }
 
         return $next($request);

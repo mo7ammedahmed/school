@@ -22,7 +22,7 @@ use Throwable;
  */
 class AiTranslator
 {
-    private const LANGUAGE_NAMES = [
+    private const array LANGUAGE_NAMES = [
         'ar' => 'Arabic',
         'en' => 'English',
     ];

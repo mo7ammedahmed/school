@@ -7,6 +7,9 @@ namespace App\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Head\Facades\Head;
+use Laravel\Head\HeadBuilder;
+use Laravel\Head\Enums\OgType;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,5 +28,21 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+
+        // Laravel Head defaults for SEO and geo optimization
+        Head::defaults(fn (HeadBuilder $head) => $head
+            ->title('Al Noor School', suffix: ' - Al Noor School')
+            ->description('Empowering education with Islamic values and academic excellence.')
+            ->canonical()
+            ->og(
+                type: OgType::Website,
+                title: 'Al Noor School',
+                description: 'Empowering education with Islamic values and academic excellence.',
+                siteName: 'Al Noor School'
+            )
+            ->searchableByRobots()
+            ->preconnect('https://fonts.bunny.net')
+            ->preconnect('https://fonts.gstatic.com')
+        );
     }
 }

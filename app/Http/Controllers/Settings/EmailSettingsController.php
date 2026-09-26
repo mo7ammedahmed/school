@@ -17,7 +17,7 @@ class EmailSettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'mail_driver' => 'smtp',
         'mail_host' => '',
         'mail_port' => 587,

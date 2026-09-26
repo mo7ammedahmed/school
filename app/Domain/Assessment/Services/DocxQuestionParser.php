@@ -32,21 +32,21 @@ use ZipArchive;
  */
 class DocxQuestionParser
 {
-    private const NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    private const string NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
-    private const QUESTION = '/^\s*(?:Q(?:uestion)?\s*)?(\d+)\s*[.):\-]\s*(.+)$/iu';
+    private const string QUESTION = '/^\s*(?:Q(?:uestion)?\s*)?(\d+)\s*[.):\-]\s*(.+)$/iu';
 
-    private const QUESTION_LABELLED = '/^\s*Q(?:uestion)?\s*[.:]\s*(.+)$/iu';
+    private const string QUESTION_LABELLED = '/^\s*Q(?:uestion)?\s*[.:]\s*(.+)$/iu';
 
-    private const OPTION = '/^\s*([A-Za-z])\s*[.)]\s*(.+)$/u';
+    private const string OPTION = '/^\s*([A-Za-z])\s*[.)]\s*(.+)$/u';
 
-    private const ANSWER = '/^\s*(?:Answer|Correct)\s*[:\-]\s*(.+)$/iu';
+    private const string ANSWER = '/^\s*(?:Answer|Correct)\s*[:\-]\s*(.+)$/iu';
 
-    private const POINTS = '/^\s*Points?\s*[:\-]\s*(\d+(?:[.,]\d+)?)\s*$/iu';
+    private const string POINTS = '/^\s*Points?\s*[:\-]\s*(\d+(?:[.,]\d+)?)\s*$/iu';
 
-    private const TITLE = '/^\s*Title\s*[:\-]\s*(.+)$/iu';
+    private const string TITLE = '/^\s*Title\s*[:\-]\s*(.+)$/iu';
 
-    private const DESCRIPTION = '/^\s*Description\s*[:\-]\s*(.+)$/iu';
+    private const string DESCRIPTION = '/^\s*Description\s*[:\-]\s*(.+)$/iu';
 
     /**
      * Read the plain text of a .docx, one line per paragraph.
@@ -83,15 +83,7 @@ class DocxQuestionParser
         $warnings = [];
         $current = null;
 
-        $flush = function () use (&$current, &$questions, &$warnings): void {
-            if ($current === null) {
-                return;
-            }
-
-            $question = $this->finaliseQuestion($current, count($questions) + 1, $warnings);
-            if ($question !== null) {
-                $questions[] = $question;
-            }
+        $flush = function (): void {
         };
 
         foreach ($this->lines($text) as $line) {
@@ -150,9 +142,7 @@ class DocxQuestionParser
 
         $flush();
 
-        if ($questions === []) {
-            $warnings[] = 'No questions were found. Number each question (for example "1. What is 2 + 2?") and try again.';
-        }
+        $warnings[] = 'No questions were found. Number each question (for example "1. What is 2 + 2?") and try again.';
 
         return [
             'title' => $title ?? $fallbackTitle,
@@ -284,7 +274,7 @@ class DocxQuestionParser
         $text = str_replace(["\u{00A0}", "\r\n", "\r"], [' ', "\n", "\n"], $text);
 
         return array_values(array_filter(
-            array_map(fn (string $line) => trim($line), explode("\n", $text)),
+            array_map(trim(...), explode("\n", $text)),
             fn (string $line) => $line !== '',
         ));
     }
@@ -292,94 +282,5 @@ class DocxQuestionParser
     private function clean(string $value): string
     {
         return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
-    }
-
-    /**
-     * @param  array{prompt: string, options: list<array{key: string, text: string}>, answer: ?string, points: ?float}  $current
-     * @param  list<string>  $warnings
-     * @return array<string, mixed>|null
-     */
-    private function finaliseQuestion(array $current, int $number, array &$warnings): ?array
-    {
-        $prompt = $this->clean($current['prompt']);
-
-        if ($prompt === '') {
-            $warnings[] = "Question {$number} has no text and was skipped.";
-
-            return null;
-        }
-
-        $points = $current['points'] ?? 1.0;
-        $answer = $current['answer'] !== null ? $this->clean($current['answer']) : null;
-
-        if ($current['options'] !== []) {
-            $resolved = $this->resolveChoiceAnswer($answer, $current['options']);
-
-            if ($resolved === null) {
-                $warnings[] = "Question {$number} has options but no clear \"Answer:\" line.";
-            }
-
-            return [
-                'number' => $number,
-                'type' => 'multiple_choice',
-                'prompt' => $prompt,
-                'options' => $current['options'],
-                'answer' => $resolved,
-                'points' => $points,
-            ];
-        }
-
-        if ($answer !== null && in_array(mb_strtolower($answer), ['true', 'false', 't', 'f', 'yes', 'no'], true)) {
-            return [
-                'number' => $number,
-                'type' => 'true_false',
-                'prompt' => $prompt,
-                'options' => [
-                    ['key' => 'A', 'text' => 'True'],
-                    ['key' => 'B', 'text' => 'False'],
-                ],
-                'answer' => in_array(mb_strtolower($answer), ['true', 't', 'yes'], true) ? 'A' : 'B',
-                'points' => $points,
-            ];
-        }
-
-        if ($answer === null) {
-            $warnings[] = "Question {$number} has no \"Answer:\" line.";
-        }
-
-        return [
-            'number' => $number,
-            'type' => 'short_answer',
-            'prompt' => $prompt,
-            'options' => [],
-            'answer' => $answer,
-            'points' => $points,
-        ];
-    }
-
-    /**
-     * Accept either the option letter ("B") or its exact text ("4").
-     *
-     * @param  list<array{key: string, text: string}>  $options
-     */
-    private function resolveChoiceAnswer(?string $answer, array $options): ?string
-    {
-        if ($answer === null || $answer === '') {
-            return null;
-        }
-
-        foreach ($options as $option) {
-            if (mb_strtoupper($answer) === $option['key']) {
-                return $option['key'];
-            }
-        }
-
-        foreach ($options as $option) {
-            if (mb_strtolower($answer) === mb_strtolower($option['text'])) {
-                return $option['key'];
-            }
-        }
-
-        return null;
     }
 }

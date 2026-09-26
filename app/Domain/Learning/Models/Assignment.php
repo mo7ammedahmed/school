@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Learning\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,34 +25,25 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'allow_late_submission',
     'is_published',
 ])]
+#[Appends(['subject', 'section', 'total_marks', 'status'])]
 class Assignment extends Model
 {
     use SoftDeletes;
-
-    /**
-     * Subject/section surface the owning offering; marks/publish state are exposed under
-     * the legacy names the admin pages were written against.
-     */
-    protected $appends = ['subject', 'section', 'total_marks', 'status'];
-
-    public function getSubjectAttribute()
+    protected function subject(): Attribute
     {
-        return $this->offering?->subject;
+        return Attribute::make(get: fn() => $this->offering?->subject);
     }
-
-    public function getSectionAttribute()
+    protected function section(): Attribute
     {
-        return $this->offering?->section;
+        return Attribute::make(get: fn() => $this->offering?->section);
     }
-
-    public function getTotalMarksAttribute(): ?float
+    protected function totalMarks(): Attribute
     {
-        return $this->max_score !== null ? (float) $this->max_score : null;
+        return Attribute::make(get: fn() => $this->max_score !== null ? (float) $this->max_score : null);
     }
-
-    public function getStatusAttribute(): string
+    protected function status(): Attribute
     {
-        return $this->is_published ? 'published' : 'draft';
+        return Attribute::make(get: fn() => $this->is_published ? 'published' : 'draft');
     }
 
     public function school(): BelongsTo

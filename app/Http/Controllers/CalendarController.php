@@ -17,7 +17,7 @@ use Throwable;
 class CalendarController extends Controller
 {
     /** The school week runs Sunday–Thursday; the grid always starts on Sunday. */
-    private const WEEK_START = Carbon::SUNDAY;
+    private const int WEEK_START = Carbon::SUNDAY;
 
     public function index(Request $request): InertiaResponse
     {

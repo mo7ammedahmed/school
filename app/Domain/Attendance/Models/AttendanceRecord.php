@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Attendance\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
@@ -20,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'notes',
     'recorded_by',
 ])]
+#[Appends(['date', 'remarks'])]
 class AttendanceRecord extends Model
 {
     use SoftDeletes;
@@ -43,18 +46,13 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }
-
-    /** Presentation aliases kept for the v1 admin pages. */
-    protected $appends = ['date', 'remarks'];
-
-    public function getDateAttribute()
+    protected function date(): Attribute
     {
-        return $this->attendanceSession?->session_date?->toDateString();
+        return Attribute::make(get: fn() => $this->attendanceSession?->session_date?->toDateString());
     }
-
-    public function getRemarksAttribute(): ?string
+    protected function remarks(): Attribute
     {
-        return $this->notes;
+        return Attribute::make(get: fn() => $this->notes);
     }
 
     protected function casts(): array

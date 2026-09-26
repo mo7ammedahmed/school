@@ -20,7 +20,7 @@ class MessageController extends Controller
             ->latest()
             ->paginate(15);
 
-        $conversations->getCollection()->transform(function (Conversation $conversation) {
+        $conversations->getCollection()->transform(function (Conversation $conversation): array {
             $messages = $conversation->messages;
             $last = $messages->first();
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Learning\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -21,26 +23,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'file_size',
     'is_published',
 ])]
+#[Appends(['subject', 'section', 'uploaded_at'])]
 class Material extends Model
 {
     use SoftDeletes;
-
-    /** Subject/section surface the owning offering; upload time mirrors creation time. */
-    protected $appends = ['subject', 'section', 'uploaded_at'];
-
-    public function getSubjectAttribute()
+    protected function subject(): Attribute
     {
-        return $this->offering?->subject;
+        return Attribute::make(get: fn() => $this->offering?->subject);
     }
-
-    public function getSectionAttribute()
+    protected function section(): Attribute
     {
-        return $this->offering?->section;
+        return Attribute::make(get: fn() => $this->offering?->section);
     }
-
-    public function getUploadedAtAttribute()
+    protected function uploadedAt(): Attribute
     {
-        return $this->created_at?->toDateTimeString();
+        return Attribute::make(get: fn() => $this->created_at?->toDateTimeString());
     }
 
     public function school(): BelongsTo

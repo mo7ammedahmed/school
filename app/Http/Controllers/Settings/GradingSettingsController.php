@@ -163,9 +163,9 @@ class GradingSettingsController extends Controller
         // Handle updating existing grading scales
         if ($request->has('gradingScales')) {
             // Fetch all existing grading scales in one query to avoid N+1 problem
-            $scaleIds = array_column(array_filter($request->input('gradingScales'), fn ($scale) => isset($scale['id'])), 'id');
+            $scaleIds = array_column(array_filter($request->input('gradingScales'), fn (array $scale) => isset($scale['id'])), 'id');
             $scales = collect();
-            if (! empty($scaleIds)) {
+            if ($scaleIds !== []) {
                 $scales = GradingScale::whereIn('id', $scaleIds)
                     ->where('school_id', $school->id)
                     ->get()
@@ -219,9 +219,9 @@ class GradingSettingsController extends Controller
         // Handle updating existing grading categories
         if ($request->has('gradingCategories')) {
             // Fetch all existing grading categories in one query to avoid N+1 problem
-            $categoryIds = array_column(array_filter($request->input('gradingCategories'), fn ($category) => isset($category['id'])), 'id');
+            $categoryIds = array_column(array_filter($request->input('gradingCategories'), fn (array $category) => isset($category['id'])), 'id');
             $categories = collect();
-            if (! empty($categoryIds)) {
+            if ($categoryIds !== []) {
                 $categories = GradingCategory::whereIn('id', $categoryIds)
                     ->where('school_id', $school->id)
                     ->get()

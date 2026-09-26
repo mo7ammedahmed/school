@@ -38,9 +38,7 @@ class CalendarDay extends Model
     protected static function booted(): void
     {
         static::creating(function (CalendarDay $day): void {
-            if ($day->is_instructional === null) {
-                $day->is_instructional = $day->type->isInstructionalByDefault();
-            }
+            $day->is_instructional ??= $day->type->isInstructionalByDefault();
         });
     }
 

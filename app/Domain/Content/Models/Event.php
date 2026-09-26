@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -22,36 +24,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'featured_image_path',
     'is_published',
 ])]
+#[Appends(['event_date', 'start_time', 'end_time', 'target_audience', 'is_active'])]
 class Event extends Model
 {
     use SoftDeletes;
-
-    /** Legacy admin-page aliases (the v2 schema stores single datetime ranges + an event type). */
-    protected $appends = ['event_date', 'start_time', 'end_time', 'target_audience', 'is_active'];
-
-    public function getEventDateAttribute(): ?string
+    protected function eventDate(): Attribute
     {
-        return $this->start_date?->toDateString();
+        return Attribute::make(get: fn() => $this->start_date?->toDateString());
     }
-
-    public function getStartTimeAttribute(): ?string
+    protected function startTime(): Attribute
     {
-        return $this->start_date?->format('H:i');
+        return Attribute::make(get: fn() => $this->start_date?->format('H:i'));
     }
-
-    public function getEndTimeAttribute(): ?string
+    protected function endTime(): Attribute
     {
-        return $this->end_date?->format('H:i');
+        return Attribute::make(get: fn() => $this->end_date?->format('H:i'));
     }
-
-    public function getTargetAudienceAttribute(): string
+    protected function targetAudience(): Attribute
     {
-        return $this->event_type ?: 'all';
+        return Attribute::make(get: fn() => $this->event_type ?: 'all');
     }
-
-    public function getIsActiveAttribute(): bool
+    protected function isActive(): Attribute
     {
-        return (bool) $this->is_published;
+        return Attribute::make(get: fn() => (bool) $this->is_published);
     }
 
     public function school(): BelongsTo

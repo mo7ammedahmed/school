@@ -17,7 +17,7 @@ class AcademicSettingsController extends Controller
     /**
      * @var array<string, mixed>
      */
-    private const DEFAULTS = [
+    private const array DEFAULTS = [
         'grading_system' => 'percentage',
         'pass_mark' => 50,
         'max_score' => 100,

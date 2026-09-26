@@ -146,7 +146,7 @@ class SchoolController extends Controller
 
     public function update(Request $request, School $school): RedirectResponse
     {
-        $validated = $request->validate($this->rules($school->id));
+        $validated = $request->validate($this->rules());
         $this->assertOrganizationAllowed((int) $validated['organization_id']);
         $validated = $this->translateBilingual($validated, ['name'], $school->id);
 
@@ -187,7 +187,7 @@ class SchoolController extends Controller
     /**
      * @return array<string, array<int, mixed>>
      */
-    private function rules(?int $ignoreId = null): array
+    private function rules(): array
     {
         return [
             'organization_id' => ['required', 'integer', 'exists:organizations,id'],

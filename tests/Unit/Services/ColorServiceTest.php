@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Services;
 
 use App\Services\ColorService;
@@ -7,7 +9,7 @@ use Tests\TestCase;
 
 class ColorServiceTest extends TestCase
 {
-    public function test_hex_validation()
+    public function test_hex_validation(): void
     {
         $this->assertTrue(ColorService::isValidHex('#0a5c42'));
         $this->assertTrue(ColorService::isValidHex('#FFFFFF'));
@@ -17,7 +19,7 @@ class ColorServiceTest extends TestCase
         $this->assertFalse(ColorService::isValidHex('#0a5c4z')); // invalid character
     }
 
-    public function test_hex_to_rgb_conversion()
+    public function test_hex_to_rgb_conversion(): void
     {
         $rgb = ColorService::hexToRgb('#0a5c42');
         $this->assertEquals(['r' => 10, 'g' => 92, 'b' => 66], $rgb);
@@ -26,7 +28,7 @@ class ColorServiceTest extends TestCase
         $this->assertEquals(['r' => 255, 'g' => 255, 'b' => 255], $rgb);
     }
 
-    public function test_luminance_calculation()
+    public function test_luminance_calculation(): void
     {
         // White should have high luminance (exactly 1.0)
         $lum = ColorService::calculateLuminance(ColorService::hexToRgb('#ffffff'));
@@ -42,7 +44,7 @@ class ColorServiceTest extends TestCase
         $this->assertLessThan(0.25, $lum);
     }
 
-    public function test_contrast_calculation()
+    public function test_contrast_calculation(): void
     {
         // Black on white should have maximum contrast
         $contrast = ColorService::calculateContrast('#000000', '#ffffff');
@@ -57,7 +59,7 @@ class ColorServiceTest extends TestCase
         $this->assertEquals(1, $contrast);
     }
 
-    public function test_contrasting_color()
+    public function test_contrasting_color(): void
     {
         // Light background should get black text
         $this->assertEquals('#000000', ColorService::getContrastingColor('#ffffff'));
@@ -69,7 +71,7 @@ class ColorServiceTest extends TestCase
         $this->assertEquals('#000000', ColorService::getContrastingColor('#808080'));
     }
 
-    public function test_contrast_standards()
+    public function test_contrast_standards(): void
     {
         // Black on white should pass AA for normal and large text
         $this->assertTrue(ColorService::meetsContrastStandard('#000000', '#ffffff'));
@@ -88,7 +90,7 @@ class ColorServiceTest extends TestCase
         $this->assertFalse(ColorService::meetsContrastStandard('#cccccc', '#ffffff', true)); // light gray on white, large text
     }
 
-    public function test_semantic_foreground()
+    public function test_semantic_foreground(): void
     {
         // For a blue background, should get white or black text depending on shade
         $fg = ColorService::getSemanticForeground('#0066cc'); // medium blue

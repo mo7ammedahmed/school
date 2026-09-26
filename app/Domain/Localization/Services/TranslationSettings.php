@@ -22,7 +22,7 @@ class TranslationSettings
 
     private readonly SchoolSettingsStore $store;
 
-    public function __construct(private readonly int $schoolId)
+    public function __construct(int $schoolId)
     {
         $this->store = new SchoolSettingsStore($schoolId, self::KEY, self::defaults(), self::secretNames());
     }
@@ -40,7 +40,7 @@ class TranslationSettings
     public static function secretNames(): array
     {
         return array_map(
-            static fn (TranslationProvider $provider): string => self::keyName($provider),
+            self::keyName(...),
             TranslationProvider::cases(),
         );
     }

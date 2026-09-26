@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Assessment\Models\Exam;
 use App\Domain\Assessment\Models\ReportCard;
@@ -37,11 +38,12 @@ class Semester extends Model
     /** @use HasFactory<SemesterFactory> */
     use HasFactory, SoftDeletes;
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 
     public function school(): BelongsTo

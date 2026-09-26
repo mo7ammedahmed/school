@@ -16,14 +16,14 @@ use InvalidArgumentException;
  */
 class TotpService
 {
-    private const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    private const string ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
-    private const DIGITS = 6;
+    private const int DIGITS = 6;
 
-    private const PERIOD = 30;
+    private const int PERIOD = 30;
 
     /** Number of periods of clock drift accepted either side of "now". */
-    private const WINDOW = 1;
+    private const int WINDOW = 1;
 
     /**
      * Generate a new base32 secret from cryptographically secure random bytes.

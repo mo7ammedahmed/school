@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -48,7 +49,8 @@ class ContentPage extends Model
         ];
     }
 
-    public function scopePublished($query)
+    #[Scope]
+    protected function published($query)
     {
         return $query
             ->where('status', 'published')

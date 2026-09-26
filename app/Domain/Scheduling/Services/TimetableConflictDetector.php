@@ -43,7 +43,7 @@ final class TimetableConflictDetector
             'teacher_id' => $candidate['teacher_id'] ?? null,
             'room_id' => $candidate['room_id'] ?? null,
             'section_id' => $candidate['section_id'] ?? null,
-        ], static fn ($value): bool => $value !== null && (int) $value !== 0);
+        ], static fn (?int $value): bool => $value !== null && $value !== 0);
 
         if ($shared === []) {
             return [];

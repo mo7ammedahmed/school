@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\RateLimiter;
 class TranslateController extends Controller
 {
     /** Per user, per minute. */
-    private const ATTEMPTS = 30;
+    private const int ATTEMPTS = 30;
 
     public function __construct(private readonly TranslationService $translations) {}
 

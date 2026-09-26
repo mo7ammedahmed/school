@@ -13,7 +13,7 @@ class TotpServiceTest extends TestCase
     private TotpService $totp;
 
     /** RFC 6238 uses the ASCII secret "12345678901234567890". */
-    private const RFC_SECRET = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+    private const string RFC_SECRET = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 
     protected function setUp(): void
     {

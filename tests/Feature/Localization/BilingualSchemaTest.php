@@ -25,7 +25,7 @@ class BilingualSchemaTest extends TestCase
      *
      * @var list<string>
      */
-    private const TABLES_WITHOUT_A_MODEL = [
+    private const array TABLES_WITHOUT_A_MODEL = [
         'website_pages',
         'website_sections',
         'website_media',

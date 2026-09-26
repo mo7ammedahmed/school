@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Quiz;
@@ -66,10 +67,11 @@ class Subject extends Model
         return $this->belongsTo(GradeLevel::class);
     }
 
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        $locale = app()->getLocale();
-
-        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        return Attribute::make(get: function () {
+            $locale = app()->getLocale();
+            return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
+        });
     }
 }
