@@ -2,7 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Card, CardContent } from '@/components/ui/card';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function StudentAssignments({ student, assignments }: { student: { first_name: string; last_name: string }; assignments: { title: string; due_date: string; status: string; offering: { subject: { name: string } } }[] }) {
     const columns: ColumnDef<any>[] = [

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Domain\Content\Models\ContentPage;
+use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class ContentPageController extends Controller
 {
+    use HandlesBilingualInput;
+
     public function index(): Response
     {
         return inertia('content/pages/index', [
@@ -84,6 +87,9 @@ class ContentPageController extends Controller
             'canonical_url' => ['nullable', 'url', 'max:2048'],
             'robots' => ['required', Rule::in(['index,follow', 'noindex,follow', 'index,nofollow', 'noindex,nofollow'])],
         ]);
+
+        // Pages store a single Arabic title column alongside the English one.
+        $validated = $this->translateInto($validated, 'title', 'title_ar');
 
         $status = $validated['status'];
         $validated['is_published'] = $status === 'published';

@@ -23,7 +23,6 @@ use App\Domain\People\Models\TeacherProfile;
 use App\Domain\People\Policies\StudentPolicy;
 use App\Domain\People\Policies\TeacherPolicy;
 use App\Domain\Scheduling\Models\Room as AppRoom;
-use App\Models\Classroom as AppClassroom;
 use App\Models\Enrollment as AppEnrollment;
 use App\Models\GradeLevel as AppGradeLevel;
 use App\Models\Guardian as AppGuardian;
@@ -33,7 +32,6 @@ use App\Models\Subject as AppSubject;
 use App\Models\Teacher as AppTeacher;
 use App\Models\Timetable as AppTimetable;
 use App\Models\User;
-use App\Policies\ClassroomPolicy;
 use App\Policies\EnrollmentPolicy;
 use App\Policies\GradeLevelPolicy;
 use App\Policies\GuardianPolicy;
@@ -49,7 +47,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    protected array $policies = [
+    protected $policies = [
         Student::class => StudentPolicy::class,
         TeacherProfile::class => TeacherPolicy::class,
         AcademicYear::class => AcademicYearPolicy::class,
@@ -64,7 +62,6 @@ class AuthServiceProvider extends ServiceProvider
         AppTeacher::class => AppTeacherPolicy::class,
         AppGuardian::class => GuardianPolicy::class,
         AppSection::class => SectionPolicy::class,
-        AppClassroom::class => ClassroomPolicy::class,
         AppRoom::class => RoomPolicy::class,
         AppSubject::class => SubjectPolicy::class,
         AppGradeLevel::class => GradeLevelPolicy::class,

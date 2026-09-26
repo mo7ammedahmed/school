@@ -19,10 +19,15 @@ class SecurityHeadersTest extends TestCase
             fn () => response('ok')
         );
 
-        $viteOrigin = trim((string) file_get_contents(public_path('hot')));
+        $hotFile = public_path('hot');
+        if (is_file($hotFile)) {
+            $viteOrigin = trim((string) file_get_contents($hotFile));
+        } else {
+            $viteOrigin = 'http://localhost:5173'; // Fallback value from middleware
+        }
 
         $this->assertSame(
-            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' {$viteOrigin}; style-src 'self' 'unsafe-inline' {$viteOrigin} https://fonts.bunny.net; img-src 'self' data: https:; font-src 'self' https: {$viteOrigin} https://fonts.bunny.net; connect-src 'self' {$viteOrigin} ws://localhost:" . parse_url($viteOrigin, PHP_URL_PORT),
+            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' {$viteOrigin}; style-src 'self' 'unsafe-inline' {$viteOrigin} https://fonts.bunny.net; img-src 'self' data: https:; font-src 'self' https: {$viteOrigin} https://fonts.bunny.net; connect-src 'self' {$viteOrigin} ws://localhost:".parse_url($viteOrigin, PHP_URL_PORT),
             $response->headers->get('Content-Security-Policy')
         );
 

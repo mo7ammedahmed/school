@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Domain\Communication\Services\SmsSender;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,23 +12,42 @@ use Inertia\Response;
 
 class SmsSettingsController extends Controller
 {
-    public function edit(): Response
+    public function index(): Response
     {
-        return inertia('settings/sms/edit');
+        $sender = SmsSender::for($this->schoolId());
+
+        return inertia('settings/sms', [
+            'settings' => $sender->masked(),
+            'providers' => [
+                ['value' => 'log', 'label' => 'Log only (no messages are sent)'],
+                ['value' => 'unifonic', 'label' => 'Unifonic'],
+                ['value' => 'twilio', 'label' => 'Twilio'],
+            ],
+            'configured' => $sender->isConfigured(),
+        ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'sms_provider' => 'required|string|max:255',
-            'sms_api_key' => 'nullable|string|max:255',
-            'sms_api_secret' => 'nullable|string|max:255',
-            'sms_sender_id' => 'nullable|string|max:255',
-            'sms_enabled' => 'required|boolean',
+        $validated = $request->validate([
+            'provider' => 'required|in:'.implode(',', SmsSender::PROVIDERS),
+            'sender_id' => 'nullable|string|max:64',
+            'account_sid' => 'nullable|string|max:255',
+            'api_key' => 'nullable|string|max:500',
+            'auth_token' => 'nullable|string|max:500',
         ]);
 
-        // TODO: Save SMS settings to database or config
+        SmsSender::for($this->schoolId())->save($validated);
 
-        return redirect()->route('settings.sms.edit')->with('success', 'SMS settings updated successfully.');
+        return back()->with('success', 'SMS settings saved.');
+    }
+
+    private function schoolId(): int
+    {
+        $schoolId = (int) session('school_id');
+
+        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
+
+        return $schoolId;
     }
 }

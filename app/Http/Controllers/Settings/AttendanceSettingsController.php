@@ -5,55 +5,65 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Settings\Concerns\InteractsWithSchoolSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
 class AttendanceSettingsController extends Controller
 {
-    public function edit(): Response
-    {
-        $settings = config('settings.attendance', [
-            'allow_late_arrival' => true,
-            'late_mark_after_minutes' => 15,
-            'half_day_threshold_minutes' => 120,
-            'auto_absent_after_minutes' => 240,
-            'require_guardian_justification' => true,
-            'allow_self_justification' => true,
-            'track_break_in_out' => false,
-        ]);
+    use InteractsWithSchoolSettings;
 
-        return inertia('settings/attendance/edit', [
+    /**
+     * @var array<string, mixed>
+     */
+    private const DEFAULTS = [
+        'late_threshold_minutes' => 15,
+        'excused_types' => ['sick', 'excused'],
+    ];
+
+    public function index(): Response
+    {
+        $settings = $this->settings('attendance', self::DEFAULTS)->all();
+
+        // The form edits the list as a comma separated string; normalise here so
+        // the page never has to cope with a missing or scalar value.
+        $settings['excused_types'] = is_array($settings['excused_types'] ?? null)
+            ? array_values($settings['excused_types'])
+            : [];
+
+        return inertia('settings/attendance', [
             'settings' => $settings,
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function edit(): Response
+    {
+        return $this->index();
+    }
+
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'allow_late_arrival' => 'required|boolean',
-            'late_mark_after_minutes' => 'required|integer|min:1',
-            'half_day_threshold_minutes' => 'required|integer|min:1',
-            'auto_absent_after_minutes' => 'required|integer|min:1',
-            'require_guardian_justification' => 'required|boolean',
-            'allow_self_justification' => 'required|boolean',
-            'track_break_in_out' => 'required|boolean',
+            'late_threshold_minutes' => 'required|integer|min:0|max:240',
+            'excused_types' => 'nullable|string|max:255',
         ]);
 
-        $settingsPath = config_path('settings.php');
+        $types = array_values(array_filter(array_map(
+            static fn (string $type): string => trim($type),
+            explode(',', (string) ($validated['excused_types'] ?? '')),
+        )));
 
-        if (! file_exists($settingsPath)) {
-            file_put_contents($settingsPath, "<?php\n\nreturn [\n    'attendance' => [],\n];\n");
-        }
+        $this->settings('attendance', self::DEFAULTS)->save([
+            'late_threshold_minutes' => $validated['late_threshold_minutes'],
+            'excused_types' => $types,
+        ]);
 
-        $settings = require $settingsPath;
-        $settings['attendance'] = $validated;
+        return redirect()->route('settings.attendance')->with('success', 'Attendance settings updated successfully.');
+    }
 
-        $export = var_export($settings, true);
-        $content = "<?php\n\nreturn ".$export.";\n";
-
-        file_put_contents($settingsPath, $content);
-
-        return redirect()->route('settings.attendance.edit')->with('success', 'Attendance settings updated successfully.');
+    public function update(Request $request): RedirectResponse
+    {
+        return $this->store($request);
     }
 }

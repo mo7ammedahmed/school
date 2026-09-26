@@ -40,7 +40,9 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $timetable = TimetableEntry::whereHas('section.students', fn ($q) => $q->where('students.id', $student->id))
+        $timetable = TimetableEntry::where('school_id', session('school_id'))
+            ->where('is_published', true)
+            ->whereHas('section.students', fn ($q) => $q->where('students.id', $student->id))
             ->with(['offering.subject', 'teacher.user', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')

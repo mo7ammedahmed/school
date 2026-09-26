@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,51 +12,69 @@ use Inertia\Response;
 
 class SchoolSettingsController extends Controller
 {
-    public function edit(): Response
+    use HandlesBilingualInput;
+
+    public function index(): Response
     {
         $school = auth()->user()->currentSchool;
         abort_unless($school, 404);
 
         return inertia('settings/school/edit', [
-            'school' => $school,
+            'school' => [
+                'id' => $school->id,
+                'name' => $school->name,
+                'name_en' => $school->name_en,
+                'name_ar' => $school->name_ar,
+                'email' => $school->email,
+                'phone' => $school->phone,
+                'address' => $school->address,
+                'logo_path' => $school->logo_path,
+                'primary_color' => $school->primary_color,
+                'secondary_color' => $school->secondary_color,
+                'accent_color' => $school->accent_color,
+            ],
         ]);
     }
 
-    public function index(): Response
+    public function edit(): Response
     {
-        return $this->edit();
+        return $this->index();
     }
 
-    public function update(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $school = auth()->user()->currentSchool;
         abort_unless($school, 404);
 
         $validated = $request->validate([
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'required|string|max:255',
-            'logo' => 'nullable|image|max:2048',
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
-            'website' => 'nullable|url|max:255',
-            'primary_color' => 'nullable|string|max:7',
-            'secondary_color' => 'nullable|string|max:7',
-            'accent_color' => 'nullable|string|max:7',
+            'logo' => 'nullable|image|max:2048',
+            'primary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'secondary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'accent_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
+
+        // Fill whichever language was left blank, then drop the upload key so it
+        // is never written to a column that does not exist.
+        $validated = $this->translateBilingual($validated, ['name'], $school->id);
 
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');
         }
 
         unset($validated['logo']);
+
         $school->update($validated);
 
         return redirect()->route('settings.school')->with('success', 'School settings updated successfully.');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        return $this->update($request);
+        return $this->store($request);
     }
 }

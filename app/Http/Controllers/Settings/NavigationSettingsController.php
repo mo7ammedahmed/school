@@ -78,7 +78,7 @@ class NavigationSettingsController extends Controller
         }
 
         // Batch create new labels
-        if (!empty($toCreate)) {
+        if (! empty($toCreate)) {
             SchoolNavigationLabel::insert($toCreate);
         }
 

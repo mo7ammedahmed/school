@@ -4,13 +4,31 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
-export default function FinanceOfflinePayments({ payments }: { payments: { id: number; invoice: { invoice_number: string }; amount: number; payment_method: string; reference_number: string; status: string; payment_date: string }[] }) {
-    const columns: ColumnDef<any>[] = [
+type PendingPayment = {
+    id: number;
+    invoice: { invoice_number: string } | null;
+    student?: { first_name: string; last_name: string } | null;
+    amount: number;
+    payment_method: string;
+    reference_number: string | null;
+    status: string;
+    payment_date: string;
+};
+
+export default function FinanceOfflinePayments({ payments }: { payments: PendingPayment[] }) {
+    const columns: ColumnDef<PendingPayment, any>[] = [
         {
-            accessorKey: 'invoice.invoice_number',
+            id: 'invoice',
             header: 'Invoice',
+            accessorFn: (row) => row.invoice?.invoice_number ?? '—',
+        },
+        {
+            id: 'student',
+            header: 'Student',
+            accessorFn: (row) =>
+                row.student ? `${row.student.first_name} ${row.student.last_name}` : '—',
         },
         {
             accessorKey: 'amount',
@@ -25,6 +43,7 @@ export default function FinanceOfflinePayments({ payments }: { payments: { id: n
         {
             accessorKey: 'reference_number',
             header: 'Reference',
+            cell: ({ row }) => row.original.reference_number ?? '—',
         },
         {
             accessorKey: 'status',
@@ -40,7 +59,7 @@ export default function FinanceOfflinePayments({ payments }: { payments: { id: n
             header: 'Actions',
             cell: ({ row }) => (
                 <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/finance/payments/${row.original.id}/return`}>Process</Link>
+                    <Link href={`/finance/payments/${row.original.id}/review`}>Confirm</Link>
                 </Button>
             ),
         },
@@ -58,7 +77,7 @@ export default function FinanceOfflinePayments({ payments }: { payments: { id: n
         >
             <PageHeader
                 title="Offline Payments"
-                description="Manage bank transfer and offline payments"
+                description="Confirm bank transfers a guardian reported from their payment link."
                 actions={
                     <Button asChild>
                         <Link href="/finance/payments/create"><Plus className="mr-2 h-4 w-4" />New Payment</Link>

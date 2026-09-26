@@ -3,9 +3,20 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
 
-export default function SettingsSecurity() {
+type SecuritySettings = {
+    password_min_length?: number | string;
+    password_expiry_days?: number | string;
+    password_require_uppercase?: boolean;
+    password_require_numbers?: boolean;
+    password_require_symbols?: boolean;
+    session_timeout?: number | string;
+    max_login_attempts?: number | string;
+    allowed_ips?: string;
+};
+
+export default function SettingsSecurity({ settings = {} }: { settings?: SecuritySettings }) {
     return (
         <AppShell
             title="Security Settings"
@@ -20,22 +31,36 @@ export default function SettingsSecurity() {
                 description="Configure password policies, session timeouts, and IP restrictions"
             />
 
-            <div className="mt-6 grid gap-6 lg:grid-cols-3">
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Password Policy</CardTitle>
-                        <CardDescription>Set password requirements for all users</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form action="/settings/security" method="POST" className="space-y-6">
+            <form action="/settings/security" method="POST" className="mt-6 space-y-6">
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>Password Policy</CardTitle>
+                            <CardDescription>Set password requirements for all users</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="password_min_length">Minimum Password Length</Label>
-                                    <Input id="password_min_length" type="number" defaultValue="8" />
+                                    <Input
+                                        id="password_min_length"
+                                        name="password_min_length"
+                                        type="number"
+                                        min={6}
+                                        max={128}
+                                        defaultValue={String(settings.password_min_length ?? 8)}
+                                    />
                                 </div>
                                 <div>
                                     <Label htmlFor="password_expiry_days">Password Expiry (Days)</Label>
-                                    <Input id="password_expiry_days" type="number" defaultValue="90" />
+                                    <Input
+                                        id="password_expiry_days"
+                                        name="password_expiry_days"
+                                        type="number"
+                                        min={0}
+                                        max={730}
+                                        defaultValue={String(settings.password_expiry_days ?? 90)}
+                                    />
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
@@ -43,81 +68,114 @@ export default function SettingsSecurity() {
                                     <Label htmlFor="password_require_uppercase">Require Uppercase</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one uppercase letter</p>
                                 </div>
-                                <Input id="password_require_uppercase" type="checkbox" defaultChecked className="h-5 w-5" />
+                                <Input
+                                    id="password_require_uppercase"
+                                    name="password_require_uppercase"
+                                    value="1"
+                                    type="checkbox"
+                                    defaultChecked={settings.password_require_uppercase ?? true}
+                                    className="h-5 w-5"
+                                />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label htmlFor="password_require_numbers">Require Numbers</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one number</p>
                                 </div>
-                                <Input id="password_require_numbers" type="checkbox" defaultChecked className="h-5 w-5" />
+                                <Input
+                                    id="password_require_numbers"
+                                    name="password_require_numbers"
+                                    value="1"
+                                    type="checkbox"
+                                    defaultChecked={settings.password_require_numbers ?? true}
+                                    className="h-5 w-5"
+                                />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
                                     <Label htmlFor="password_require_symbols">Require Special Characters</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one special character</p>
                                 </div>
-                                <Input id="password_require_symbols" type="checkbox" defaultChecked className="h-5 w-5" />
+                                <Input
+                                    id="password_require_symbols"
+                                    name="password_require_symbols"
+                                    value="1"
+                                    type="checkbox"
+                                    defaultChecked={settings.password_require_symbols ?? true}
+                                    className="h-5 w-5"
+                                />
                             </div>
-                            <div className="flex gap-4">
-                                <Button type="button" variant="outline">Cancel</Button>
-                                <Button type="submit">Save Changes</Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quick Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <Button variant="outline" className="w-full justify-start" asChild>
+                                <a href="/settings/general">General Settings</a>
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start" asChild>
+                                <a href="/settings/notifications-config">Notifications</a>
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start" asChild>
+                                <a href="/settings/email">Email Configuration</a>
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start" asChild>
+                                <a href="/settings/security">Security Settings</a>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                        <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/general">General Settings</a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/notifications-config">Notifications</a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/email">Email Configuration</a>
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/security">Security Settings</a>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-3">
-                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>Session & IP Settings</CardTitle>
                         <CardDescription>Manage session timeouts and IP restrictions</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <form action="/settings/security" method="POST" className="space-y-6">
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div>
-                                    <Label htmlFor="session_timeout">Session Timeout (Minutes)</Label>
-                                    <Input id="session_timeout" type="number" defaultValue="60" />
-                                </div>
-                                <div>
-                                    <Label htmlFor="max_login_attempts">Max Login Attempts</Label>
-                                    <Input id="max_login_attempts" type="number" defaultValue="5" />
-                                </div>
+                    <CardContent className="space-y-6">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <div>
+                                <Label htmlFor="session_timeout">Session Timeout (Minutes)</Label>
+                                <Input
+                                    id="session_timeout"
+                                    name="session_timeout"
+                                    type="number"
+                                    min={5}
+                                    defaultValue={String(settings.session_timeout ?? 60)}
+                                />
                             </div>
                             <div>
-                                <Label htmlFor="allowed_ips">Allowed IP Addresses (comma-separated)</Label>
-                                <Input id="allowed_ips" defaultValue="192.168.1.0/24, 10.0.0.0/8" />
+                                <Label htmlFor="max_login_attempts">Max Login Attempts</Label>
+                                <Input
+                                    id="max_login_attempts"
+                                    name="max_login_attempts"
+                                    type="number"
+                                    min={1}
+                                    defaultValue={String(settings.max_login_attempts ?? 5)}
+                                />
                             </div>
-                            <div className="flex gap-4">
-                                <Button type="button" variant="outline">Cancel</Button>
-                                <Button type="submit">Save Changes</Button>
-                            </div>
-                        </form>
+                        </div>
+                        <div>
+                            <Label htmlFor="allowed_ips">Allowed IP Addresses (comma-separated)</Label>
+                            <Input
+                                id="allowed_ips"
+                                name="allowed_ips"
+                                defaultValue={settings.allowed_ips ?? ''}
+                                placeholder="192.168.1.0/24, 10.0.0.0/8"
+                            />
+                        </div>
                     </CardContent>
                 </Card>
-            </div>
+
+                <div className="flex gap-4">
+                    <Button type="button" variant="outline" asChild>
+                        <a href="/settings/general">Cancel</a>
+                    </Button>
+                    <Button type="submit">Save Changes</Button>
+                </div>
+            </form>
         </AppShell>
     );
 }

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
+use App\Domain\Finance\Models\FeeType;
 use App\Http\Controllers\Controller;
 use App\Models\FeeStructure;
-use App\Domain\Finance\Models\FeeType;
 use App\Models\GradeLevel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

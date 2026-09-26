@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Models\Event;
+use App\Domain\Content\Models\Event;
 use Inertia\Inertia;
 use Inertia\Response;
 

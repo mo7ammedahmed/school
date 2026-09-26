@@ -29,29 +29,40 @@ class Payment extends Model
 {
     use SoftDeletes;
 
+    /** @return BelongsTo<School, $this> */
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
 
+    /** @return BelongsTo<Student, $this> */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
 
+    /** @return BelongsTo<Invoice, $this> */
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
     }
 
+    /** @return HasMany<PaymentAllocation, $this> */
     public function allocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
     }
 
+    /** @return HasMany<Refund, $this> */
     public function refunds(): HasMany
     {
         return $this->hasMany(Refund::class);
+    }
+
+    /** @return HasMany<GatewayTransaction, $this> */
+    public function gatewayTransactions(): HasMany
+    {
+        return $this->hasMany(GatewayTransaction::class);
     }
 
     protected function casts(): array

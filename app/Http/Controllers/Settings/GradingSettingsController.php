@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Domain\Academics\Models\GradingCategory;
 use App\Domain\Academics\Models\GradingScale;
+use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -14,15 +15,33 @@ use Inertia\Response;
 
 class GradingSettingsController extends Controller
 {
+    /**
+     * Resolve the school the current request is scoped to.
+     *
+     * The school.context middleware puts the resolved school on the request
+     * attributes; membership is the fallback for requests that bypass it.
+     */
+    private function school(Request $request): School
+    {
+        $school = $request->attributes->get('school')
+            ?? $request->user()?->currentSchool
+            ?? $request->user()?->schools()->first();
+
+        if (! $school instanceof School) {
+            abort(403, 'No active school context for this account.');
+        }
+
+        return $school;
+    }
+
+    public function index(Request $request): Response
+    {
+        return $this->edit($request);
+    }
+
     public function edit(Request $request): Response
     {
-        // Get the current school from the request (set by school.context middleware)
-        $school = $request->attributes->get('school');
-
-        if (! $school) {
-            // Fallback for when school context is not available
-            $school = $request->user()->currentSchool ?? $request->user()->schools()->first();
-        }
+        $school = $this->school($request);
 
         // Fetch grading scales for the school
         $gradingScales = GradingScale::where('school_id', $school->id)
@@ -62,7 +81,7 @@ class GradingSettingsController extends Controller
             ? filter_var($includeExtracurricularSetting->value, FILTER_VALIDATE_BOOLEAN)
             : true;
 
-        return inertia('settings/grading/edit', [
+        return inertia('settings/grading', [
             'school' => [
                 'id' => $school->id,
                 'name' => $school->name,
@@ -78,13 +97,7 @@ class GradingSettingsController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        // Get the current school from the request (set by school.context middleware)
-        $school = $request->attributes->get('school');
-
-        if (! $school) {
-            // Fallback for when school context is not available
-            $school = $request->user()->currentSchool ?? $request->user()->schools()->first();
-        }
+        $school = $this->school($request);
 
         $request->validate([
             // Grading scales data
@@ -150,9 +163,9 @@ class GradingSettingsController extends Controller
         // Handle updating existing grading scales
         if ($request->has('gradingScales')) {
             // Fetch all existing grading scales in one query to avoid N+1 problem
-            $scaleIds = array_column(array_filter($request->input('gradingScales'), fn($scale) => isset($scale['id'])), 'id');
+            $scaleIds = array_column(array_filter($request->input('gradingScales'), fn ($scale) => isset($scale['id'])), 'id');
             $scales = collect();
-            if (!empty($scaleIds)) {
+            if (! empty($scaleIds)) {
                 $scales = GradingScale::whereIn('id', $scaleIds)
                     ->where('school_id', $school->id)
                     ->get()
@@ -206,9 +219,9 @@ class GradingSettingsController extends Controller
         // Handle updating existing grading categories
         if ($request->has('gradingCategories')) {
             // Fetch all existing grading categories in one query to avoid N+1 problem
-            $categoryIds = array_column(array_filter($request->input('gradingCategories'), fn($category) => isset($category['id'])), 'id');
+            $categoryIds = array_column(array_filter($request->input('gradingCategories'), fn ($category) => isset($category['id'])), 'id');
             $categories = collect();
-            if (!empty($categoryIds)) {
+            if (! empty($categoryIds)) {
                 $categories = GradingCategory::whereIn('id', $categoryIds)
                     ->where('school_id', $school->id)
                     ->get()
@@ -256,13 +269,13 @@ class GradingSettingsController extends Controller
             ['value' => $request->input('include_extracurricular') ? 'true' : 'false', 'type' => 'boolean']
         );
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading settings updated successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading settings updated successfully.');
     }
 
     // Individual grading scale management methods
     public function storeScale(Request $request): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
@@ -289,24 +302,24 @@ class GradingSettingsController extends Controller
                 ->update(['is_default' => false]);
         }
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading scale created successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading scale created successfully.');
     }
 
-    public function showScale(GradingScale $scale): Response
+    public function showScale(Request $request, GradingScale $scale): Response
     {
         // Ensure the scale belongs to the current school
-        $school = request()->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         if ($scale->school_id !== $school->id) {
             abort(403);
         }
 
-        return inertia('settings/grading/edit', [
+        return inertia('settings/grading', [
             'school' => [
                 'id' => $school->id,
                 'name' => $school->name,
             ],
-            'gradingScales' => [$scale]->map(fn ($s) => [
+            'gradingScales' => collect([$scale])->map(fn ($s) => [
                 'id' => $s->id,
                 'name' => $s->name,
                 'description' => $s->description,
@@ -347,7 +360,7 @@ class GradingSettingsController extends Controller
 
     public function updateScale(Request $request, GradingScale $scale): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         // Ensure the scale belongs to the current school
         if ($scale->school_id !== $school->id) {
@@ -378,12 +391,12 @@ class GradingSettingsController extends Controller
                 ->update(['is_default' => false]);
         }
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading scale updated successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading scale updated successfully.');
     }
 
-    public function destroyScale(GradingScale $scale): RedirectResponse
+    public function destroyScale(Request $request, GradingScale $scale): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         // Ensure the scale belongs to the current school
         if ($scale->school_id !== $school->id) {
@@ -403,13 +416,13 @@ class GradingSettingsController extends Controller
             }
         }
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading scale deleted successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading scale deleted successfully.');
     }
 
     // Individual grading category management methods
     public function storeCategory(Request $request): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
@@ -426,19 +439,19 @@ class GradingSettingsController extends Controller
             'description' => $validated['description'],
         ]);
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading category created successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading category created successfully.');
     }
 
-    public function showCategory(GradingCategory $category): Response
+    public function showCategory(Request $request, GradingCategory $category): Response
     {
         // Ensure the category belongs to the current school
-        $school = request()->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         if ($category->school_id !== $school->id) {
             abort(403);
         }
 
-        return inertia('settings/grading/edit', [
+        return inertia('settings/grading', [
             'school' => [
                 'id' => $school->id,
                 'name' => $school->name,
@@ -454,7 +467,7 @@ class GradingSettingsController extends Controller
                     'scale' => json_decode($scale->scale, true),
                     'is_default' => $scale->is_default,
                 ]),
-            'gradingCategories' => [$category]->map(fn ($c) => [
+            'gradingCategories' => collect([$category])->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
                 'code' => $c->code,
@@ -485,7 +498,7 @@ class GradingSettingsController extends Controller
 
     public function updateCategory(Request $request, GradingCategory $category): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         // Ensure the category belongs to the current school
         if ($category->school_id !== $school->id) {
@@ -506,12 +519,12 @@ class GradingSettingsController extends Controller
             'description' => $validated['description'] ?? $category->description,
         ]);
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading category updated successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading category updated successfully.');
     }
 
-    public function destroyCategory(GradingCategory $category): RedirectResponse
+    public function destroyCategory(Request $request, GradingCategory $category): RedirectResponse
     {
-        $school = $request->attributes->get('school') ?? ($request->user()->currentSchool ?? $request->user()->schools()->first());
+        $school = $this->school($request);
 
         // Ensure the category belongs to the current school
         if ($category->school_id !== $school->id) {
@@ -520,6 +533,6 @@ class GradingSettingsController extends Controller
 
         $category->delete();
 
-        return redirect()->route('settings.grading.edit')->with('success', 'Grading category deleted successfully.');
+        return redirect()->route('settings.grading')->with('success', 'Grading category deleted successfully.');
     }
 }

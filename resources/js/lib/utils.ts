@@ -43,7 +43,9 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
 ): (...args: Parameters<T>) => void {
-    let timeout: NodeJS.Timeout | null = null;
+    // `ReturnType<typeof setTimeout>` keeps this correct in both the browser and
+    // Node without pulling in the @types/node globals.
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     return (...args: Parameters<T>) => {
         if (timeout) clearTimeout(timeout);
         timeout = setTimeout(() => func(...args), wait);

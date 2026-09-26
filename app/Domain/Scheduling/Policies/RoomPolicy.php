@@ -12,21 +12,23 @@ class RoomPolicy
 {
     use HandlesAuthorization;
 
+    // checkPermissionTo() returns false for an unknown permission, where
+    // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, Room $model): bool
     {
-        return $user->hasPermissionTo('manage-rooms') ||
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-rooms') ||
+            (int) $model->school_id === (int) session('school_id');
     }
 
     public function update(User $user, Room $model): bool
     {
-        return $user->hasPermissionTo('manage-rooms') &&
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-rooms') &&
+            (int) $model->school_id === (int) session('school_id');
     }
 
     public function delete(User $user, Room $model): bool
     {
-        return $user->hasPermissionTo('manage-rooms') &&
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-rooms') &&
+            (int) $model->school_id === (int) session('school_id');
     }
 }

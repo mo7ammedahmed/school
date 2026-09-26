@@ -5,7 +5,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function AcademicYearsIndex({ academicYears }: { academicYears: { id: number; name: string; start_date: string; end_date: string; is_current: boolean }[] }) {
     const columns: ColumnDef<any>[] = [

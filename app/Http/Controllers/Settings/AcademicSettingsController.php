@@ -5,53 +5,52 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Settings\Concerns\InteractsWithSchoolSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
 class AcademicSettingsController extends Controller
 {
+    use InteractsWithSchoolSettings;
+
+    /**
+     * @var array<string, mixed>
+     */
+    private const DEFAULTS = [
+        'grading_system' => 'percentage',
+        'pass_mark' => 50,
+        'max_score' => 100,
+    ];
+
+    public function index(): Response
+    {
+        return inertia('settings/academic', [
+            'settings' => $this->settings('academic', self::DEFAULTS)->all(),
+        ]);
+    }
+
+    /** Kept for callers that still address the screen as an "edit" action. */
     public function edit(): Response
     {
-        $settings = config('settings.academic', [
-            'grading_system' => 'percentage',
-            'pass_marks_percentage' => 40,
-            'attendance_required_percentage' => 75,
-            'max_working_days' => 220,
-            'late_arrival_tolerance_minutes' => 15,
-            'enable_auto_grade_calculation' => true,
+        return $this->index();
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'grading_system' => 'required|in:percentage,letter,gpa',
+            'pass_mark' => 'required|integer|min:0|max:100',
+            'max_score' => 'required|integer|min:1|max:1000',
         ]);
 
-        return inertia('settings/academic/edit', [
-            'settings' => $settings,
-        ]);
+        $this->settings('academic', self::DEFAULTS)->save($validated);
+
+        return redirect()->route('settings.academic')->with('success', 'Academic settings updated successfully.');
     }
 
     public function update(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'grading_system' => 'required|in:percentage,letter,gpa',
-            'pass_marks_percentage' => 'required|integer|min:0|max:100',
-            'attendance_required_percentage' => 'required|integer|min:0|max:100',
-            'max_working_days' => 'required|integer|min:1|max:366',
-            'late_arrival_tolerance_minutes' => 'required|integer|min:0|max:120',
-            'enable_auto_grade_calculation' => 'required|boolean',
-        ]);
-
-        $settingsPath = config_path('settings.php');
-
-        if (! file_exists($settingsPath)) {
-            file_put_contents($settingsPath, "<?php\n\nreturn [\n    'academic' => [],\n];\n");
-        }
-
-        $settings = require $settingsPath;
-        $settings['academic'] = $validated;
-
-        $export = var_export($settings, true);
-        $content = "<?php\n\nreturn ".$export.";\n";
-
-        file_put_contents($settingsPath, $content);
-
-        return redirect()->route('settings.academic.edit')->with('success', 'Academic settings updated successfully.');
+        return $this->store($request);
     }
 }

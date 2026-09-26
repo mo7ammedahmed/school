@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function SubjectsShow({ subject }: { subject: { id: number; name: string; code: string; grade_level: { name: string }; credits: number } }) {
+export default function SubjectsShow({ subject }: { subject: { id: number; name: string; code: string; grade_level: { name: string } | null } }) {
     return (
         <AppShell
             title="Subject Details"
@@ -46,11 +46,7 @@ export default function SubjectsShow({ subject }: { subject: { id: number; name:
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Grade Level</span>
-                            <p className="text-base">{subject.grade_level.name}</p>
-                        </div>
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Credits</span>
-                            <p className="text-base">{subject.credits || '-'}</p>
+                            <p className="text-base">{subject.grade_level?.name ?? '—'}</p>
                         </div>
                     </div>
                 </CardContent>

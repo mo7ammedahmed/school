@@ -1,11 +1,36 @@
+import { useState } from 'react';
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
-export default function FinancePaymentReturn({ payment }: { payment: { id: number; invoice_number: string; amount: number; payment_method: string; reference_number: string; status: string; payment_date: string } }) {
+type Payment = {
+    id: number;
+    invoice_number: string | null;
+    amount: number;
+    payment_method: string;
+    reference_number: string | null;
+    status: string;
+    payment_date: string;
+};
+
+export default function FinancePaymentReturn({ payment }: { payment: Payment }) {
+    const [reference, setReference] = useState(payment.reference_number ?? '');
+    const [processing, setProcessing] = useState(false);
+
+    const confirm = () => {
+        setProcessing(true);
+        router.post(
+            `/finance/payments/${payment.id}/confirm`,
+            { reference_number: reference },
+            { onFinish: () => setProcessing(false) },
+        );
+    };
+
     return (
         <AppShell
             title="Process Payment"
@@ -47,7 +72,7 @@ export default function FinancePaymentReturn({ payment }: { payment: { id: numbe
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Reference Number</span>
-                            <p className="text-base">{payment.reference_number}</p>
+                            <p className="text-base">{payment.reference_number ?? '—'}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Payment Date</span>
@@ -59,10 +84,20 @@ export default function FinancePaymentReturn({ payment }: { payment: { id: numbe
                         </div>
                     </div>
 
-                    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                            <strong>Note:</strong> This is a bank transfer/offline payment. Please verify the payment
-                            in your bank account before marking it as completed.
+                    <div className="mt-6 max-w-sm">
+                        <Label htmlFor="reference_number">Reference number</Label>
+                        <Input
+                            id="reference_number"
+                            value={reference}
+                            onChange={(event) => setReference(event.target.value)}
+                            placeholder="Bank reference (optional)"
+                        />
+                    </div>
+
+                    <div className="mt-6 rounded-lg border border-warning/30 bg-warning/10 p-4">
+                        <p className="text-sm text-warning-foreground">
+                            <strong>Note:</strong> This is a bank transfer/offline payment. Verify it in your bank
+                            account first — confirming marks the invoice as paid and emails the guardian a receipt.
                         </p>
                     </div>
 
@@ -70,7 +105,9 @@ export default function FinancePaymentReturn({ payment }: { payment: { id: numbe
                         <Button variant="outline" asChild>
                             <Link href="/finance/payments/offline">Cancel</Link>
                         </Button>
-                        <Button>Mark as Completed</Button>
+                        <Button onClick={confirm} disabled={processing}>
+                            {processing ? 'Confirming…' : 'Confirm payment'}
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

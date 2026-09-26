@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use RuntimeException;
 use App\Domain\Academics\Models\AcademicYear;
-use App\Domain\People\Models\GuardianRelationship;
+use App\Domain\Academics\Models\Enrollment;
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Admissions\Models\AdmissionPeriod;
-use App\Domain\People\Models\Guardian;
-use App\Domain\People\Models\Student;
-use App\Domain\Academics\Models\Enrollment;
 use App\Domain\Compliance\Models\AuditLog;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use App\Domain\People\Models\Guardian;
+use App\Domain\People\Models\GuardianRelationship;
+use App\Domain\People\Models\Student;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
+use RuntimeException;
 
 class AdmissionsController extends Controller
 {
@@ -79,7 +79,7 @@ class AdmissionsController extends Controller
     /**
      * Review decision endpoint: approve or reject an application.
      */
-    public function applicationDecide(Request $request, int $id): Response
+    public function applicationDecide(Request $request, int $id): RedirectResponse
     {
         $validated = $request->validate([
             'decision' => ['required', 'in:approved,rejected'],
@@ -139,7 +139,7 @@ class AdmissionsController extends Controller
                 ->where('email', $application->guardian_email)
                 ->first();
 
-            if (!$guardian) {
+            if (! $guardian) {
                 $guardian = Guardian::create([
                     'school_id' => $schoolId,
                     'first_name' => $application->guardian_first_name,
@@ -155,7 +155,7 @@ class AdmissionsController extends Controller
                 'school_id' => $schoolId,
                 'first_name' => $application->student_first_name,
                 'last_name' => $application->student_last_name,
-                'student_id_number' => 'ANS-' . strtoupper(Str::random(6)),
+                'student_id_number' => 'ANS-'.strtoupper(Str::random(6)),
                 'date_of_birth' => $application->student_date_of_birth,
                 'gender' => $application->student_gender,
                 'nationality' => $application->student_nationality,

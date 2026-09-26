@@ -1,9 +1,10 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
 import {
     Users,
@@ -33,6 +34,29 @@ import {
     X,
     Sparkles,
     TrendingUp,
+    Palette,
+    ChevronDown,
+    Layers,
+    Clock,
+    Package,
+    FileSpreadsheet,
+    CalendarRange,
+    Receipt,
+    Tags,
+    Percent,
+    CreditCard,
+    RotateCcw,
+    ShieldCheck,
+    ScrollText,
+    Building2,
+    User,
+    Lock,
+    SlidersHorizontal,
+    Globe,
+    Mail,
+    Sun,
+    Languages,
+    FileBarChart,
 } from 'lucide-react';
 
 interface AppShellProps {
@@ -56,6 +80,10 @@ interface NavGroup {
 // Role names match the seeded Spatie roles exactly.
 const STAFF = ['school_admin', 'super_admin', 'principal', 'registrar', 'teacher', 'accountant'];
 const ADMINS = ['school_admin', 'super_admin'];
+// Every signed-in role — used by the personal account screens.
+const ALL_ROLES = [...STAFF, 'student', 'guardian'];
+const ACADEMIC_ADMINS = [...ADMINS, 'registrar', 'principal'];
+const FINANCE = [...ADMINS, 'accountant'];
 
 export const NAV_GROUPS: NavGroup[] = [
     {
@@ -90,10 +118,13 @@ export const NAV_GROUPS: NavGroup[] = [
     {
         labelKey: 'shell.group.academics',
         items: [
-            { key: 'nav.academicYears', href: '/academic-years', icon: BookOpen, roles: [...ADMINS, 'registrar', 'principal'] },
+            { key: 'nav.academicYears', href: '/academic-years', icon: BookOpen, roles: ACADEMIC_ADMINS },
             { key: 'nav.gradeLevels', href: '/grade-levels', icon: GraduationCap, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.sections', href: '/sections', icon: LayoutGrid, roles: [...ADMINS, 'registrar', 'principal'] },
+            { key: 'nav.subjects', href: '/subjects', icon: Layers, roles: ACADEMIC_ADMINS },
+            { key: 'nav.sections', href: '/sections', icon: LayoutGrid, roles: ACADEMIC_ADMINS },
             { key: 'nav.rooms', href: '/rooms', icon: DoorOpen, roles: [...ADMINS, 'registrar'] },
+            { key: 'nav.periods', href: '/periods', icon: Clock, roles: [...ADMINS, 'registrar'] },
+            { key: 'nav.enrollments', href: '/enrollments', icon: Package, roles: [...ADMINS, 'registrar'] },
             { key: 'nav.timetable', href: '/timetable', icon: CalendarDays, roles: [...ADMINS, 'teacher'] },
         ],
     },
@@ -109,6 +140,8 @@ export const NAV_GROUPS: NavGroup[] = [
             { key: 'nav.submissions', href: '/submissions', icon: Upload, roles: [...ADMINS, 'teacher'] },
             { key: 'nav.reportCards', href: '/report-cards', icon: Award, roles: [...ADMINS, 'teacher'] },
             { key: 'nav.materials', href: '/materials', icon: Upload, roles: [...ADMINS, 'teacher'] },
+            { key: 'nav.assessments', href: '/assessments', icon: FileSpreadsheet, roles: [...ADMINS, 'teacher'] },
+            { key: 'nav.calendar', href: '/calendar', icon: CalendarRange, roles: STAFF },
         ],
     },
     {
@@ -119,18 +152,60 @@ export const NAV_GROUPS: NavGroup[] = [
             { key: 'nav.events', href: '/content/events', icon: Calendar, roles: ADMINS },
             { key: 'nav.messages', href: '/messages', icon: MessageSquare, roles: [...ADMINS, 'teacher', 'registrar'] },
             { key: 'nav.documents', href: '/documents', icon: FileText, roles: [...ADMINS, 'teacher'] },
+            { key: 'nav.websitePages', href: '/content/pages', icon: Globe, roles: ADMINS },
         ],
     },
     {
         labelKey: 'shell.group.operations',
         items: [
             { key: 'nav.admissions', href: '/admissions/applications', icon: UserPlus, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.finance', href: '/finance/invoices', icon: DollarSign, roles: [...ADMINS, 'accountant'] },
+            { key: 'nav.admissionsReview', href: '/admissions/review', icon: ClipboardCheck, roles: [...ADMINS, 'registrar'] },
+            { key: 'nav.finance', href: '/finance/invoices', icon: DollarSign, roles: FINANCE },
+            { key: 'nav.feeStructures', href: '/finance/fee-structures', icon: Receipt, roles: FINANCE },
+            { key: 'nav.feeTypes', href: '/finance/fee-types', icon: Tags, roles: FINANCE },
+            { key: 'nav.discounts', href: '/finance/discounts', icon: Percent, roles: FINANCE },
+            { key: 'nav.financePayments', href: '/finance/payments', icon: CreditCard, roles: FINANCE },
+            { key: 'nav.refunds', href: '/finance/refunds', icon: RotateCcw, roles: FINANCE },
+            { key: 'nav.reports', href: '/reports', icon: FileBarChart, roles: [...ACADEMIC_ADMINS, 'accountant'] },
+        ],
+    },
+    {
+        labelKey: 'shell.group.administration',
+        items: [
+            { key: 'nav.users', href: '/settings/users', icon: Users, roles: ADMINS },
+            { key: 'nav.roles', href: '/roles', icon: ShieldCheck, roles: ADMINS },
+            { key: 'nav.schools', href: '/schools', icon: Building2, roles: ADMINS },
+            { key: 'nav.auditLogs', href: '/audit-logs', icon: ScrollText, roles: ADMINS },
         ],
     },
     {
         labelKey: 'shell.group.system',
-        items: [{ key: 'nav.settings', href: '/settings/school', icon: Settings, roles: ADMINS }],
+        items: [
+            { key: 'nav.settings', href: '/settings/school', icon: Settings, roles: ADMINS },
+            { key: 'nav.settingsAcademic', href: '/settings/academic', icon: GraduationCap, roles: ADMINS },
+            { key: 'nav.settingsAttendance', href: '/settings/attendance', icon: CalendarCheck, roles: ADMINS },
+            { key: 'nav.settingsGrading', href: '/settings/grading', icon: Award, roles: ADMINS },
+            { key: 'nav.settingsLocalization', href: '/settings/localization', icon: Languages, roles: ADMINS },
+            { key: 'nav.settingsTranslations', href: '/settings/translations', icon: Languages, roles: ADMINS },
+            { key: 'nav.settingsNotifications', href: '/settings/notifications-config', icon: Bell, roles: ADMINS },
+            { key: 'nav.settingsEmail', href: '/settings/email', icon: Mail, roles: ADMINS },
+            { key: 'nav.settingsSms', href: '/settings/sms', icon: MessageSquare, roles: ADMINS },
+            { key: 'nav.settingsPayments', href: '/settings/payments', icon: CreditCard, roles: ADMINS },
+            { key: 'nav.settingsPaymentLogs', href: '/settings/payments/logs', icon: ScrollText, roles: ADMINS },
+            { key: 'nav.settingsSecurity', href: '/settings/security', icon: ShieldCheck, roles: ADMINS },
+            { key: 'nav.appearance', href: '/settings/appearance', icon: Palette, roles: ADMINS },
+            { key: 'nav.settingsTheme', href: '/settings/theme', icon: Sun, roles: ADMINS },
+            { key: 'nav.navigationLabels', href: '/settings/navigation', icon: LayoutGrid, roles: ADMINS },
+        ],
+    },
+    {
+        labelKey: 'shell.group.account',
+        items: [
+            { key: 'nav.profile', href: '/settings/profile', icon: User, roles: ALL_ROLES },
+            { key: 'nav.password', href: '/settings/password', icon: Lock, roles: ALL_ROLES },
+            { key: 'nav.preferences', href: '/settings/preferences', icon: SlidersHorizontal, roles: ALL_ROLES },
+            { key: 'nav.twoFactor', href: '/settings/security/two-factor', icon: ShieldCheck, roles: ALL_ROLES },
+        ],
     },
 ];
 
@@ -169,17 +244,84 @@ function BrandLockup({ compact = false }: { compact?: boolean }) {
     );
 }
 
+const SIDEBAR_SECTION_KEY = 'aether.sidebar-section';
+
+/** Stable identity for a section, including groups that have no heading. */
+function sidebarSectionKey(group: NavGroup, index: number): string {
+    return group.labelKey ?? `group-${index}`;
+}
+
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     const { locale } = useLocale();
     const page = usePage<App.PageProps>();
     const { auth } = page.props;
     const userRoles = auth.user?.roles || [];
     const pathname = page.url.split('?')[0];
+    const sectionIdPrefix = useId();
 
     const visibleGroups = NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items.filter((item) => item.roles.some((role) => userRoles.includes(role))),
     })).filter((group) => group.items.length > 0);
+
+    // The section that owns the current page, so navigating always reveals it.
+    const activeSection = (() => {
+        const index = visibleGroups.findIndex((group) => group.items.some((item) => isActive(item.href, pathname)));
+        return index === -1 ? null : sidebarSectionKey(visibleGroups[index], index);
+    })();
+
+    const [openSection, setOpenSection] = useState<string | null>(() =>
+        typeof window === 'undefined' ? null : window.localStorage.getItem(SIDEBAR_SECTION_KEY)
+    );
+
+    useEffect(() => {
+        if (!activeSection) return;
+        setOpenSection(activeSection);
+        window.localStorage.setItem(SIDEBAR_SECTION_KEY, activeSection);
+    }, [activeSection]);
+
+    const toggleSection = (key: string) => {
+        setOpenSection((current) => {
+            const next = current === key ? null : key;
+            if (next) window.localStorage.setItem(SIDEBAR_SECTION_KEY, next);
+            else window.localStorage.removeItem(SIDEBAR_SECTION_KEY);
+            return next;
+        });
+    };
+
+    /** One group's links — shared by collapsible and always-open groups. */
+    const renderItems = (group: NavGroup) => (
+        <ul className="space-y-0.5">
+            {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href, pathname);
+                return (
+                    <li key={item.key}>
+                        <Link
+                            href={item.href}
+                            onClick={onNavigate}
+                            aria-current={active ? 'page' : undefined}
+                            className={cn(
+                                'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+                                active
+                                    ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(10,92,66,0.04)]'
+                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            )}
+                        >
+                            <Icon
+                                className={cn(
+                                    'size-[1.05rem] shrink-0 transition-colors',
+                                    active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground'
+                                )}
+                                aria-hidden="true"
+                            />
+                            <span className="truncate">{t(locale, item.key)}</span>
+                        </Link>
+                    </li>
+                );
+            })}
+        </ul>
+    );
 
     return (
         <div className="flex h-full flex-col">
@@ -188,46 +330,60 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </div>
 
             <nav
-                className="sidebar-scroll flex-1 space-y-5 overflow-y-auto px-3 py-4"
+                className="sidebar-scroll flex-1 space-y-1 overflow-y-auto px-3 py-4"
                 aria-label={locale === 'ar' ? 'التنقل الجانبي' : 'Sidebar navigation'}
             >
-                {visibleGroups.map((group, gi) => (
-                    <div key={gi} className="space-y-0.5">
-                        {group.labelKey && (
-                            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground/60">{t(locale, group.labelKey)}</p>
-                        )}
-                        <ul className="space-y-0.5">
-                            {group.items.map((item) => {
-                                const Icon = item.icon;
-                                const active = isActive(item.href, pathname);
-                                return (
-                                    <li key={item.key}>
-                                        <Link
-                                            href={item.href}
-                                            onClick={onNavigate}
-                                            aria-current={active ? 'page' : undefined}
-                                            className={cn(
-                                                'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-                                                active
-                                                    ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(10,92,66,0.04)]'
-                                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                                            )}
-                                        >
-                                            <Icon
-                                                className={cn(
-                                                    'size-[1.05rem] shrink-0 transition-colors',
-                                                    active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground'
-                                                )}
-                                                aria-hidden="true"
-                                            />
-                                            <span className="truncate">{t(locale, item.key)}</span>
-                                        </Link>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
-                ))}
+                {visibleGroups.map((group, gi) => {
+                    // A group with no heading (the standalone dashboard link)
+                    // stays open: collapsing it would hide the only label it has.
+                    if (!group.labelKey) {
+                        return <div key={gi}>{renderItems(group)}</div>;
+                    }
+
+                    const key = sidebarSectionKey(group, gi);
+                    const isOpen = openSection === key;
+                    const panelId = `${sectionIdPrefix}-${gi}`;
+
+                    return (
+                        <div key={key} className="space-y-0.5">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection(key)}
+                                aria-expanded={isOpen}
+                                aria-controls={panelId}
+                                className={cn(
+                                    'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-xs font-semibold uppercase tracking-[0.16em] transition-colors',
+                                    isOpen
+                                        ? 'text-muted-foreground'
+                                        : 'text-muted-foreground/60 hover:bg-muted/50 hover:text-muted-foreground'
+                                )}
+                            >
+                                <span className="truncate">{t(locale, group.labelKey)}</span>
+                                <ChevronDown
+                                    className={cn(
+                                        'size-3.5 shrink-0 transition-transform duration-200',
+                                        isOpen ? 'rotate-0' : '-rotate-90 rtl:rotate-90'
+                                    )}
+                                    aria-hidden="true"
+                                />
+                            </button>
+
+                            {/* 0fr→1fr animates the panel height without measuring
+                                it; `inert` keeps the collapsed links out of the
+                                tab order and the accessibility tree. */}
+                            <div
+                                id={panelId}
+                                inert={!isOpen}
+                                className={cn(
+                                    'grid transition-[grid-template-rows] duration-200 ease-out',
+                                    isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                                )}
+                            >
+                                <div className="overflow-hidden">{renderItems(group)}</div>
+                            </div>
+                        </div>
+                    );
+                })}
             </nav>
 
             <div className="shrink-0 border-t border-border/70 p-2">
@@ -350,10 +506,22 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                                     </Link>
                                 </Button>
                             )}
+                            <ThemeToggle />
                             <LanguageSwitcher variant="ghost" />
                             {canSettings && (
                                 <>
                                     <div className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden="true" />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        asChild
+                                        aria-label="Theme"
+                                        title="Theme"
+                                    >
+                                        <Link href="/settings/theme">
+                                            <Palette className="size-[1.1rem]" aria-hidden="true" />
+                                        </Link>
+                                    </Button>
                                     <Button
                                         variant="ghost"
                                         size="icon-sm"

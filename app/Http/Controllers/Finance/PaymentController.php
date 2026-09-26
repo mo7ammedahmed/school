@@ -4,61 +4,98 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Finance;
 
+use App\Domain\Finance\Models\Invoice;
+use App\Domain\Finance\Models\Payment;
+use App\Domain\Finance\Services\PaymentSettlementService;
+use App\Domain\People\Models\Student;
 use App\Http\Controllers\Controller;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class PaymentController extends Controller
 {
-    public function index()
+    public function __construct(private readonly PaymentSettlementService $settlement) {}
+
+    public function index(): InertiaResponse
     {
-        $payments = Payment::with('invoice')->latest()->paginate(15);
+        $payments = Payment::query()
+            ->where('school_id', $this->schoolId())
+            ->with(['invoice:id,invoice_number', 'student:id,first_name,last_name'])
+            ->latest()
+            ->limit(200)
+            ->get()
+            ->map(fn (Payment $payment) => $this->toRow($payment));
 
         return Inertia::render('finance/payments/index', [
             'payments' => $payments,
         ]);
     }
 
-    public function create()
+    /**
+     * The queue of payments waiting on a human: bank transfers a guardian
+     * confirmed from their payment link, plus anything recorded manually.
+     */
+    public function offline(): InertiaResponse
     {
-        $invoices = Invoice::orderBy('created_at', 'desc')->get();
-        $students = Student::orderBy('first_name')->get();
+        $payments = Payment::query()
+            ->where('school_id', $this->schoolId())
+            ->where('status', 'pending')
+            ->with('invoice:id,invoice_number')
+            ->latest()
+            ->get()
+            ->map(fn (Payment $payment) => $this->toRow($payment));
 
+        return Inertia::render('finance/payments/offline', [
+            'payments' => $payments,
+        ]);
+    }
+
+    public function create(): InertiaResponse
+    {
         return Inertia::render('finance/payments/create', [
-            'invoices' => $invoices,
-            'students' => $students,
+            'invoices' => $this->invoices(),
+            'students' => $this->students(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'invoice_id' => 'required|exists:invoices,id',
+            'student_id' => ['required', 'integer', $this->studentRule()],
+            'invoice_id' => ['required', 'integer', $this->invoiceRule()],
             'payment_number' => 'required|string|max:255|unique:payments,payment_number',
             'amount' => 'required|numeric|min:0.01',
             'currency' => 'nullable|string|max:3',
             'payment_method' => 'required|in:cash,bank_transfer,moyasar,hyperpay,stripe',
             'payment_date' => 'required|date',
-            'status' => 'required|in:pending,completed,failed,refunded,paid',
+            'status' => 'required|in:pending,completed,paid,failed,refunded',
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         $validated['currency'] ??= 'SAR';
-        $validated['school_id'] = $request->session()->get('school_id');
+        $validated['school_id'] = $this->schoolId();
 
-        Payment::create($validated);
+        $payment = Payment::create($validated);
+
+        // Recording a settled payment straight away still has to move the
+        // invoice balance, not just the payment row.
+        if (in_array($payment->status, ['paid', 'completed'], true)) {
+            $this->settlement->settleManually($payment, $payment->reference_number, 'payment_recorded');
+        }
 
         return redirect()->route('finance.payments.index')->with('success', 'Payment created successfully.');
     }
 
-    public function show(Payment $payment)
+    public function show(Payment $payment): InertiaResponse
     {
+        $this->authorizePayment($payment);
+
         $payment->load('invoice.student');
 
         return Inertia::render('finance/payments/show', [
@@ -66,45 +103,153 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function edit(Payment $payment)
+    public function edit(Payment $payment): InertiaResponse
     {
-        $invoices = Invoice::orderBy('created_at', 'desc')->get();
-        $students = Student::orderBy('first_name')->get();
+        $this->authorizePayment($payment);
 
         return Inertia::render('finance/payments/edit', [
             'payment' => $payment,
-            'invoices' => $invoices,
-            'students' => $students,
+            'invoices' => $this->invoices(),
+            'students' => $this->students(),
         ]);
     }
 
     public function update(Request $request, Payment $payment): RedirectResponse
     {
+        $this->authorizePayment($payment);
+
         $validated = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'invoice_id' => 'required|exists:invoices,id',
+            'student_id' => ['required', 'integer', $this->studentRule()],
+            'invoice_id' => ['required', 'integer', $this->invoiceRule()],
             'payment_number' => 'required|string|max:255|unique:payments,payment_number,'.$payment->id,
             'amount' => 'required|numeric|min:0.01',
             'currency' => 'nullable|string|max:3',
             'payment_method' => 'required|in:cash,bank_transfer,moyasar,hyperpay,stripe',
             'payment_date' => 'required|date',
-            'status' => 'required|in:pending,completed,failed,refunded,paid',
+            'status' => 'required|in:pending,completed,paid,failed,refunded',
             'reference_number' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         $validated['currency'] ??= 'SAR';
-        $validated['school_id'] = $request->session()->get('school_id');
 
+        $wasSettled = $payment->status === 'paid';
         $payment->update($validated);
+
+        if (! $wasSettled && in_array($payment->status, ['paid', 'completed'], true)) {
+            $this->settlement->settleManually($payment, $payment->reference_number, 'payment_recorded');
+        }
 
         return redirect()->route('finance.payments.index')->with('success', 'Payment updated successfully.');
     }
 
     public function destroy(Payment $payment): RedirectResponse
     {
+        $this->authorizePayment($payment);
+
         $payment->delete();
 
         return redirect()->route('finance.payments.index')->with('success', 'Payment deleted successfully.');
+    }
+
+    /**
+     * Confirmation screen for a payment that arrived outside a gateway.
+     */
+    public function review(Payment $payment): InertiaResponse
+    {
+        $this->authorizePayment($payment);
+
+        $payment->load('invoice');
+
+        return Inertia::render('finance/payments/return', [
+            'payment' => array_merge($payment->toArray(), [
+                'invoice_number' => $payment->invoice?->invoice_number,
+            ]),
+        ]);
+    }
+
+    /**
+     * Confirm an offline payment. This settles it, updates the invoice and sends
+     * the guardian a receipt.
+     */
+    public function confirm(Request $request, Payment $payment): RedirectResponse
+    {
+        $this->authorizePayment($payment);
+
+        $validated = $request->validate([
+            'reference_number' => 'nullable|string|max:255',
+        ]);
+
+        if ($payment->status === 'paid') {
+            return back()->with('error', 'This payment is already confirmed.');
+        }
+
+        $this->settlement->settleManually($payment, $validated['reference_number'] ?? null);
+
+        return redirect()
+            ->route('finance.payments.offline')
+            ->with('success', 'Payment confirmed. The invoice balance has been updated and a receipt was sent.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function toRow(Payment $payment): array
+    {
+        return [
+            'id' => $payment->id,
+            'payment_number' => $payment->payment_number,
+            'amount' => (float) $payment->amount,
+            'currency' => $payment->currency,
+            'payment_method' => $payment->payment_method,
+            'reference_number' => $payment->reference_number,
+            'status' => $payment->status,
+            'payment_date' => optional($payment->payment_date)->toDateString(),
+            'invoice' => $payment->invoice ? ['invoice_number' => $payment->invoice->invoice_number] : null,
+            'student' => $payment->student ? [
+                'first_name' => $payment->student->first_name,
+                'last_name' => $payment->student->last_name,
+            ] : null,
+        ];
+    }
+
+    private function invoices(): Collection
+    {
+        return Invoice::query()
+            ->where('school_id', $this->schoolId())
+            ->orderByDesc('created_at')
+            ->get(['id', 'invoice_number', 'student_id', 'balance_due', 'currency', 'status']);
+    }
+
+    private function students(): Collection
+    {
+        return Student::query()
+            ->where('school_id', $this->schoolId())
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name', 'student_number']);
+    }
+
+    private function studentRule(): Exists
+    {
+        return Rule::exists('students', 'id')->where('school_id', $this->schoolId());
+    }
+
+    private function invoiceRule(): Exists
+    {
+        return Rule::exists('invoices', 'id')->where('school_id', $this->schoolId());
+    }
+
+    private function schoolId(): int
+    {
+        $schoolId = (int) session('school_id');
+
+        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
+
+        return $schoolId;
+    }
+
+    private function authorizePayment(Payment $payment): void
+    {
+        abort_unless((int) $payment->school_id === $this->schoolId(), 403);
     }
 }

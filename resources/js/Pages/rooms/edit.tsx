@@ -2,6 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -37,11 +38,12 @@ export default function RoomsEdit({ room }: { room: { id: number; name: string; 
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <Label htmlFor="name_ar">Room Name (Arabic)</Label>
-                                <Input id="name_ar" name="name_ar" defaultValue={room.name_ar} required />
+                                <Input id="name_ar" name="name_ar" dir="rtl" defaultValue={room.name_ar} />
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Room Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={room.name_en} required />
+                                <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>
                                 <Label htmlFor="code">Room Code</Label>

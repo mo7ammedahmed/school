@@ -47,6 +47,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UseFactory(StudentFactory::class)]
 class Student extends Model
 {
+    /** @use HasFactory<StudentFactory> */
     use HasFactory, SoftDeletes;
 
     public function school(): BelongsTo

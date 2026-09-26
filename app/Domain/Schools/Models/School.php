@@ -45,6 +45,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class School extends Model
 {
+    /** @use HasFactory<SchoolFactory> */
     use HasFactory, SoftDeletes;
 
     public function getNameAttribute(): string
@@ -111,6 +112,75 @@ class School extends Model
         }
 
         return $metadata['theme'];
+    }
+
+    /**
+     * The five headline tokens per colour mode, shown in Settings → Theme.
+     * Kept separate from the wide `theme` token map so the two editors do not
+     * fight over the same keys.
+     *
+     * @return array{light: array<string, string>, dark: array<string, string>}
+     */
+    public function getThemeModes(): array
+    {
+        $stored = $this->metadata['theme_modes'] ?? [];
+
+        return [
+            'light' => array_merge($this->defaultThemeModes()['light'], $stored['light'] ?? []),
+            'dark' => array_merge($this->defaultThemeModes()['dark'], $stored['dark'] ?? []),
+        ];
+    }
+
+    /**
+     * Persist the per-mode palettes and keep the brand colour columns in sync.
+     *
+     * @param  array{light?: array<string, string>, dark?: array<string, string>}  $modes
+     */
+    public function setThemeModes(array $modes): void
+    {
+        $metadata = $this->metadata ?? [];
+        $metadata['theme_modes'] = [
+            'light' => array_merge($metadata['theme_modes']['light'] ?? [], $modes['light'] ?? []),
+            'dark' => array_merge($metadata['theme_modes']['dark'] ?? [], $modes['dark'] ?? []),
+        ];
+        $this->metadata = $metadata;
+
+        // The accent doubles as the brand primary so exports, e-mails and the
+        // public site stay in step with the dashboard.
+        if (isset($modes['light']['accent'])) {
+            $this->primary_color = $modes['light']['accent'];
+        }
+
+        $this->save();
+    }
+
+    /**
+     * Default light/dark palettes used until a school saves its own.
+     *
+     * @return array{light: array<string, string>, dark: array<string, string>}
+     */
+    protected function defaultThemeModes(): array
+    {
+        // Seed the accent from the school's existing brand colour so schools
+        // that configured branding before this feature keeps their colour.
+        $accent = $this->primary_color ?: '#006c55';
+
+        return [
+            'light' => [
+                'accent' => $accent,
+                'background' => '#f4f3ee',
+                'surface' => '#ffffff',
+                'text' => '#0a0a0a',
+                'muted' => '#6b6b64',
+            ],
+            'dark' => [
+                'accent' => $accent,
+                'background' => '#070707',
+                'surface' => '#0b0b0b',
+                'text' => '#f4f4f1',
+                'muted' => '#a4a4a8',
+            ],
+        ];
     }
 
     /**

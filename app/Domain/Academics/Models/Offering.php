@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
+use App\Domain\Assessment\Models\Assessment;
+use App\Domain\Assessment\Models\Exam;
 use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Material;
@@ -16,8 +18,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Assessment\Models\Assessment;
-use App\Domain\Assessment\Models\Exam;
 
 #[Fillable([
     'school_id',

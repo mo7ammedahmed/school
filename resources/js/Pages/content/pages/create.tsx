@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type SectionType = { value: string; label: string };
@@ -50,11 +51,21 @@ export default function PageCreate({ sectionTypes, page }: { sectionTypes: Secti
                 <Card><CardHeader><CardTitle>Page details</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-2">
                     {(['title', 'title_ar', 'slug', 'seo_title', 'seo_description', 'canonical_url'] as const).map((field) => (
                         <div key={field} className={field === 'seo_description' ? 'md:col-span-2' : ''}>
-                            <Label htmlFor={field}>{field.replaceAll('_', ' ')}</Label>
-                            <Input id={field} value={data[field]} onChange={(event) => setData(field, event.target.value)} />
+                            <Label htmlFor={field}>
+                                {field === 'title' ? 'Title (English)' : field === 'title_ar' ? 'Title (Arabic)' : field.replaceAll('_', ' ')}
+                            </Label>
+                            <Input
+                                id={field}
+                                dir={field === 'title_ar' ? 'rtl' : undefined}
+                                value={data[field]}
+                                onChange={(event) => setData(field, event.target.value)}
+                            />
                             {errors[field] && <p className="text-sm text-destructive">{errors[field]}</p>}
                         </div>
                     ))}
+                    <div className="md:col-span-2">
+                        <TranslatePair enId="title" arId="title_ar" />
+                    </div>
                     <div><Label htmlFor="status">Status</Label><select id="status" className="input w-full" value={data.status} onChange={(event) => setData('status', event.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option></select></div>
                     <div><Label htmlFor="template">Template</Label><select id="template" className="input w-full" value={data.template} onChange={(event) => setData('template', event.target.value)}><option value="standard">Standard</option><option value="landing">Landing</option></select></div>
                 </CardContent></Card>

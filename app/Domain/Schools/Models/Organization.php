@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UseFactory(OrganizationFactory::class)]
 class Organization extends Model
 {
+    /** @use HasFactory<OrganizationFactory> */
     use HasFactory, SoftDeletes;
 
     public function schools(): HasMany

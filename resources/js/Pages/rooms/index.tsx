@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function RoomsIndex({ rooms }: { rooms: { id: number; name: string; code: string; room_type: string; capacity: number }[] }) {
     const columns: ColumnDef<any>[] = [

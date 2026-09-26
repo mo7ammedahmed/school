@@ -124,7 +124,7 @@ type AppearanceProps = {
 export default function AppearanceSettings({ appearance, themeConfig }: AppearanceProps) {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [themeConfigState, setThemeConfigState] = useState<ThemeConfig>(themeConfig);
-    const { data, setData, post, transform, processing, errors, recentlySuccessful, reset } = useForm<{
+    const { setData, post, transform, processing, errors, recentlySuccessful, reset } = useForm<{
         primary_color: string;
         secondary_color: string;
         accent_color: string;
@@ -197,9 +197,10 @@ export default function AppearanceSettings({ appearance, themeConfig }: Appearan
                 },
             ]}
         >
-            <PageHeader>
-                Appearance settings
-            </PageHeader>
+            <PageHeader
+                title="Appearance"
+                description="Upload your school logo and favicon, and tune the public site colors."
+            />
 
             <form onSubmit={submit} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
                 {/* General tab */}

@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read Offering|null $offering
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',
@@ -27,6 +30,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'end_time',
     'room_id',
     'max_score',
+    'questions',
     'is_published',
 ])]
 class Exam extends Model
@@ -96,6 +100,7 @@ class Exam extends Model
         return [
             'exam_date' => 'date:Y-m-d',
             'max_score' => 'decimal:2',
+            'questions' => 'array',
             'is_published' => 'boolean',
         ];
     }

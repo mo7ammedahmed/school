@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function SubjectsIndex({ subjects }: { subjects: { id: number; name: string; code: string; grade_level: { name: string } }[] }) {
     const columns: ColumnDef<any>[] = [

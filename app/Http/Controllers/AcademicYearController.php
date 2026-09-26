@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\AcademicYear;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class AcademicYearController extends Controller
 {
+    use HandlesBilingualInput;
+
     private function schoolId(): int
     {
         return (int) session('school_id');
@@ -35,15 +38,18 @@ class AcademicYearController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name_ar' => 'required|string|max:255',
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => [
-                'required', 'string', 'max:255',
+                'nullable', 'string', 'max:255', 'required_without:name_ar',
                 Rule::unique('academic_years', 'name_en')->where('school_id', $this->schoolId()),
             ],
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'is_current' => 'required|boolean',
         ]);
+
+        // One language is enough: the other is translated and stored for you.
+        $validated = $this->translateBilingual($validated);
 
         DB::transaction(function () use ($validated) {
             if ($validated['is_current']) {
@@ -77,9 +83,9 @@ class AcademicYearController extends Controller
         abort_unless((int) $academicYear->school_id === $this->schoolId(), 403);
 
         $validated = $request->validate([
-            'name_ar' => 'required|string|max:255',
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => [
-                'required', 'string', 'max:255',
+                'nullable', 'string', 'max:255', 'required_without:name_ar',
                 Rule::unique('academic_years', 'name_en')
                     ->where('school_id', $this->schoolId())
                     ->ignore($academicYear->id),
@@ -88,6 +94,8 @@ class AcademicYearController extends Controller
             'end_date' => 'required|date|after:start_date',
             'is_current' => 'required|boolean',
         ]);
+
+        $validated = $this->translateBilingual($validated);
 
         DB::transaction(function () use ($academicYear, $validated) {
             if ($validated['is_current']) {

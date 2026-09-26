@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function MaterialsIndex({ materials }: {    materials: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_size: number; uploaded_at: string }[] }) {
     const columns: ColumnDef<any>[] = [

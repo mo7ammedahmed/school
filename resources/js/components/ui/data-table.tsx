@@ -1,18 +1,10 @@
 import * as React from 'react';
-import {
-    createCoreRowModel,
-    createSortedRowModel,
-} from '@tanstack/table-core';
-import {
-    type ColumnDef,
-    type SortingState,
-    flexRender,
-    useTable,
-} from '@tanstack/react-table';
+import { flexRender, useTable, type RowData, type SortingState } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { tableFeatureSet, type ColumnDef } from '@/lib/table';
 
-interface DataTableProps<TData> {
+interface DataTableProps<TData extends RowData> {
     columns: ColumnDef<TData, any>[];
     data: TData[] | { data: TData[] };
     className?: string;
@@ -22,7 +14,7 @@ interface DataTableProps<TData> {
     onRowClick?: (row: TData) => void;
 }
 
-export function DataTable<TData extends Record<string, any>>({
+export function DataTable<TData extends RowData>({
     columns,
     data,
     className,
@@ -37,12 +29,11 @@ export function DataTable<TData extends Record<string, any>>({
     const rows = Array.isArray(data) ? data : data?.data ?? [];
 
     const table = useTable({
+        features: tableFeatureSet,
         data: rows,
         columns,
-        getCoreRowModel: createCoreRowModel(),
-        getSortedRowModel: createSortedRowModel(),
-        onSortingChange: setSorting,
         state: { sorting },
+        onSortingChange: setSorting,
     });
 
     return (
@@ -105,7 +96,7 @@ export function DataTable<TData extends Record<string, any>>({
                     <tbody className="divide-y divide-border/70 bg-card">
                         {loading ? (
                             <tr>
-                                <td colSpan={table.getVisibleFlatColumns().length} className="px-4 py-16 text-center">
+                                <td colSpan={table.getAllFlatColumns().length} className="px-4 py-16 text-center">
                                     <div className="mx-auto h-4 w-32 animate-pulse rounded-full bg-muted" aria-label="Loading" />
                                 </td>
                             </tr>
@@ -131,7 +122,7 @@ export function DataTable<TData extends Record<string, any>>({
                                     )}
                                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                                 >
-                                    {row.getVisibleCells().map((cell) => (
+                                    {row.getAllCells().map((cell) => (
                                         <td key={cell.id} className="px-4 py-3 text-sm font-medium leading-[1.4] text-foreground/90">
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>

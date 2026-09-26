@@ -1,14 +1,24 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
-
 import { DataTable } from '@/components/ui/data-table';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
-export default function AuditLogsIndex({ auditLogs }: { auditLogs: { id: number; user: { name: string }; action: string; model_type: string; model_id: number; ip_address: string; created_at: string }[] }) {
-    const columns: ColumnDef<any>[] = [
+type AuditLogRow = {
+    id: number;
+    user: { name: string } | null;
+    action: string;
+    entity_type: string | null;
+    entity_id: number | null;
+    ip_address: string | null;
+    created_at: string | null;
+};
+
+export default function AuditLogsIndex({ auditLogs }: { auditLogs: { data: AuditLogRow[] } }) {
+    const columns: ColumnDef<AuditLogRow>[] = [
         {
-            accessorKey: 'user.name',
+            id: 'user',
             header: 'User',
+            cell: ({ row }) => row.original.user?.name ?? 'System',
         },
         {
             accessorKey: 'action',
@@ -16,22 +26,25 @@ export default function AuditLogsIndex({ auditLogs }: { auditLogs: { id: number;
             cell: ({ row }) => row.original.action.charAt(0).toUpperCase() + row.original.action.slice(1),
         },
         {
-            accessorKey: 'model_type',
-            header: 'Model',
-            cell: ({ row }) => row.original.model_type.split('\\').pop(),
+            accessorKey: 'entity_type',
+            header: 'Entity',
+            cell: ({ row }) => (row.original.entity_type ? row.original.entity_type.split('\\').pop() : '—'),
         },
         {
-            accessorKey: 'model_id',
-            header: 'Model ID',
+            accessorKey: 'entity_id',
+            header: 'Entity ID',
+            cell: ({ row }) => row.original.entity_id ?? '—',
         },
         {
             accessorKey: 'ip_address',
             header: 'IP Address',
+            cell: ({ row }) => row.original.ip_address ?? '—',
         },
         {
             accessorKey: 'created_at',
             header: 'Timestamp',
-            cell: ({ row }) => new Date(row.original.created_at).toLocaleString(),
+            cell: ({ row }) =>
+                row.original.created_at ? new Date(row.original.created_at).toLocaleString() : '—',
         },
     ];
 
@@ -43,12 +56,9 @@ export default function AuditLogsIndex({ auditLogs }: { auditLogs: { id: number;
                 { label: 'Audit Logs' },
             ]}
         >
-            <PageHeader
-                title="Audit Logs"
-                description="Track system activities"
-            />
+            <PageHeader title="Audit Logs" description="Track system activities" />
 
-            <DataTable columns={columns} data={auditLogs} />
+            <DataTable columns={columns} data={auditLogs} emptyMessage="No audit log entries yet." />
         </AppShell>
     );
 }

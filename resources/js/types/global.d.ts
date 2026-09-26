@@ -3,17 +3,27 @@ import type { PageProps as InertiaPageProps } from '@inertiajs/core';
 declare global {
     namespace App {
         interface Appearance {
-            /**
-             * Only the light theme is supported. The app always renders
-             * in light mode (no dark variant), regardless of the user's
-             * OS/browser preference.
-             */
-            theme: 'light';
+            /** The user's colour-mode preference. "system" follows the OS. */
+            theme: 'light' | 'dark' | 'system';
             primary_color?: string | null;
             secondary_color?: string | null;
             accent_color?: string | null;
             logo_path?: string | null;
             favicon_path?: string | null;
+        }
+
+        /** The five headline tokens a school can tune per colour mode. */
+        interface ThemePalette {
+            accent: string;
+            background: string;
+            surface: string;
+            text: string;
+            muted: string;
+        }
+
+        interface ThemeModes {
+            light: ThemePalette;
+            dark: ThemePalette;
         }
 
         interface ThemeConfig {
@@ -54,6 +64,7 @@ declare global {
             school?: App.School | null;
             appearance?: App.Appearance;
             themeConfig?: App.ThemeConfig;
+            themeModes?: App.ThemeModes | null;
             navLabels?: Record<string, { en?: string | null; ar?: string | null }>;
             locale: string;
             flash: {

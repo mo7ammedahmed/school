@@ -6,6 +6,7 @@ namespace Tests\Feature\Finance;
 
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Identity\Models\UserMembership;
+use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -43,8 +44,12 @@ class PaymentTest extends TestCase
     {
         $user = User::factory()->create();
         $school = School::factory()->create();
+        // The student must belong to the same school as the invoice: payments are
+        // validated against the active school context.
+        $student = Student::factory()->create(['school_id' => $school->id]);
         $invoice = Invoice::factory()->create([
             'school_id' => $school->id,
+            'student_id' => $student->id,
             'total_amount' => 1000,
             'balance_due' => 1000,
         ]);

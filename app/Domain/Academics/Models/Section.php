@@ -9,8 +9,11 @@ use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
+use Database\Factories\Domain\Academics\Models\SectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -32,9 +35,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends([
     'name',
 ])]
+#[UseFactory(SectionFactory::class)]
 class Section extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<SectionFactory> */
+    use HasFactory, SoftDeletes;
 
     public function getNameAttribute(): string
     {

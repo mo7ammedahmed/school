@@ -5,7 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function SettingsLocalization() {
+type LocalizationSettings = {
+    default_locale?: string;
+    default_timezone?: string;
+    date_format?: string;
+    time_format?: string;
+    currency?: string;
+    currency_symbol?: string;
+    number_format?: string;
+    week_start?: number | string;
+};
+
+export default function SettingsLocalization({ settings = {} }: { settings?: LocalizationSettings }) {
     return (
         <AppShell
             title="Localization Settings"
@@ -31,41 +42,41 @@ export default function SettingsLocalization() {
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="default_locale">Default Language</Label>
-                                    <Input id="default_locale" defaultValue="en" />
+                                    <Input id="default_locale" name="default_locale" defaultValue={settings.default_locale ?? 'en'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="default_timezone">Default Timezone</Label>
-                                    <Input id="default_timezone" defaultValue="Asia/Riyadh" />
+                                    <Input id="default_timezone" name="default_timezone" defaultValue={settings.default_timezone ?? 'Asia/Riyadh'} />
                                 </div>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="date_format">Date Format</Label>
-                                    <Input id="date_format" defaultValue="Y-m-d" />
+                                    <Input id="date_format" name="date_format" defaultValue={settings.date_format ?? 'Y-m-d'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="time_format">Time Format</Label>
-                                    <Input id="time_format" defaultValue="H:i" />
+                                    <Input id="time_format" name="time_format" defaultValue={settings.time_format ?? 'H:i'} />
                                 </div>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="currency">Currency</Label>
-                                    <Input id="currency" defaultValue="SAR" />
+                                    <Input id="currency" name="currency" defaultValue={settings.currency ?? 'SAR'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="currency_symbol">Currency Symbol</Label>
-                                    <Input id="currency_symbol" defaultValue="SAR" />
+                                    <Input id="currency_symbol" name="currency_symbol" defaultValue={settings.currency_symbol ?? 'SAR'} />
                                 </div>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="number_format">Number Format</Label>
-                                    <Input id="number_format" defaultValue="1,234.56" />
+                                    <Input id="number_format" name="number_format" defaultValue={settings.number_format ?? '1,234.56'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="week_start">Week Starts On</Label>
-                                    <Input id="week_start" type="number" defaultValue="0" />
+                                    <Input id="week_start" name="week_start" type="number" min={0} max={6} defaultValue={String(settings.week_start ?? 0)} />
                                 </div>
                             </div>
                             <div className="flex gap-4">

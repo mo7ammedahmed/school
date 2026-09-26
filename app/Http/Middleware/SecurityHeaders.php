@@ -21,14 +21,14 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         $isLocal = config('app.env') === 'local';
-        $viteOrigin = $isLocal ? ' ' . $this->viteOrigin() : '';
-        $fontOrigin = "https://fonts.bunny.net";
+        $viteOrigin = $isLocal ? ' '.$this->viteOrigin() : '';
+        $fontOrigin = 'https://fonts.bunny.net';
 
-        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'" . $viteOrigin;
-        $styleSrc = "'self' 'unsafe-inline'" . $viteOrigin . " $fontOrigin";
-        $fontSrc = "'self' https:" . $viteOrigin . " $fontOrigin";
-        $viteWebSocketOrigin = $isLocal ? ' ws://localhost:' . $this->vitePort() : '';
-        $connectSrc = "'self'" . $viteOrigin . $viteWebSocketOrigin;
+        $scriptSrc = "'self' 'unsafe-inline' 'unsafe-eval'".$viteOrigin;
+        $styleSrc = "'self' 'unsafe-inline'".$viteOrigin." $fontOrigin";
+        $fontSrc = "'self' https:".$viteOrigin." $fontOrigin";
+        $viteWebSocketOrigin = $isLocal ? ' ws://localhost:'.$this->vitePort() : '';
+        $connectSrc = "'self'".$viteOrigin.$viteWebSocketOrigin;
 
         $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src $scriptSrc; style-src $styleSrc; img-src 'self' data: https:; font-src $fontSrc; connect-src $connectSrc");
 
@@ -61,7 +61,7 @@ class SecurityHeaders
             return $fallback;
         }
 
-        return $parts['scheme'] . '://' . $parts['host'] . ':' . $parts['port'];
+        return $parts['scheme'].'://'.$parts['host'].':'.$parts['port'];
     }
 
     private function vitePort(): int

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Inertia\Response;
 
 class RoomController extends Controller
 {
+    use HandlesBilingualInput;
+
     public function index(): Response
     {
         $schoolId = session('school_id');
@@ -27,8 +30,8 @@ class RoomController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'required|string|max:255',
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
             'code' => 'required|string|max:50|unique:rooms,code,NULL,id,school_id,'.session('school_id'),
             'room_type' => 'required|in:classroom,laboratory,library,gymnasium,auditorium,office,other',
             'capacity' => 'required|integer|min:1',
@@ -37,7 +40,7 @@ class RoomController extends Controller
 
         $validated['school_id'] = session('school_id');
 
-        $room = Room::create($validated);
+        $room = Room::create($this->translateBilingual($validated));
 
         return redirect()->route('rooms.show', $room)->with('success', 'Room created successfully.');
     }
@@ -67,15 +70,15 @@ class RoomController extends Controller
         }
 
         $validated = $request->validate([
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'required|string|max:255',
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
             'code' => 'required|string|max:50|unique:rooms,code,'.$room->id.',school_id,'.session('school_id'),
             'room_type' => 'required|in:classroom,laboratory,library,gymnasium,auditorium,office,other',
             'capacity' => 'required|integer|min:1',
             'description' => 'nullable|string',
         ]);
 
-        $room->update($validated);
+        $room->update($this->translateBilingual($validated));
 
         return redirect()->route('rooms.show', $room)->with('success', 'Room updated successfully.');
     }

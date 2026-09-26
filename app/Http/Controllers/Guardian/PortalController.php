@@ -56,7 +56,9 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $timetable = TimetableEntry::whereHas('section.students', fn ($q) => $q->where('students.id', $child->id))
+        $timetable = TimetableEntry::where('school_id', session('school_id'))
+            ->where('is_published', true)
+            ->whereHas('section.students', fn ($q) => $q->where('students.id', $child->id))
             ->with(['offering.subject', 'teacher.user', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')

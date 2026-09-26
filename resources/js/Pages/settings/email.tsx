@@ -5,7 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function SettingsEmail() {
+type MailSettings = {
+    mail_driver?: string;
+    mail_host?: string;
+    mail_port?: number | string;
+    mail_encryption?: string;
+    mail_username?: string;
+    mail_from_address?: string;
+    mail_from_name?: string;
+    has_mail_password?: boolean;
+};
+
+export default function SettingsEmail({ settings = {} }: { settings?: MailSettings }) {
     return (
         <AppShell
             title="Email Configuration"
@@ -31,40 +42,45 @@ export default function SettingsEmail() {
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="mail_driver">Mail Driver</Label>
-                                    <Input id="mail_driver" defaultValue="smtp" />
+                                    <Input id="mail_driver" name="mail_driver" defaultValue={settings.mail_driver ?? 'smtp'} />
                                 </div>
                                 <div>
                                     <Label htmlFor="mail_host">SMTP Host</Label>
-                                    <Input id="mail_host" defaultValue="smtp.gmail.com" />
+                                    <Input id="mail_host" name="mail_host" defaultValue={settings.mail_host ?? 'smtp.gmail.com'} />
                                 </div>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="mail_port">SMTP Port</Label>
-                                    <Input id="mail_port" type="number" defaultValue="587" />
+                                    <Input id="mail_port" name="mail_port" type="number" defaultValue={String(settings.mail_port ?? 587)} />
                                 </div>
                                 <div>
                                     <Label htmlFor="mail_encryption">Encryption</Label>
-                                    <Input id="mail_encryption" defaultValue="tls" />
+                                    <Input id="mail_encryption" name="mail_encryption" defaultValue={settings.mail_encryption ?? 'tls'} />
                                 </div>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="mail_username">Username</Label>
-                                    <Input id="mail_username" defaultValue="noreply@school.edu" />
+                                    <Input id="mail_username" name="mail_username" defaultValue={settings.mail_username ?? ''} />
                                 </div>
                                 <div>
                                     <Label htmlFor="mail_password">Password</Label>
-                                    <Input id="mail_password" type="password" />
+                                    <Input
+                                        id="mail_password"
+                                        name="mail_password"
+                                        type="password"
+                                        placeholder={settings.has_mail_password ? '•••••••• stored' : ''}
+                                    />
                                 </div>
                             </div>
                             <div>
                                 <Label htmlFor="mail_from_address">From Address</Label>
-                                <Input id="mail_from_address" type="email" defaultValue="noreply@school.edu" />
+                                <Input id="mail_from_address" name="mail_from_address" type="email" defaultValue={settings.mail_from_address ?? 'noreply@school.edu'} />
                             </div>
                             <div>
                                 <Label htmlFor="mail_from_name">From Name</Label>
-                                <Input id="mail_from_name" defaultValue="School Administration" />
+                                <Input id="mail_from_name" name="mail_from_name" defaultValue={settings.mail_from_name ?? 'School Administration'} />
                             </div>
                             <div className="flex gap-4">
                                 <Button type="button" variant="outline">Cancel</Button>

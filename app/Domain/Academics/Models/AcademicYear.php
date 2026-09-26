@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class AcademicYear extends Model
 {
+    /** @use HasFactory<AcademicYearFactory> */
     use HasFactory, SoftDeletes;
 
     public function getNameAttribute(): string

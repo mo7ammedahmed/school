@@ -1,3 +1,5 @@
+import { type FormEvent } from 'react';
+import { useForm } from '@inertiajs/react';
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -7,7 +9,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function AssessmentsCreate({ sections }: { sections: { id: number; name: string }[] }) {
+type Option = { id: number; label: string };
+type Category = { id: number; name: string };
+
+type AssessmentsCreateProps = {
+    offerings: Option[];
+    gradingCategories: Category[];
+};
+
+export default function AssessmentsCreate({ offerings, gradingCategories }: AssessmentsCreateProps) {
+    const { data, setData, post, processing, errors } = useForm({
+        offering_id: '',
+        grading_category_id: '',
+        name: '',
+        description: '',
+        due_date: '',
+        max_score: '',
+        weight: '100',
+        is_published: false as boolean,
+    });
+
+    const submit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        post('/assessments');
+    };
+
     return (
         <AppShell
             title="New Assessment"
@@ -22,61 +48,129 @@ export default function AssessmentsCreate({ sections }: { sections: { id: number
                 description="Create a new assessment"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/assessments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/assessments">
+                            <ArrowLeft className="me-2 h-4 w-4" />
+                            Back
+                        </Link>
                     </Button>
                 }
             />
 
-            <Card>
+            <Card className="mt-6">
                 <CardHeader>
                     <CardTitle>Assessment Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-6" method="POST" action="/assessments">
+                    <form onSubmit={submit} className="space-y-6">
                         <div className="grid gap-6 md:grid-cols-2">
-                            <div>
+                            <div className="space-y-2">
                                 <Label htmlFor="name">Assessment Name</Label>
-                                <Input id="name" name="name" required />
+                                <Input
+                                    id="name"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    required
+                                />
+                                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                             </div>
-                            <div>
-                                <Label htmlFor="assessment_type">Assessment Type</Label>
-                                <select id="assessment_type" name="assessment_type" className="input" required>
-                                    <option value="">Select type</option>
-                                    <option value="formative">Formative</option>
-                                    <option value="summative">Summative</option>
-                                    <option value="diagnostic">Diagnostic</option>
-                                    <option value="benchmark">Benchmark</option>
-                                </select>
-                            </div>
-                            <div>
-                                <Label htmlFor="section_id">Section</Label>
-                                <select id="section_id" name="section_id" className="input" required>
-                                    <option value="">Select section</option>
-                                    {sections.map((section) => (
-                                        <option key={section.id} value={section.id}>{section.name}</option>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="offering_id">Offering</Label>
+                                <select
+                                    id="offering_id"
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    value={data.offering_id}
+                                    onChange={(e) => setData('offering_id', e.target.value)}
+                                    required
+                                >
+                                    <option value="">Select offering</option>
+                                    {offerings.map((offering) => (
+                                        <option key={offering.id} value={offering.id}>
+                                            {offering.label}
+                                        </option>
                                     ))}
                                 </select>
+                                {errors.offering_id && <p className="text-sm text-destructive">{errors.offering_id}</p>}
                             </div>
-                            <div>
-                                <Label htmlFor="assessment_date">Assessment Date</Label>
-                                <Input id="assessment_date" name="assessment_date" type="date" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="total_marks">Total Marks</Label>
-                                <Input id="total_marks" name="total_marks" type="number" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="status">Status</Label>
-                                <select id="status" name="status" className="input" required defaultValue="scheduled">
-                                    <option value="scheduled">Scheduled</option>
-                                    <option value="ongoing">Ongoing</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="cancelled">Cancelled</option>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="grading_category_id">Grading Category</Label>
+                                <select
+                                    id="grading_category_id"
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                                    value={data.grading_category_id}
+                                    onChange={(e) => setData('grading_category_id', e.target.value)}
+                                    required
+                                >
+                                    <option value="">Select category</option>
+                                    {gradingCategories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
                                 </select>
+                                {errors.grading_category_id && (
+                                    <p className="text-sm text-destructive">{errors.grading_category_id}</p>
+                                )}
                             </div>
-                            <div className="md:col-span-2">
+
+                            <div className="space-y-2">
+                                <Label htmlFor="due_date">Due Date</Label>
+                                <Input
+                                    id="due_date"
+                                    type="date"
+                                    value={data.due_date}
+                                    onChange={(e) => setData('due_date', e.target.value)}
+                                />
+                                {errors.due_date && <p className="text-sm text-destructive">{errors.due_date}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="max_score">Max Score</Label>
+                                <Input
+                                    id="max_score"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={data.max_score}
+                                    onChange={(e) => setData('max_score', e.target.value)}
+                                />
+                                {errors.max_score && <p className="text-sm text-destructive">{errors.max_score}</p>}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="weight">Weight (%)</Label>
+                                <Input
+                                    id="weight"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="100"
+                                    value={data.weight}
+                                    onChange={(e) => setData('weight', e.target.value)}
+                                    required
+                                />
+                                {errors.weight && <p className="text-sm text-destructive">{errors.weight}</p>}
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="description">Description</Label>
-                                <textarea id="description" name="description" className="input min-h-[100px]" />
+                                <textarea
+                                    id="description"
+                                    className="min-h-[100px] w-full rounded-md border border-input bg-background p-3 text-sm"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-2 md:col-span-2">
+                                <input
+                                    id="is_published"
+                                    type="checkbox"
+                                    checked={data.is_published}
+                                    onChange={(e) => setData('is_published', e.target.checked)}
+                                />
+                                <Label htmlFor="is_published">Publish to students</Label>
                             </div>
                         </div>
 
@@ -84,7 +178,9 @@ export default function AssessmentsCreate({ sections }: { sections: { id: number
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/assessments">Cancel</Link>
                             </Button>
-                            <Button type="submit">Create Assessment</Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Create Assessment'}
+                            </Button>
                         </div>
                     </form>
                 </CardContent>

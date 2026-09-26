@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'school_id',
     'academic_year_id',
     'semester_id',
+    'period_id',
     'offering_id',
     'room_id',
     'teacher_id',
@@ -55,6 +56,11 @@ class TimetableEntry extends Model
         return $this->belongsTo(Semester::class);
     }
 
+    public function period(): BelongsTo
+    {
+        return $this->belongsTo(Period::class);
+    }
+
     public function offering(): BelongsTo
     {
         return $this->belongsTo(Offering::class);
@@ -73,6 +79,17 @@ class TimetableEntry extends Model
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
+    }
+
+    /** 'HH:MM:SS' storage trimmed to 'HH:MM' for display. */
+    public function startsAt(): string
+    {
+        return substr((string) $this->start_time, 0, 5);
+    }
+
+    public function endsAt(): string
+    {
+        return substr((string) $this->end_time, 0, 5);
     }
 
     protected function casts(): array

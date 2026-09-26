@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function ReportCardsIndex({ reportCards }: { reportCards: { id: number; student: { first_name: string; last_name: string }; academic_year: { name: string }; grade: string; gpa: number; status: string }[] }) {
     const columns: ColumnDef<any>[] = [

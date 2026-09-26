@@ -1,11 +1,14 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { QuestionPaper, type ExamQuestion } from '@/components/ui/question-paper';
+import { ArrowLeft, ListChecks } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function ExamsShow({ exam }: { exam: { id: number; name: string; subject: { name: string }; section: { name: string }; exam_date: string; start_time: string; end_time: string; total_marks: number; passing_marks: number; status: string } }) {
+export default function ExamsShow({ exam }: { exam: { id: number; name: string; subject: { name: string }; section: { name: string }; exam_date: string; start_time: string; end_time: string; total_marks: number; passing_marks: number; status: string; questions?: ExamQuestion[] | null } }) {
+    const questions = exam.questions ?? [];
+
     return (
         <AppShell
             title="Exam Details"
@@ -73,6 +76,23 @@ export default function ExamsShow({ exam }: { exam: { id: number; name: string; 
                             <p className="text-base capitalize">{exam.status}</p>
                         </div>
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <ListChecks className="h-4 w-4 text-muted-foreground" />
+                        Question paper
+                    </CardTitle>
+                    <CardDescription>
+                        {questions.length > 0
+                            ? `${questions.length} question${questions.length === 1 ? '' : 's'} imported from Word.`
+                            : 'This exam has no question paper attached.'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <QuestionPaper questions={questions} />
                 </CardContent>
             </Card>
         </AppShell>

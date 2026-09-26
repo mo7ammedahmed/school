@@ -5,7 +5,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function AttendanceIndex({ attendances }: { attendances: { id: number; student: { first_name: string; last_name: string }; date: string; status: string; remarks: string }[] }) {
     const columns: ColumnDef<any>[] = [

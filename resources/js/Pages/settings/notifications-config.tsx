@@ -5,7 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-export default function SettingsNotifications() {
+type NotificationSettings = {
+    email_enrollment?: boolean;
+    email_attendance?: boolean;
+    email_exam?: boolean;
+    email_assignment?: boolean;
+    email_announcement?: boolean;
+};
+
+export default function SettingsNotifications({ settings = {} }: { settings?: NotificationSettings }) {
     return (
         <AppShell
             title="Notification Settings"
@@ -34,35 +42,35 @@ export default function SettingsNotifications() {
                                         <Label htmlFor="email_enrollment">Enrollment Notifications</Label>
                                         <p className="text-sm text-muted-foreground">Receive emails when a student enrolls</p>
                                     </div>
-                                    <Input id="email_enrollment" type="checkbox" defaultChecked className="h-5 w-5" />
+                                    <Input id="email_enrollment" name="email_enrollment" value="1" type="checkbox" defaultChecked={settings.email_enrollment ?? true} className="h-5 w-5" />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="email_attendance">Attendance Alerts</Label>
                                         <p className="text-sm text-muted-foreground">Receive emails for attendance issues</p>
                                     </div>
-                                    <Input id="email_attendance" type="checkbox" defaultChecked className="h-5 w-5" />
+                                    <Input id="email_attendance" name="email_attendance" value="1" type="checkbox" defaultChecked={settings.email_attendance ?? true} className="h-5 w-5" />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="email_exam">Exam Results</Label>
                                         <p className="text-sm text-muted-foreground">Receive emails when exam results are published</p>
                                     </div>
-                                    <Input id="email_exam" type="checkbox" defaultChecked className="h-5 w-5" />
+                                    <Input id="email_exam" name="email_exam" value="1" type="checkbox" defaultChecked={settings.email_exam ?? true} className="h-5 w-5" />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="email_assignment">Assignment Deadlines</Label>
                                         <p className="text-sm text-muted-foreground">Receive emails for upcoming assignment deadlines</p>
                                     </div>
-                                    <Input id="email_assignment" type="checkbox" className="h-5 w-5" />
+                                    <Input id="email_assignment" name="email_assignment" value="1" type="checkbox" defaultChecked={settings.email_assignment ?? false} className="h-5 w-5" />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                         <Label htmlFor="email_announcement">Announcements</Label>
                                         <p className="text-sm text-muted-foreground">Receive emails for new announcements</p>
                                     </div>
-                                    <Input id="email_announcement" type="checkbox" defaultChecked className="h-5 w-5" />
+                                    <Input id="email_announcement" name="email_announcement" value="1" type="checkbox" defaultChecked={settings.email_announcement ?? true} className="h-5 w-5" />
                                 </div>
                             </div>
                             <div className="flex gap-4">

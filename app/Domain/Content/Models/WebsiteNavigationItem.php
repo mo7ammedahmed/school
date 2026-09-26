@@ -53,6 +53,6 @@ class WebsiteNavigationItem extends Model
     {
         $locale = app()->getLocale();
 
-        return $this->{"label_$locale"} ?? $this->label_en;
+        return $this->{"label_$locale"} ?? $this->label_en ?? $this->label_ar ?? '';
     }
 }

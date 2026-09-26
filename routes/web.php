@@ -7,6 +7,7 @@ use App\Http\Controllers\Admissions\ReviewController;
 use App\Http\Controllers\AdmissionsController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\AssessmentImportController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceSessionController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\SchoolSelectionController;
 use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarDayController;
 use App\Http\Controllers\ContentPageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
@@ -33,10 +36,12 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GradeLevelController;
 use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\Platform\HealthController;
 use App\Http\Controllers\Platform\OrganizationController;
 use App\Http\Controllers\Platform\SupportAccessController;
@@ -50,6 +55,7 @@ use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\NewsController as PublicNewsController;
 use App\Http\Controllers\Public\PageController;
 use App\Http\Controllers\Public\ProgramsController;
+use App\Http\Controllers\Public\PublicInvoicePaymentController;
 use App\Http\Controllers\Public\TeachersController;
 use App\Http\Controllers\QuizController;
 use App\Http\Controllers\ReportCardController;
@@ -75,15 +81,21 @@ use App\Http\Controllers\Settings\SchoolSettingsController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\SecuritySettingsController;
 use App\Http\Controllers\Settings\SmsSettingsController;
+use App\Http\Controllers\Settings\ThemeSettingsController;
+use App\Http\Controllers\Settings\TranslationSettingsController;
 use App\Http\Controllers\Student\PortalController as StudentPortalController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\TranslateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
+
+// Interface language is a device-level choice, so it is available to guests too.
+Route::post('/locale', LocaleController::class)->name('locale');
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -162,6 +174,12 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 });
 
 // Authenticated application routes
+// Translates a single field for the bilingual inputs. Any signed-in author can
+// use it; it spends provider credits so it is rate limited per user.
+Route::middleware(['auth', 'school.context'])
+    ->post('/translate', TranslateController::class)
+    ->name('translate');
+
 Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -194,10 +212,27 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
     // Scheduling
     Route::resource('rooms', RoomController::class);
-    Route::resource('timetable', TimetableController::class);
+    Route::resource('periods', PeriodController::class)->except(['create', 'show', 'edit']);
+
+    // Registered before the resource so /timetable/grid is not swallowed by /timetable/{timetable}.
+    Route::get('/timetable/grid', [TimetableController::class, 'grid'])->name('timetable.grid');
+    Route::get('/timetable/calendar', [TimetableController::class, 'calendar'])->name('timetable.calendar');
+    Route::get('/timetable/list', [TimetableController::class, 'list'])->name('timetable.list');
+    Route::get('/timetable/conflicts', [TimetableController::class, 'conflicts'])->name('timetable.conflicts');
+    Route::get('/timetable/export/pdf', [TimetableController::class, 'exportPdf'])->name('timetable.export.pdf');
+    Route::get('/timetable/export/ics', [TimetableController::class, 'exportIcs'])->name('timetable.export.ics');
     Route::get('/timetable/teacher/{teacher}', [TimetableController::class, 'teacher'])->name('timetable.teacher');
     Route::get('/timetable/class/{section}', [TimetableController::class, 'section'])->name('timetable.section');
+    Route::post('/timetable/{timetable}/publish', [TimetableController::class, 'publish'])->name('timetable.publish');
+    Route::post('/timetable/{timetable}/unpublish', [TimetableController::class, 'unpublish'])->name('timetable.unpublish');
+    Route::resource('timetable', TimetableController::class);
     Route::get('/my-schedule', [TimetableController::class, 'mySchedule'])->name('my-schedule');
+
+    // Academic calendar
+    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/feed', [CalendarController::class, 'feed'])->name('calendar.feed');
+    Route::get('/calendar/export.ics', [CalendarController::class, 'download'])->name('calendar.export');
+    Route::resource('calendar-days', CalendarDayController::class)->only(['store', 'update', 'destroy']);
 
     // Attendance
     Route::resource('attendance-sessions', AttendanceSessionController::class)->parameters(['attendance-sessions' => 'session']);
@@ -213,6 +248,15 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/my-attendance', [AttendanceController::class, 'myAttendance'])->name('my-attendance');
 
     // Assessment
+    // Word import is registered before the resource so /assessments/import is
+    // not swallowed by /assessments/{assessment}.
+    Route::middleware('permission:manage-exams|manage-quizzes')->group(function () {
+        Route::get('/assessments/import', [AssessmentImportController::class, 'create'])->name('assessments.import');
+        Route::post('/assessments/import/parse', [AssessmentImportController::class, 'parse'])->name('assessments.import.parse');
+        Route::post('/assessments/import', [AssessmentImportController::class, 'store'])->name('assessments.import.store');
+        Route::get('/assessments/import/template', [AssessmentImportController::class, 'template'])->name('assessments.import.template');
+    });
+
     Route::resource('assessments', AssessmentController::class);
     Route::get('/assessments/{assessment}/scores', [AssessmentController::class, 'scores'])->name('assessments.scores');
     Route::resource('exams', ExamController::class);
@@ -241,10 +285,16 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::put('/fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
         Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])->name('fee-assignments.index');
         Route::resource('discounts', FinanceDiscountController::class);
+        // Invoice actions must be declared before the resource so the extra
+        // segments are not swallowed by the {invoice} wildcard.
+        Route::post('/invoices/{invoice}/issue', [FinanceInvoiceController::class, 'issue'])->name('invoices.issue');
+        Route::post('/invoices/{invoice}/send', [FinanceInvoiceController::class, 'send'])->name('invoices.send');
+        Route::get('/invoices/{invoice}/pdf', [FinanceInvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::resource('invoices', FinanceInvoiceController::class);
         Route::get('/payments/offline', [FinancePaymentController::class, 'offline'])->name('payments.offline');
+        Route::get('/payments/{payment}/review', [FinancePaymentController::class, 'review'])->name('payments.review');
+        Route::post('/payments/{payment}/confirm', [FinancePaymentController::class, 'confirm'])->name('payments.confirm');
         Route::resource('payments', FinancePaymentController::class);
-        Route::get('/payments/{payment}/return', [FinancePaymentController::class, 'return'])->name('payments.return');
         Route::resource('refunds', FinanceRefundController::class);
         Route::get('/my-fees', [FinanceController::class, 'myFees'])->name('my-fees');
     });
@@ -317,8 +367,15 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/localization', [LocalizationSettingsController::class, 'store']);
         Route::get('/appearance', [AppearanceSettingsController::class, 'index'])->name('appearance');
         Route::post('/appearance', [AppearanceSettingsController::class, 'store'])->name('appearance.store');
+        Route::get('/theme', [ThemeSettingsController::class, 'index'])->name('theme');
+        Route::post('/theme', [ThemeSettingsController::class, 'store'])->name('theme.store');
         Route::get('/navigation', [NavigationSettingsController::class, 'index'])->name('navigation');
         Route::post('/navigation', [NavigationSettingsController::class, 'store']);
+        Route::get('/translations', [TranslationSettingsController::class, 'index'])->name('translations');
+        Route::post('/translations', [TranslationSettingsController::class, 'store']);
+        Route::post('/translations/test', [TranslationSettingsController::class, 'test'])->name('translations.test');
+        Route::post('/translations/backfill', [TranslationSettingsController::class, 'backfill'])->name('translations.backfill');
+        Route::post('/translations/models', [TranslationSettingsController::class, 'models'])->name('translations.models');
         Route::get('/payments', [PaymentSettingsController::class, 'index'])->name('payments');
         Route::post('/payments', [PaymentSettingsController::class, 'store']);
         Route::get('/payments/logs', [PaymentSettingsController::class, 'logs'])->name('payments.logs');
@@ -334,6 +391,8 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/password', [PasswordController::class, 'store']);
         Route::get('/preferences', [PreferenceController::class, 'index'])->name('preferences');
         Route::post('/preferences', [PreferenceController::class, 'store']);
+        // Light/dark toggle is a personal preference, not an admin setting.
+        Route::post('/theme/mode', [ThemeSettingsController::class, 'storeMode'])->name('theme.mode');
         Route::get('/security/two-factor', [SecurityController::class, 'index'])->name('security.two-factor');
         Route::post('/security/two-factor/enable', [SecurityController::class, 'enable'])->name('security.two-factor.enable');
         Route::post('/security/two-factor/disable', [SecurityController::class, 'disable'])->name('security.two-factor.disable');
@@ -367,6 +426,15 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/children/{child}/assignments', [GuardianPortalController::class, 'childAssignments'])->name('children.assignments');
         Route::get('/children/{child}/fees', [GuardianPortalController::class, 'childFees'])->name('children.fees');
     });
+});
+
+// Public payment links handed to guardians in invoice emails. Access is proven
+// by the signature rather than a session, so these sit outside the auth group.
+Route::prefix('pay')->name('public.invoices.')->middleware('signed')->group(function () {
+    Route::get('/{invoice}', [PublicInvoicePaymentController::class, 'show'])->name('pay');
+    Route::get('/{invoice}/pdf', [PublicInvoicePaymentController::class, 'pdf'])->name('pdf');
+    Route::post('/{invoice}/checkout', [PublicInvoicePaymentController::class, 'checkout'])->name('checkout');
+    Route::post('/{invoice}/offline', [PublicInvoicePaymentController::class, 'offline'])->name('offline');
 });
 
 // Webhook routes (no auth middleware)

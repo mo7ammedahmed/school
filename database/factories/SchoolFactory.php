@@ -6,6 +6,7 @@ use App\Domain\Schools\Models\Organization;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<School> */
 class SchoolFactory extends Factory
 {
     protected $model = School::class;

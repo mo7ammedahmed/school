@@ -14,8 +14,11 @@ class SetLocale
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Order matters: an explicit choice (session, then cookie) beats the
+        // user profile, which beats the school default and the browser hint.
         $locale = $request->session()->get('locale')
             ?? $request->cookie('locale')
+            ?? $request->user()?->locale
             ?? $request->getPreferredLanguage($this->availableLocales)
             ?? 'en';
 

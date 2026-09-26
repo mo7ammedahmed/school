@@ -213,7 +213,8 @@ export default function OnboardingGradingSettings({ school, gradingScales, gradi
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Checkbox id="includeExtracurricular" name="include_extracurricular" defaultChecked={settings.include_extracurricular} />
+                  <input type="hidden" name="include_extracurricular" value="0" />
+                  <Checkbox id="includeExtracurricular" name="include_extracurricular" value="1" defaultChecked={settings.include_extracurricular} />
                   <div>
                     <Label htmlFor="includeExtracurricular">Include Extracurricular Activities in Grade Calculation</Label>
                     <p className="text-sm text-gray-500">

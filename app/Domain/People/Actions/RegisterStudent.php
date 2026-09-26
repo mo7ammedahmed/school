@@ -32,7 +32,7 @@ class RegisterStudent
             'password' => bcrypt(Str::random(16)),
         ];
 
-        DB::transaction(function () use ($data, $userData) {
+        $student = DB::transaction(function () use ($data, $userData) {
             $user = User::create($userData);
 
             return Student::create([

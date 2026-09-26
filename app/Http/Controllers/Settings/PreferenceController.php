@@ -11,43 +11,49 @@ use Inertia\Response;
 
 class PreferenceController extends Controller
 {
-    public function edit(): Response
+    public function index(): Response
     {
-        return inertia('settings/preferences/edit', [
+        $user = auth()->user();
+
+        return inertia('settings/preferences', [
             'preferences' => [
-                'locale' => auth()->user()->locale ?? config('app.locale'),
-                'timezone' => auth()->user()->timezone ?? config('app.timezone'),
-                'theme' => auth()->user()->theme ?? 'light',
-                'notifications' => [
-                    'email' => auth()->user()->email_notifications ?? true,
-                    'push' => auth()->user()->push_notifications ?? true,
-                    'sms' => auth()->user()->sms_notifications ?? false,
-                ],
+                'locale' => $user->locale ?? config('app.locale'),
+                'timezone' => $user->timezone ?? config('app.timezone'),
+                'theme' => $user->theme ?? 'light',
+                'email_notifications' => (bool) ($user->email_notifications ?? true),
+                'sms_notifications' => (bool) ($user->sms_notifications ?? false),
             ],
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function edit(): Response
+    {
+        return $this->index();
+    }
+
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'locale' => 'required|string|size:2',
-            'timezone' => 'required|string',
+            'locale' => 'required|in:en,ar',
+            'timezone' => 'required|string|max:64',
             'theme' => 'required|in:light,dark,system',
-            'notifications' => 'required|array',
-            'notifications.email' => 'required|boolean',
-            'notifications.push' => 'required|boolean',
-            'notifications.sms' => 'required|boolean',
+            'email_notifications' => 'sometimes|boolean',
+            'sms_notifications' => 'sometimes|boolean',
         ]);
 
-        auth()->user()->update([
+        $request->user()->update([
             'locale' => $validated['locale'],
             'timezone' => $validated['timezone'],
             'theme' => $validated['theme'],
-            'email_notifications' => $validated['notifications']['email'],
-            'push_notifications' => $validated['notifications']['push'],
-            'sms_notifications' => $validated['notifications']['sms'],
+            'email_notifications' => $request->boolean('email_notifications'),
+            'sms_notifications' => $request->boolean('sms_notifications'),
         ]);
 
-        return redirect()->route('settings.preferences.edit')->with('success', 'Preferences updated successfully.');
+        return redirect()->route('settings.preferences')->with('success', 'Preferences updated successfully.');
+    }
+
+    public function update(Request $request): RedirectResponse
+    {
+        return $this->store($request);
     }
 }

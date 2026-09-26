@@ -8,8 +8,11 @@ use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Quiz;
 use App\Domain\Schools\Models\School;
+use Database\Factories\Domain\Academics\Models\SubjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,13 +25,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'code',
     'subject_type',
     'description',
+    'grade_level_id',
 ])]
 #[Appends([
     'name',
 ])]
+#[UseFactory(SubjectFactory::class)]
 class Subject extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<SubjectFactory> */
+    use HasFactory, SoftDeletes;
 
     public function school(): BelongsTo
     {
@@ -64,6 +70,6 @@ class Subject extends Model
     {
         $locale = app()->getLocale();
 
-        return $this->{"name_$locale"} ?? $this->name_en;
+        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
     }
 }

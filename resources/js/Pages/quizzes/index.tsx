@@ -3,9 +3,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { FileUp, Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function QuizzesIndex({ quizzes }: {    quizzes: { id: number; title: string; subject: { name: string }; section: { name: string }; duration_minutes: number; total_marks: number; status: string }[] }) {
     const columns: ColumnDef<any>[] = [
@@ -66,9 +66,14 @@ export default function QuizzesIndex({ quizzes }: {    quizzes: { id: number; ti
                 title="Quizzes"
                 description="Manage quizzes"
                 actions={
-                    <Button asChild>
-                        <Link href="/quizzes/create"><Plus className="mr-2 h-4 w-4" />New Quiz</Link>
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/assessments/import"><FileUp className="mr-2 h-4 w-4" />Import from Word</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/quizzes/create"><Plus className="mr-2 h-4 w-4" />New Quiz</Link>
+                        </Button>
+                    </div>
                 }
             />
 

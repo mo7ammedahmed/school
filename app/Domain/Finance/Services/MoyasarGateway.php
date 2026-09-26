@@ -24,6 +24,31 @@ class MoyasarGateway implements PaymentGatewayInterface
         $this->baseUrl = config('services.moyasar.base_url', 'https://api.moyasar.com/v1');
     }
 
+    /**
+     * Point this gateway at a school's own credentials instead of the env
+     * defaults, so each school can hold its own merchant account.
+     */
+    public function useSchoolSettings(int $schoolId): static
+    {
+        $settings = GatewaySettings::for($schoolId);
+
+        if ($settings->publicKey() !== null) {
+            $this->apiKey = $settings->publicKey();
+        }
+
+        if ($settings->secretKey() !== null) {
+            $this->secretKey = $settings->secretKey();
+        }
+
+        return $this;
+    }
+
+    public function isConfigured(): bool
+    {
+        return $this->apiKey !== null && $this->apiKey !== ''
+            && $this->secretKey !== null && $this->secretKey !== '';
+    }
+
     public function createPayment(Payment $payment, array $metadata = []): array
     {
         try {

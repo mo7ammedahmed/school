@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+
+    # Laravel 11+ models declare casts in a casts() method rather than a
+    # $casts property. Larastan skips that method unless this is enabled,
+    # which leaves every date/enum/bool attribute typed as string.
+    parseModelCastsMethod: true
+
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - routes
+        - tests
+
+    excludePaths:
+        - bootstrap/cache/*
+        - app/Http/Controllers/Public/*

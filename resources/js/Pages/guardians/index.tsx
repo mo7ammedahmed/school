@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function GuardiansIndex({ guardians }: { guardians: { id: number; first_name: string; last_name: string; email: string; phone: string; relationship: string }[] }) {
     const columns: ColumnDef<any>[] = [

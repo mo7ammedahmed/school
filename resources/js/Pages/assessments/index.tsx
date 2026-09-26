@@ -5,39 +5,61 @@ import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
-export default function AssessmentsIndex({ assessments }: { assessments: { id: number; name: string; assessment_type: string; section: { name: string }; assessment_date: string; total_marks: number; status: string }[] }) {
-    const columns: ColumnDef<any>[] = [
+type AssessmentRow = {
+    id: number;
+    name: string;
+    category: string | null;
+    subject: string | null;
+    section: string | null;
+    due_date: string | null;
+    max_score: number | null;
+    weight: number | null;
+    is_published: boolean;
+};
+
+export default function AssessmentsIndex({ assessments }: { assessments: { data: AssessmentRow[] } }) {
+    const columns: ColumnDef<AssessmentRow>[] = [
         {
             accessorKey: 'name',
             header: 'Name',
         },
         {
-            accessorKey: 'assessment_type',
-            header: 'Type',
-            cell: ({ row }) => row.original.assessment_type.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            accessorKey: 'category',
+            header: 'Category',
+            cell: ({ row }) => row.original.category ?? '—',
         },
         {
-            accessorKey: 'section.name',
+            accessorKey: 'subject',
+            header: 'Subject',
+            cell: ({ row }) => row.original.subject ?? '—',
+        },
+        {
+            accessorKey: 'section',
             header: 'Section',
+            cell: ({ row }) => row.original.section ?? '—',
         },
         {
-            accessorKey: 'assessment_date',
-            header: 'Date',
+            accessorKey: 'due_date',
+            header: 'Due Date',
+            cell: ({ row }) => row.original.due_date ?? '—',
         },
         {
-            accessorKey: 'total_marks',
-            header: 'Total Marks',
+            accessorKey: 'max_score',
+            header: 'Max Score',
+            cell: ({ row }) => (row.original.max_score === null ? '—' : row.original.max_score.toFixed(2)),
         },
         {
-            accessorKey: 'status',
+            accessorKey: 'weight',
+            header: 'Weight',
+            cell: ({ row }) => (row.original.weight === null ? '—' : `${row.original.weight}%`),
+        },
+        {
+            accessorKey: 'is_published',
             header: 'Status',
-            cell: ({ row }) => {
-                const status = row.original.status;
-                const variant = status === 'completed' ? 'default' : status === 'scheduled' ? 'secondary' : 'destructive';
-                return <Badge variant={variant}>{status}</Badge>;
-            },
+            cell: ({ row }) =>
+                row.original.is_published ? <Badge>Published</Badge> : <Badge variant="secondary">Draft</Badge>,
         },
         {
             id: 'actions',
@@ -48,7 +70,7 @@ export default function AssessmentsIndex({ assessments }: { assessments: { id: n
                         <Link href={`/assessments/${row.original.id}`}>View</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/assessments/${row.original.id}/edit`}>Edit</Link>
+                        <Link href={`/assessments/${row.original.id}/scores`}>Scores</Link>
                     </Button>
                 </div>
             ),
@@ -65,15 +87,18 @@ export default function AssessmentsIndex({ assessments }: { assessments: { id: n
         >
             <PageHeader
                 title="Assessments"
-                description="Manage assessments"
+                description="Manage assessments and their weightings"
                 actions={
                     <Button asChild>
-                        <Link href="/assessments/create"><Plus className="mr-2 h-4 w-4" />New Assessment</Link>
+                        <Link href="/assessments/create">
+                            <Plus className="me-2 h-4 w-4" />
+                            New Assessment
+                        </Link>
                     </Button>
                 }
             />
 
-            <DataTable columns={columns} data={assessments} />
+            <DataTable columns={columns} data={assessments} emptyMessage="No assessments yet." />
         </AppShell>
     );
 }

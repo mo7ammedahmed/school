@@ -13,7 +13,7 @@ class ProfileController extends Controller
 {
     public function edit(): Response
     {
-        return inertia('settings/profile/edit', [
+        return inertia('settings/profile', [
             'user' => auth()->user(),
         ]);
     }

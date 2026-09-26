@@ -2,6 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -37,11 +38,12 @@ export default function AcademicYearsEdit({ academicYear }: { academicYear: { id
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <Label htmlFor="name_ar">Academic Year Name (Arabic)</Label>
-                                <Input id="name_ar" name="name_ar" defaultValue={academicYear.name_ar} required />
+                                <Input id="name_ar" name="name_ar" dir="rtl" defaultValue={academicYear.name_ar} />
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Academic Year Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={academicYear.name_en} required />
+                                <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>
                                 <Label htmlFor="is_current">Current Year</Label>

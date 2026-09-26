@@ -2,6 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -36,11 +37,12 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <Label htmlFor="name_ar">Subject Name (Arabic)</Label>
-                                <Input id="name_ar" name="name_ar" required />
+                                <Input id="name_ar" name="name_ar" dir="rtl" />
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Subject Name (English)</Label>
                                 <Input id="name_en" name="name_en" required />
+                                <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>
                                 <Label htmlFor="code">Subject Code</Label>
@@ -55,10 +57,7 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
                                     ))}
                                 </select>
                             </div>
-                            <div>
-                                <Label htmlFor="credits">Credits</Label>
-                                <Input id="credits" name="credits" type="number" step="0.1" />
-                            </div>
+
                         </div>
 
                         <div className="flex gap-4">

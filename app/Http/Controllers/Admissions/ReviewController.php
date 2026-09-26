@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Admissions;
 
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Admissions\Services\AdmissionReviewService;
-use App\Models\User;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,16 +31,7 @@ class ReviewController extends Controller
         $filters = $request->only(['status', 'assigned_to', 'priority', 'search']);
         $applications = $this->reviewService->getReviewQueue($schoolId, $filters);
 
-        // Get reviewers (admissions staff) for assignment dropdown
-        $reviewers = User::whereHas('rolePermissions', function ($q) {
-            $q->whereHas('permission', function ($q) {
-                $q->where('name', 'manage-admissions');
-            });
-        })->get(['id', 'first_name', 'last_name'])
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => trim($user->first_name.' '.$user->last_name),
-            ]);
+        $reviewers = $this->reviewers();
 
         $statistics = $this->reviewService->getReviewStatistics($schoolId);
 
@@ -57,19 +48,19 @@ class ReviewController extends Controller
                 'assigned_to' => $app->assignedTo
                     ? [
                         'id' => $app->assignedTo->id,
-                        'name' => trim($app->assignedTo->first_name.' '.$app->assignedTo->last_name),
+                        'name' => $app->assignedTo->name,
                     ]
                     : null,
                 'reviewer' => $app->reviewer
                     ? [
                         'id' => $app->reviewer->id,
-                        'name' => trim($app->reviewer->first_name.' '.$app->reviewer->last_name),
+                        'name' => $app->reviewer->name,
                     ]
                     : null,
                 'internal_notes' => $app->internal_notes,
             ]),
             'filters' => $filters,
-            'reviewers' => $reviewers->values()->all(),
+            'reviewers' => $reviewers,
             'statistics' => $statistics,
             'priorityLevels' => [
                 'low' => 'Low',
@@ -169,16 +160,7 @@ class ReviewController extends Controller
      */
     public function showForReview(AdmissionApplication $application): Response
     {
-        // Get reviewers (admissions staff) for assignment dropdown
-        $reviewers = User::whereHas('rolePermissions', function ($q) {
-            $q->whereHas('permission', function ($q) {
-                $q->where('name', 'manage-admissions');
-            });
-        })->get(['id', 'first_name', 'last_name'])
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => trim($user->first_name.' '.$user->last_name),
-            ]);
+        $reviewers = $this->reviewers();
 
         $this->authorize('manage-admissions');
 
@@ -218,12 +200,36 @@ class ReviewController extends Controller
                     'user' => $event->user
                         ? [
                             'id' => $event->user->id,
-                            'name' => trim($event->user->first_name.' '.$event->user->last_name),
+                            'name' => $event->user->name,
                         ]
                         : null,
                 ]),
             ],
-            'reviewers' => $reviewers->values()->all(),
+            'reviewers' => $reviewers,
         ]);
+    }
+
+    /**
+     * Staff who may be assigned applications.
+     *
+     * Resolved through the Spatie role → permission relations; the previous
+     * `rolePermissions`/`permission` relations do not exist and the selected
+     * `first_name`/`last_name` columns do not exist on users either.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function reviewers(): array
+    {
+        return User::whereHas('roles.permissions', function ($query) {
+            $query->where('name', 'manage-admissions');
+        })
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ])
+            ->values()
+            ->all();
     }
 }

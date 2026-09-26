@@ -52,10 +52,18 @@ class EnsureSchoolContext
             return redirect()->route('school.select');
         }
 
-        if ($schoolId !== null && ! School::find((int) $schoolId)) {
+        $school = $schoolId !== null ? School::find((int) $schoolId) : null;
+
+        if ($schoolId !== null && ! $school) {
             session()->forget('school_id');
 
             return redirect()->route('school.select');
+        }
+
+        // Expose the resolved school to controllers so they never have to
+        // re-derive tenant scope from the session themselves.
+        if ($school) {
+            $request->attributes->set('school', $school);
         }
 
         return $next($request);

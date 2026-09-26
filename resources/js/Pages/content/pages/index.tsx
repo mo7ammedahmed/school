@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import type { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 type Page = { id: number; title: string; slug: string; status: string; updated_at: string };
 

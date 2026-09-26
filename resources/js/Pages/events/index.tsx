@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function EventsIndex({ events }: { events: { id: number; title: string; event_date: string; location: string; target_audience: string; is_active: boolean }[] }) {
     const columns: ColumnDef<any>[] = [

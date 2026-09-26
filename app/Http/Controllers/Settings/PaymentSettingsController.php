@@ -4,34 +4,95 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Domain\Finance\Models\GatewayTransaction;
+use App\Domain\Finance\Models\WebhookEvent;
+use App\Domain\Finance\Services\GatewaySettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
+/**
+ * Lets a school administrator choose and configure the payment gateway used for
+ * guardian payment links.
+ */
 class PaymentSettingsController extends Controller
 {
-    public function edit(): Response
+    public function index(): Response
     {
-        return inertia('settings/payments/edit');
+        $schoolId = $this->schoolId();
+        $settings = GatewaySettings::for($schoolId);
+
+        return inertia('settings/payments', [
+            'settings' => $settings->masked(),
+            'gateways' => [
+                ['value' => 'offline', 'label' => 'Offline / bank transfer', 'online' => false],
+                ['value' => 'moyasar', 'label' => 'Moyasar', 'online' => true],
+                ['value' => 'hyperpay', 'label' => 'HyperPay', 'online' => true],
+                ['value' => 'stripe', 'label' => 'Stripe', 'online' => true],
+            ],
+            'channels' => [
+                ['value' => 'email', 'label' => 'Email (invoice PDF + payment link)'],
+                ['value' => 'sms', 'label' => 'SMS (short link)'],
+                ['value' => 'inapp', 'label' => 'In-app notification'],
+            ],
+            'webhookUrl' => route('webhooks.payments.handle', ['gateway' => $settings->gateway()]),
+            'activity' => $settings->activity(),
+            'onlineCheckout' => $settings->supportsOnlineCheckout(),
+        ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'payment_gateway' => 'required|in:stripe,paypal,razorpay,custom',
-            'stripe_key' => 'nullable|string|max:255',
-            'stripe_secret' => 'nullable|string|max:255',
-            'paypal_client_id' => 'nullable|string|max:255',
-            'paypal_secret' => 'nullable|string|max:255',
-            'paypal_mode' => 'required|in:sandbox,live',
+        $validated = $request->validate([
+            'gateway' => 'required|in:'.implode(',', GatewaySettings::GATEWAYS),
+            'mode' => 'required|in:'.implode(',', GatewaySettings::MODES),
+            'enabled' => 'required|boolean',
             'currency' => 'required|string|max:10',
-            'payment_enabled' => 'required|boolean',
-            'auto_approve_payments' => 'required|boolean',
+            'auto_send' => 'required|boolean',
+            'channels' => 'present|array',
+            'channels.*' => 'in:'.implode(',', GatewaySettings::CHANNELS),
+            'public_key' => 'nullable|string|max:500',
+            'secret_key' => 'nullable|string|max:500',
+            'webhook_secret' => 'nullable|string|max:500',
+            'clear_secret_key' => 'nullable|boolean',
+            'clear_webhook_secret' => 'nullable|boolean',
+            'instructions' => 'nullable|string|max:2000',
         ]);
 
-        // TODO: Save payment settings to database or config
+        GatewaySettings::for($this->schoolId())->save($validated);
 
-        return redirect()->route('settings.payments.edit')->with('success', 'Payment settings updated successfully.');
+        return back()->with('success', 'Payment settings saved.');
+    }
+
+    public function logs(): Response
+    {
+        $schoolId = $this->schoolId();
+
+        $transactions = GatewayTransaction::query()
+            ->where('school_id', $schoolId)
+            ->latest()
+            ->limit(50)
+            ->get(['id', 'gateway', 'gateway_transaction_id', 'status', 'amount', 'created_at']);
+
+        $events = WebhookEvent::query()
+            ->where('school_id', $schoolId)
+            ->latest()
+            ->limit(50)
+            ->get(['id', 'gateway', 'event_id', 'event_type', 'status', 'error_message', 'created_at']);
+
+        return inertia('settings/payments-logs', [
+            'transactions' => $transactions,
+            'events' => $events,
+        ]);
+    }
+
+    private function schoolId(): int
+    {
+        $schoolId = (int) session('school_id');
+
+        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
+
+        return $schoolId;
     }
 }

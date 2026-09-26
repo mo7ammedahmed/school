@@ -73,10 +73,12 @@ class InvoiceTest extends TestCase
             'notes' => 'Test invoice',
         ]);
 
-        $response->assertRedirect('/finance/invoices');
+        // Creation lands on the invoice so it can be issued (and delivered) next.
+        $response->assertRedirect('/finance/invoices/1');
         $this->assertDatabaseHas('invoices', [
             'invoice_number' => 'INV-001',
             'school_id' => $school->id,
+            'status' => 'draft',
         ]);
     }
 

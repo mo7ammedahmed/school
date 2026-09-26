@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property bool|null $is_financial_guardian
+ *                                            Populated by Invoice::guardians() to flag the guardian responsible for fees.
+ *                                            It is not a database column, so it is only set when loaded that way.
+ */
 #[Fillable([
     'school_id',
     'user_id',
@@ -32,16 +37,19 @@ class Guardian extends Model
 {
     use SoftDeletes;
 
+    /** @return BelongsTo<School, $this> */
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<GuardianRelationship, $this> */
     public function relationships(): HasMany
     {
         return $this->hasMany(GuardianRelationship::class);
@@ -49,6 +57,8 @@ class Guardian extends Model
 
     /**
      * Children linked through guardian_relationships (belongsToMany via pivot).
+     *
+     * @return BelongsToMany<Student, $this>
      */
     public function students(): BelongsToMany
     {

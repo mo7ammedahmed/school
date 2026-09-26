@@ -40,6 +40,6 @@ class WebsiteNavigationMenu extends Model
     {
         $locale = app()->getLocale();
 
-        return $this->{"name_$locale"} ?? $this->name_en;
+        return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
     }
 }

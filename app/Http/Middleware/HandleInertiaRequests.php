@@ -75,13 +75,20 @@ class HandleInertiaRequests extends Middleware
                 ]
             ),
             'themeConfig' => $school ? $school->getThemeConfig() : [],
+            // Light/dark headline palettes, editable in Settings → Theme.
+            'themeModes' => $school ? $school->getThemeModes() : null,
             'navLabels' => $school ? $school->navigationLabels()
                 ->get(['key', 'name_en', 'name_ar'])
                 ->mapWithKeys(fn ($label) => [
                     $label->key => ['en' => $label->name_en, 'ar' => $label->name_ar],
                 ])
                 ->all() : [],
-            'locale' => $school?->locale ?? 'en',
+            // Session first: it is what the user last chose in the switcher and
+            // what the server is currently rendering with.
+            'locale' => session('locale')
+                ?? $user?->locale
+                ?? $school?->locale
+                ?? 'en',
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),

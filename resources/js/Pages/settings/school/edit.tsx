@@ -3,26 +3,26 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function SchoolSettings({ school }: { school: { name: string; address?: string; phone?: string; email?: string; logo?: string; primary_color?: string } }) {
-    const { data, setData, post, processing } = useForm({
-        name: school.name || '',
-        address: school.address || '',
-        phone: school.phone || '',
-        email: school.email || '',
-        logo: school.logo || '',
-        primary_color: school.primary_color || '#059669',
-    });
+type SchoolSettings = {
+    id: number;
+    name: string;
+    name_en: string | null;
+    name_ar: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    logo_path: string | null;
+    primary_color: string | null;
+    secondary_color: string | null;
+    accent_color: string | null;
+};
 
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post('/settings/school');
-    };
-
+export default function SchoolSettings({ school }: { school: SchoolSettings }) {
     return (
         <AppShell
             title="School Settings"
@@ -47,31 +47,57 @@ export default function SchoolSettings({ school }: { school: { name: string; add
                     <CardTitle>School Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={submit} className="space-y-6">
+                    <form
+                        className="space-y-6"
+                        method="POST"
+                        action="/settings/school"
+                        encType="multipart/form-data"
+                    >
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="name">School Name</Label>
-                                <Input id="name" name="name" value={data.name} onChange={(e) => setData('name', e.target.value)} required />
+                                <Label htmlFor="name_en">School Name (English)</Label>
+                                <Input id="name_en" name="name_en" defaultValue={school.name_en ?? ''} required />
+                                <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>
-                                <Label htmlFor="address">Address</Label>
-                                <Input id="address" name="address" value={data.address} onChange={(e) => setData('address', e.target.value)} />
-                            </div>
-                            <div>
-                                <Label htmlFor="phone">Phone</Label>
-                                <Input id="phone" name="phone" value={data.phone} onChange={(e) => setData('phone', e.target.value)} />
+                                <Label htmlFor="name_ar">School Name (Arabic)</Label>
+                                <Input id="name_ar" name="name_ar" dir="rtl" defaultValue={school.name_ar ?? ''} />
                             </div>
                             <div>
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" name="email" type="email" value={data.email} onChange={(e) => setData('email', e.target.value)} />
+                                <Input id="email" name="email" type="email" defaultValue={school.email ?? ''} required />
                             </div>
                             <div>
-                                <Label htmlFor="logo">Logo URL</Label>
-                                <Input id="logo" name="logo" value={data.logo} onChange={(e) => setData('logo', e.target.value)} />
+                                <Label htmlFor="phone">Phone</Label>
+                                <Input id="phone" name="phone" defaultValue={school.phone ?? ''} />
                             </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="address">Address</Label>
+                                <Input id="address" name="address" defaultValue={school.address ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="logo">Logo</Label>
+                                <Input id="logo" name="logo" type="file" accept="image/*" />
+                                {school.logo_path && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        A logo is already stored. Upload a new file to replace it.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-3">
                             <div>
                                 <Label htmlFor="primary_color">Primary Color</Label>
-                                <Input id="primary_color" name="primary_color" type="color" value={data.primary_color} onChange={(e) => setData('primary_color', e.target.value)} />
+                                <Input id="primary_color" name="primary_color" type="color" defaultValue={school.primary_color ?? '#0a5c42'} />
+                            </div>
+                            <div>
+                                <Label htmlFor="secondary_color">Secondary Color</Label>
+                                <Input id="secondary_color" name="secondary_color" type="color" defaultValue={school.secondary_color ?? '#f2efe8'} />
+                            </div>
+                            <div>
+                                <Label htmlFor="accent_color">Accent Color</Label>
+                                <Input id="accent_color" name="accent_color" type="color" defaultValue={school.accent_color ?? '#efecdf'} />
                             </div>
                         </div>
 
@@ -79,9 +105,7 @@ export default function SchoolSettings({ school }: { school: { name: string; add
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/settings/general">Cancel</Link>
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : 'Save Settings'}
-                            </Button>
+                            <Button type="submit">Save Settings</Button>
                         </div>
                     </form>
                 </CardContent>

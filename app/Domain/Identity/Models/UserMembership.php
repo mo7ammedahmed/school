@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[UseFactory(UserMembershipFactory::class)]
 class UserMembership extends Model
 {
+    /** @use HasFactory<UserMembershipFactory> */
     use HasFactory;
 
     public function user(): BelongsTo

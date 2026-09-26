@@ -2,9 +2,10 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
+import { TimetableViewSwitcher } from '@/components/timetable-view-switcher';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function TimetableIndex({ timetables }: { timetables: { id: number; section: { name: string }; subject: { name: string }; teacher: { first_name: string; last_name: string }; day_of_week: string; start_time: string; end_time: string;    room: { name: string } | null }[] }) {
     const columns: ColumnDef<any>[] = [
@@ -70,9 +71,12 @@ export default function TimetableIndex({ timetables }: { timetables: { id: numbe
                 title="Timetable"
                 description="Manage class schedules"
                 actions={
-                    <Button asChild>
-                        <Link href="/timetable/create"><Plus className="mr-2 h-4 w-4" />Add Schedule</Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <TimetableViewSwitcher current="list" />
+                        <Button asChild>
+                            <Link href="/timetable/create"><Plus className="mr-2 h-4 w-4" />Add Schedule</Link>
+                        </Button>
+                    </div>
                 }
             />
 

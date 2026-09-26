@@ -6,6 +6,7 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Payment> */
 class PaymentFactory extends Factory
 {
     protected $model = Payment::class;

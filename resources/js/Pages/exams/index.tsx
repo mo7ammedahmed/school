@@ -3,9 +3,9 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { FileUp, Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function ExamsIndex({ exams }: { exams: { id: number; name: string; subject: { name: string }; section: { name: string }; exam_date: string; total_marks: number; status: string }[] }) {
     const columns: ColumnDef<any>[] = [
@@ -66,9 +66,14 @@ export default function ExamsIndex({ exams }: { exams: { id: number; name: strin
                 title="Exams"
                 description="Manage exams and assessments"
                 actions={
-                    <Button asChild>
-                        <Link href="/exams/create"><Plus className="mr-2 h-4 w-4" />New Exam</Link>
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/assessments/import"><FileUp className="mr-2 h-4 w-4" />Import from Word</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/exams/create"><Plus className="mr-2 h-4 w-4" />New Exam</Link>
+                        </Button>
+                    </div>
                 }
             />
 

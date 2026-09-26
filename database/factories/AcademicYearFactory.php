@@ -6,6 +6,7 @@ use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<AcademicYear> */
 class AcademicYearFactory extends Factory
 {
     protected $model = AcademicYear::class;

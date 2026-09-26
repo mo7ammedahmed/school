@@ -12,21 +12,23 @@ class TimetableEntryPolicy
 {
     use HandlesAuthorization;
 
+    // checkPermissionTo() returns false for an unknown permission, where
+    // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, TimetableEntry $model): bool
     {
-        return $user->hasPermissionTo('manage-timetable-entries') ||
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-timetable-entries') ||
+            (int) $model->school_id === (int) session('school_id');
     }
 
     public function update(User $user, TimetableEntry $model): bool
     {
-        return $user->hasPermissionTo('manage-timetable-entries') &&
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-timetable-entries') &&
+            (int) $model->school_id === (int) session('school_id');
     }
 
     public function delete(User $user, TimetableEntry $model): bool
     {
-        return $user->hasPermissionTo('manage-timetable-entries') &&
-            $model->school_id === session('school_id');
+        return $user->checkPermissionTo('manage-timetable-entries') &&
+            (int) $model->school_id === (int) session('school_id');
     }
 }

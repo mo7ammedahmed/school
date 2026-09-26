@@ -1,7 +1,10 @@
 ﻿@import "tailwindcss";
 
-/* Light-only theme â€” no dark variant is defined, so `dark:` utilities
-   never activate. Removing the custom-variant keeps the build valid. */
+/* Dark mode is driven by a `.dark` class on <html>. Two things are needed:
+   1. the `dark:` variant so utilities like `dark:bg-card` compile, and
+   2. the `.dark` token overrides in @layer base below, so every utility that
+      reads a `--color-*` token flips automatically. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
     /* ---------- Typography ---------- */
@@ -186,10 +189,63 @@
     }
 
     /*
-     * No dark variant exists in this build. The `.dark` block above has been
-     * removed so there is no path to dark mode â€” even on OS/browser defaults
-     * the app shell stays in light mode.
+     * Dark palette. These are the *defaults*; a school can override the five
+     * headline tokens (accent/background/surface/text/muted) from
+     * Settings â†’ Theme, which writes inline variables on <html> at runtime.
      */
+    .dark {
+        color-scheme: dark;
+
+        --color-background: #070707;
+        --color-foreground: #f4f4f1;
+        --color-card: #0b0b0b;
+        --color-card-foreground: #f4f4f1;
+        --color-popover: #0b0b0b;
+        --color-popover-foreground: #f4f4f1;
+        --color-primary: #006c55;
+        --color-primary-foreground: #ffffff;
+        --color-secondary: #1a1a1a;
+        --color-secondary-foreground: #ededed;
+        --color-muted: #1a1a1a;
+        --color-muted-foreground: #a4a4a8;
+        --color-accent: #1f1f1f;
+        --color-accent-foreground: #ededed;
+        --color-border: #262626;
+        --color-input: #2c2c2c;
+        --color-ring: #006c55;
+        --color-link: #3bb99a;
+        --color-link-hover: #6fd4bb;
+        --color-sidebar: #0b0b0b;
+        --color-sidebar-foreground: #f4f4f1;
+        --color-sidebar-primary: #006c55;
+        --color-sidebar-primary-foreground: #ffffff;
+        --color-sidebar-accent: #1a1a1a;
+        --color-sidebar-accent-foreground: #ededed;
+        --color-sidebar-border: #262626;
+        --color-sidebar-ring: #006c55;
+        --color-header: #0b0b0b;
+        --color-header-foreground: #f4f4f1;
+        --color-header-border: #262626;
+        --color-footer: #050505;
+        --color-footer-foreground: #f4f4f1;
+        --color-footer-border: #262626;
+        --color-table-header: #141414;
+        --color-table-header-foreground: #ededed;
+        --color-table-row: #0b0b0b;
+        --color-table-row-hover: #161616;
+        --color-table-border: #262626;
+        --color-input-background: #141414;
+        --color-input-foreground: #f4f4f1;
+        --color-input-placeholder: #a4a4a8;
+        --color-input-border: #2c2c2c;
+        --color-input-focus: #006c55;
+        --color-button-primary: #006c55;
+        --color-button-primary-foreground: #ffffff;
+        --color-button-secondary: #1a1a1a;
+        --color-button-secondary-foreground: #ededed;
+        --color-button-outline: #0b0b0b;
+        --color-button-ghost: transparent;
+    }
 
     * {
         border-color: var(--color-border);

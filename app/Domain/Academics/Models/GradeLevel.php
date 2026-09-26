@@ -6,8 +6,11 @@ namespace App\Domain\Academics\Models;
 
 use App\Domain\Finance\Models\FeeStructure;
 use App\Domain\Schools\Models\School;
+use Database\Factories\Domain\Academics\Models\GradeLevelFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -24,9 +27,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends([
     'name',
 ])]
+#[UseFactory(GradeLevelFactory::class)]
 class GradeLevel extends Model
 {
-    use SoftDeletes;
+    /** @use HasFactory<GradeLevelFactory> */
+    use HasFactory, SoftDeletes;
 
     public function getNameAttribute(): string
     {

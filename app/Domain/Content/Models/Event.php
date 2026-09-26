@@ -29,7 +29,7 @@ class Event extends Model
     /** Legacy admin-page aliases (the v2 schema stores single datetime ranges + an event type). */
     protected $appends = ['event_date', 'start_time', 'end_time', 'target_audience', 'is_active'];
 
-    public function getEventDateAttribute()
+    public function getEventDateAttribute(): ?string
     {
         return $this->start_date?->toDateString();
     }

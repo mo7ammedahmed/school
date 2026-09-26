@@ -5,7 +5,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@/lib/table';
 
 export default function AnnouncementsIndex({ announcements }: { announcements: { id: number; title: string; target_audience: string; publish_date: string; expiry_date: string; is_active: boolean }[] }) {
     const columns: ColumnDef<any>[] = [

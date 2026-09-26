@@ -15,7 +15,7 @@ class PasswordController extends Controller
 {
     public function edit(): Response
     {
-        return inertia('settings/password/edit');
+        return inertia('settings/password');
     }
 
     public function index(): Response
