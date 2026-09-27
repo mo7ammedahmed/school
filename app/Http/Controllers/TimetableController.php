@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Throwable;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
@@ -15,21 +14,45 @@ use App\Domain\Scheduling\Models\Period;
 use App\Domain\Scheduling\Models\Room;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Scheduling\Services\TimetableConflictDetector;
+use App\Domain\Schools\Models\School;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Throwable;
 
 class TimetableController extends Controller
 {
     /** School week: Sunday through Thursday. */
     private const array DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
+
+    /**
+     * Day names as they should appear on paper. The app has no `lang` files, so
+     * the two labels the timetable needs are carried here rather than guessed
+     * from a slug.
+     */
+    private const array DAY_LABELS = [
+        'sunday' => ['Sunday', 'الأحد'],
+        'monday' => ['Monday', 'الاثنين'],
+        'tuesday' => ['Tuesday', 'الثلاثاء'],
+        'wednesday' => ['Wednesday', 'الأربعاء'],
+        'thursday' => ['Thursday', 'الخميس'],
+    ];
+
+    /** The headings and empty-state copy of a printed sheet, per language. */
+    private const array PDF_LABELS = [
+        'timetable' => ['Timetable', 'الجدول الدراسي'],
+        'time' => ['Time', 'الوقت'],
+        'printed' => ['Printed', 'تاريخ الطباعة'],
+        'empty' => ['No timetable entries.', 'لا توجد حصص في الجدول.'],
+    ];
 
     public function __construct(private readonly TimetableConflictDetector $conflicts) {}
 
@@ -410,13 +433,117 @@ class TimetableController extends Controller
 
         $entries = $query->orderBy('day_of_week')->orderBy('start_time')->get();
 
+        $school = School::find($schoolId);
+        $isArabic = app()->getLocale() === 'ar';
+        $schoolName = $school?->name ?? config('app.name');
+
+        // dompdf draws text left to right without joining Arabic letters, so
+        // every string on this sheet is handed through {@see ArabicShaper} by
+        // the `@shaped` directive in the view. The logo falls back to the
+        // school's initial so the sheet is branded even before a logo is
+        // uploaded in Settings → Appearance.
         $pdf = Pdf::loadView('timetable.pdf', [
             'entries' => $entries,
             'days' => self::DAYS,
-            'schoolName' => session('school_name') ?? config('app.name'),
+            'dayLabels' => collect(self::DAYS)
+                ->mapWithKeys(fn (string $day): array => [$day => self::DAY_LABELS[$day][$isArabic ? 1 : 0]])
+                ->all(),
+            'labels' => collect(self::PDF_LABELS)
+                ->map(fn (array $pair): string => $pair[$isArabic ? 1 : 0])
+                ->all(),
+            'schoolName' => $schoolName,
+            'schoolInitial' => mb_substr($schoolName, 0, 1),
+            'schoolColor' => $school->primary_color ?: '#0a5c42',
+            'schoolLogo' => $this->inlineLogo($school),
+            'isArabic' => $isArabic,
         ]);
 
         return $pdf->download('timetable.pdf');
+    }
+
+    /**
+     * A print-ready weekly grid.
+     *
+     * The browser is the renderer here on purpose: it joins Arabic letters and
+     * reads the logo, neither of which the dompdf path can do, so "Print" and
+     * "Save as PDF" both produce a correct sheet in either language.
+     */
+    public function print(Request $request): InertiaResponse
+    {
+        $schoolId = $this->schoolId();
+
+        $query = TimetableEntry::where('school_id', $schoolId)
+            ->whereIn('day_of_week', self::DAYS)
+            ->with(['offering.subject', 'section', 'teacher', 'room']);
+
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->integer('section_id'));
+        }
+
+        if ($request->filled('teacher_id')) {
+            $query->where('teacher_id', $request->integer('teacher_id'));
+        }
+
+        if ($request->filled('semester_id')) {
+            $query->where('semester_id', $request->integer('semester_id'));
+        }
+
+        $entries = $query->orderBy('start_time')->get();
+        $school = School::find($schoolId);
+
+        $slots = $entries
+            ->groupBy(fn (TimetableEntry $entry): string => $entry->startsAt().' - '.$entry->endsAt())
+            ->map(fn (Collection $slotEntries, string $slot): array => [
+                'slot' => $slot,
+                'days' => collect(self::DAYS)->mapWithKeys(fn (string $day): array => [
+                    $day => $slotEntries
+                        ->where('day_of_week', $day)
+                        ->map(fn (TimetableEntry $entry): array => [
+                            'subject' => $entry->offering?->subject?->name ?? $entry->section?->name ?? '—',
+                            'section' => $entry->section?->name,
+                            'teacher' => trim(($entry->teacher?->first_name ?? '').' '.($entry->teacher?->last_name ?? '')),
+                            'room' => $entry->room?->name,
+                        ])
+                        ->values()
+                        ->all(),
+                ])->all(),
+            ])
+            ->values()
+            ->all();
+
+        return inertia('timetable/print', [
+            'days' => self::DAYS,
+            'slots' => $slots,
+            'entry_count' => $entries->count(),
+            'generated_at' => now()->toDateString(),
+            'school' => [
+                'name' => $school?->name,
+                'logo_url' => $school?->logo_path
+                    ? Storage::disk('public')->url($school->logo_path)
+                    : null,
+            ],
+        ]);
+    }
+
+    /**
+     * A data URI of the school's logo, which dompdf can embed without reaching
+     * back out over HTTP for it.
+     */
+    private function inlineLogo(?School $school): ?string
+    {
+        if (! $school?->logo_path) {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+
+        if (! $disk->exists($school->logo_path)) {
+            return null;
+        }
+
+        $mime = $disk->mimeType($school->logo_path) ?: 'image/png';
+
+        return 'data:'.$mime.';base64,'.base64_encode((string) $disk->get($school->logo_path));
     }
 
     /**

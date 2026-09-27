@@ -65,7 +65,10 @@ class ThemeSettingsTest extends TestCase
         $school = School::factory()->create();
         $this->actingAsSchoolUser($school, ['manage-settings']);
 
-        $response = $this->get('/settings/theme');
+        // The palettes live on the Appearance screen; /settings/theme forwards.
+        $this->get('/settings/theme')->assertRedirect(route('settings.appearance'));
+
+        $response = $this->get('/settings/appearance');
         $response->assertOk();
 
         $props = $response->viewData('page')['props'];
@@ -83,7 +86,7 @@ class ThemeSettingsTest extends TestCase
         $school = School::factory()->create();
         $this->actingAsSchoolUser($school, ['manage-settings']);
 
-        $this->post('/settings/theme', [
+        $this->post('/settings/appearance', [
             'light' => [
                 'accent' => 'not-a-colour',
                 'background' => '#ffffff',
@@ -99,6 +102,58 @@ class ThemeSettingsTest extends TestCase
                 'muted' => '#a4a4a8',
             ],
         ])->assertSessionHasErrors('light.accent');
+    }
+
+    public function test_a_token_can_be_saved_as_a_gradient_instead_of_a_colour(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        $gradient = json_encode([
+            'type' => 'linear',
+            'angle' => 135,
+            'stops' => [
+                ['color' => '#0a5c42', 'position' => 0],
+                ['color' => '#cda253', 'position' => 100],
+            ],
+        ], JSON_THROW_ON_ERROR);
+
+        $this->post('/settings/appearance', [
+            'primary_color' => '#0a5c42',
+            'secondary_color' => '#f2efe8',
+            'accent_color' => '#efecdf',
+            'theme' => 'light',
+            'light' => [
+                'accent' => '#0a5c42',
+                'accent_solid' => '1',
+                'accent_gradient' => $gradient,
+                'background' => '#f4f3ee',
+                'surface' => '#ffffff',
+                'text' => '#0a0a0a',
+                'muted' => '#6b6b64',
+            ],
+            'dark' => [
+                'accent' => '#0a5c42',
+                // A multipart form sends every value as a string.
+                'accent_solid' => '0',
+                'accent_gradient' => '',
+                'background' => '#070707',
+                'surface' => '#0b0b0b',
+                'text' => '#f4f4f1',
+                'muted' => '#a4a4a8',
+            ],
+        ])->assertRedirect(route('settings.appearance'));
+
+        $modes = $school->fresh()->getThemeModes();
+
+        // The gradient survives the round-trip so the editor can reopen it.
+        $this->assertJson($modes['light']['accent_gradient']);
+        $this->assertSame(135, json_decode($modes['light']['accent_gradient'], true)['angle']);
+        $this->assertSame('#0a5c42', $modes['light']['accent']);
+
+        // The Solid switch is stored too, and the dark pair stays flat.
+        $this->assertTrue((bool) $modes['light']['accent_solid']);
+        $this->assertEmpty($modes['dark']['accent_gradient']);
     }
 
     /**

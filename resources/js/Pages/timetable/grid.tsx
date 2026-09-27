@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
-import { AlertTriangle, History, Download } from 'lucide-react';
+import { AlertTriangle, History, Download, Printer } from 'lucide-react';
 import { TimetableViewSwitcher } from '@/components/timetable-view-switcher';
 
 type GridEntry = {
@@ -87,9 +87,12 @@ export default function TimetableGrid({
                             </a>
                         </Button>
                         <Button variant="outline" asChild>
-                            <a href={`/timetable/export/pdf?${query.toString()}`}>
-                                <Download className="me-2 h-4 w-4" />
-                                PDF
+                            {/* The browser prints this one: it shapes Arabic and
+                                shows the school's logo, which the dompdf export
+                                cannot. */}
+                            <a href={`/timetable/print?${query.toString()}`}>
+                                <Printer className="me-2 h-4 w-4" />
+                                Print / PDF
                             </a>
                         </Button>
                         <Button variant="outline" asChild>

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'invoice_id',
     'fee_assignment_id',
     'description',
+    'description_ar',
     'quantity',
     'unit_price',
     'amount',

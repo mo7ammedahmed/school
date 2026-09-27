@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Quiz;
@@ -13,6 +12,7 @@ use Database\Factories\Domain\Academics\Models\SubjectFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'code',
     'subject_type',
     'description',
+    'description_ar',
     'grade_level_id',
 ])]
 #[Appends([
@@ -71,6 +72,7 @@ class Subject extends Model
     {
         return Attribute::make(get: function () {
             $locale = app()->getLocale();
+
             return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
         });
     }

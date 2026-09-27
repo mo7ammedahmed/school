@@ -14,10 +14,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'name',
+    'name_ar',
     'slug',
     'email',
     'phone',
     'address',
+    'address_ar',
     'logo_path',
     'metadata',
 ])]

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Content\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Appends;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,11 +15,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'school_id',
     'title',
+    'title_ar',
     'slug',
     'description',
+    'description_ar',
     'start_date',
     'end_date',
     'location',
+    'location_ar',
     'event_type',
     'featured_image_path',
     'is_published',
@@ -28,25 +31,30 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Event extends Model
 {
     use SoftDeletes;
+
     protected function eventDate(): Attribute
     {
-        return Attribute::make(get: fn() => $this->start_date?->toDateString());
+        return Attribute::make(get: fn () => $this->start_date?->toDateString());
     }
+
     protected function startTime(): Attribute
     {
-        return Attribute::make(get: fn() => $this->start_date?->format('H:i'));
+        return Attribute::make(get: fn () => $this->start_date?->format('H:i'));
     }
+
     protected function endTime(): Attribute
     {
-        return Attribute::make(get: fn() => $this->end_date?->format('H:i'));
+        return Attribute::make(get: fn () => $this->end_date?->format('H:i'));
     }
+
     protected function targetAudience(): Attribute
     {
-        return Attribute::make(get: fn() => $this->event_type ?: 'all');
+        return Attribute::make(get: fn () => $this->event_type ?: 'all');
     }
+
     protected function isActive(): Attribute
     {
-        return Attribute::make(get: fn() => (bool) $this->is_published);
+        return Attribute::make(get: fn () => (bool) $this->is_published);
     }
 
     public function school(): BelongsTo

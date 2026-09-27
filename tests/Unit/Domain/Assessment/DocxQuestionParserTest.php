@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Domain\Assessment;
 
-use RuntimeException;
 use App\Domain\Assessment\Services\DocxQuestionParser;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class DocxQuestionParserTest extends TestCase
 {

@@ -34,6 +34,7 @@ use Illuminate\Support\Collection;
     'currency',
     'status',
     'notes',
+    'notes_ar',
     'vat_amount',
     'vat_rate',
     'qr_code_data',

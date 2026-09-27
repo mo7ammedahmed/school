@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'grades',
     'attendance_summary',
     'comments',
+    'comments_ar',
     'published_at',
 ])]
 class ReportCard extends Model

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Domain\Attendance\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Appends;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'student_id',
     'status',
     'notes',
+    'notes_ar',
     'recorded_by',
 ])]
 #[Appends(['date', 'remarks'])]
@@ -46,13 +47,15 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }
+
     protected function date(): Attribute
     {
-        return Attribute::make(get: fn() => $this->attendanceSession?->session_date?->toDateString());
+        return Attribute::make(get: fn () => $this->attendanceSession?->session_date?->toDateString());
     }
+
     protected function remarks(): Attribute
     {
-        return Attribute::make(get: fn() => $this->notes);
+        return Attribute::make(get: fn () => $this->notes);
     }
 
     protected function casts(): array

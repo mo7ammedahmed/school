@@ -218,6 +218,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/timetable/grid', [TimetableController::class, 'grid'])->name('timetable.grid');
     Route::get('/timetable/calendar', [TimetableController::class, 'calendar'])->name('timetable.calendar');
     Route::get('/timetable/list', [TimetableController::class, 'list'])->name('timetable.list');
+    Route::get('/timetable/print', [TimetableController::class, 'print'])->name('timetable.print');
     Route::get('/timetable/conflicts', [TimetableController::class, 'conflicts'])->name('timetable.conflicts');
     Route::get('/timetable/export/pdf', [TimetableController::class, 'exportPdf'])->name('timetable.export.pdf');
     Route::get('/timetable/export/ics', [TimetableController::class, 'exportIcs'])->name('timetable.export.ics');

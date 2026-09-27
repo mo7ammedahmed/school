@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'student_id',
     'score',
     'notes',
+    'notes_ar',
     'graded_by',
     'graded_at',
 ])]

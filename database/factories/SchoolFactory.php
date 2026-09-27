@@ -13,6 +13,8 @@ class SchoolFactory extends Factory
 
     public function definition(): array
     {
+        $address = fake()->optional()->address();
+
         return [
             'organization_id' => Organization::factory(),
             'name_ar' => fake()->company().' School',
@@ -20,7 +22,11 @@ class SchoolFactory extends Factory
             'slug' => fake()->slug(),
             'email' => fake()->optional()->safeEmail(),
             'phone' => fake()->optional()->phoneNumber(),
-            'address' => fake()->optional()->address(),
+            'address' => $address,
+            // Mirrored like the organisation above: a school that only has an
+            // English address would show up as "missing Arabic" in the
+            // translation sweep, which makes the backfill tests order-dependent.
+            'address_ar' => $address,
             'city' => fake()->optional()->city(),
             'country' => 'SA',
             'timezone' => 'Asia/Riyadh',

@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { gsap } from 'gsap';
@@ -145,33 +146,12 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
 
 
-    // Apply the school's LIGHT theme tokens to the public site. The entire
-    // marketing site — header, footer, hero, buttons, footer blur, sidebar
-    // accents — is driven by these tokens, so the dashboard can recolor the
-    // whole public site from Settings → Appearance → Website Colors.
-    useEffect(() => {
-        const school = page.props.school;
-        const theme = school?.theme_config?.light;
-        if (!theme) return;
-
-        const root = document.documentElement;
-        root.classList.remove('dark');
-        root.dataset.theme = 'light';
-
-        // Every token the public site cares about gets written as a CSS variable.
-        Object.entries(theme).forEach(([key, value]) => {
-            if (typeof value !== 'string') return;
-            const cssVar = key.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
-            root.style.setProperty(`--${cssVar}`, value);
-        });
-
-        // Public-site brand accents: the pine/gold scale is derived from the
-        // themed primary color, not a hardcoded hex.
-        root.style.setProperty('--color-pine-600', theme.colorPrimary ?? '#0a5c42');
-        root.style.setProperty('--color-pine-950', theme.colorPrimary ?? '#0a5c42');
-        root.style.setProperty('--color-gold-400', theme.colorAccent ?? '#cda253');
-        root.style.setProperty('--color-gold-600', theme.colorMutedForeground ?? '#74705f');
-    }, [page.props.school]);
+    // The public site follows the visitor's light/dark choice exactly like the
+    // dashboard does: `buildSchoolPalettes` in app.tsx writes the school's
+    // per-mode tokens (Settings → Appearance → Light/Dark) onto <html> and
+    // flips the `.dark` class, which is what the marketing tokens — paper, ink
+    // and the pine/gold scale — are derived from. Claiming the document here
+    // would pin the public site to light mode and fight the toggle.
 
     return (
         <div className="flex min-h-screen flex-col bg-paper">
@@ -222,6 +202,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                 </Link>
                             )}
                             <LanguageSwitcher variant="ghost" className="hidden sm:inline-flex" />
+                            <ThemeToggle className="hidden sm:inline-flex" />
                             <Button asChild className="hidden sm:inline-flex">
                                 <Link href="/apply">
                                     {t(locale, 'public.applyNow')}
@@ -277,7 +258,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                                         <Link href="/login">{t(locale, 'public.login')}</Link>
                                     </Button>
                                 )}
-                                <LanguageSwitcher variant="ghost" />
+                                <div className="flex items-center gap-1">
+                                    <LanguageSwitcher variant="ghost" />
+                                    <ThemeToggle />
+                                </div>
                             </div>
                         </div>
                     </nav>

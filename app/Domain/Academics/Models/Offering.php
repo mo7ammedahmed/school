@@ -26,7 +26,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'teacher_id',
     'section_id',
     'name',
+    'name_ar',
     'description',
+    'description_ar',
 ])]
 class Offering extends Model
 {

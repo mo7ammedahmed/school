@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\ApplySiteMetadata;
 use App\Http\Middleware\EnsureSchoolContext;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SecurityHeaders;
@@ -22,8 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             SecurityHeaders::class,
-            // Reads the session, so it must run after StartSession.
+            // Both read the session, so they must run after StartSession; the
+            // locale decides which language the page titles are written in.
             SetLocale::class,
+            ApplySiteMetadata::class,
         ]);
 
         $middleware->alias([

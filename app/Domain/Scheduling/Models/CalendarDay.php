@@ -27,7 +27,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'end_date',
     'type',
     'title',
+    'title_ar',
     'description',
+    'description_ar',
     'is_instructional',
     'created_by',
 ])]

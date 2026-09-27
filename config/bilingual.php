@@ -98,6 +98,7 @@ return [
             'scope' => 'id',
             'pairs' => [
                 ['en' => 'name_en', 'ar' => 'name_ar'],
+                ['en' => 'description_en', 'ar' => 'description_ar'],
                 ['en' => 'address', 'ar' => 'address_ar'],
             ],
         ],

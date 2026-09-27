@@ -151,7 +151,7 @@ class PaymentSettlementService
             // is required, and gateway payloads do not reliably carry it.
             $schoolId = $payment?->school_id ?? $this->resolveSchoolId($payload);
 
-            if (!$payment instanceof Payment) {
+            if (! $payment instanceof Payment) {
                 $this->recordFailure($gateway, $eventId, $payload, $schoolId, 'Payment not found for webhook');
 
                 return;

@@ -85,7 +85,6 @@ class SidebarLinksTest extends TestCase
             '/settings/payments/logs',
             '/settings/security',
             '/settings/appearance',
-            '/settings/theme',
             '/settings/navigation',
             '/settings/profile',
             '/settings/password',
@@ -102,6 +101,17 @@ class SidebarLinksTest extends TestCase
         $this->actingAsSuperAdmin(School::factory()->create());
 
         $this->get($url)->assertOk();
+    }
+
+    /**
+     * The palettes moved into Settings → Appearance, so the old screen has to
+     * forward there rather than 404 on an existing bookmark.
+     */
+    public function test_the_theme_screen_forwards_to_appearance(): void
+    {
+        $this->actingAsSuperAdmin(School::factory()->create());
+
+        $this->get('/settings/theme')->assertRedirect(route('settings.appearance'));
     }
 
     private function actingAsSuperAdmin(School $school): User

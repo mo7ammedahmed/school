@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'file_size',
     'score',
     'feedback',
+    'feedback_ar',
     'graded_by',
     'graded_at',
     'submitted_at',

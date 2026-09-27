@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'school_id',
     'name',
+    'name_ar',
     'code',
     'description',
+    'description_ar',
     'is_recurring',
     'frequency',
 ])]

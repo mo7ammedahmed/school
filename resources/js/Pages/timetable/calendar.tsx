@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, AlertTriangle, Download, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertTriangle, Printer, CalendarDays } from 'lucide-react';
 import { TimetableViewSwitcher } from '@/components/timetable-view-switcher';
 import { cn } from '@/lib/utils';
 
@@ -171,9 +171,12 @@ export default function TimetableCalendar({
                             </a>
                         </Button>
                         <Button variant="outline" asChild>
-                            <a href={`/timetable/export/pdf?${query.toString()}`}>
-                                <Download className="me-2 h-4 w-4" />
-                                PDF
+                            {/* The browser prints this one: it shapes Arabic and
+                                shows the school's logo, which the dompdf export
+                                cannot. */}
+                            <a href={`/timetable/print?${query.toString()}`}>
+                                <Printer className="me-2 h-4 w-4" />
+                                Print / PDF
                             </a>
                         </Button>
                     </div>

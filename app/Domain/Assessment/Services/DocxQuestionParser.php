@@ -83,7 +83,15 @@ class DocxQuestionParser
         $warnings = [];
         $current = null;
 
-        $flush = function (): void {
+        // Each question is only complete once the *next* one starts, so the work
+        // of finishing it (type, option keys, warnings) lives in one closure.
+        $flush = function () use (&$current, &$questions, &$warnings): void {
+            if ($current === null) {
+                return;
+            }
+
+            $questions[] = $this->classify($current, $warnings);
+            $current = null;
         };
 
         foreach ($this->lines($text) as $line) {
@@ -142,7 +150,9 @@ class DocxQuestionParser
 
         $flush();
 
-        $warnings[] = 'No questions were found. Number each question (for example "1. What is 2 + 2?") and try again.';
+        if ($questions === []) {
+            $warnings[] = 'No questions were found. Number each question (for example "1. What is 2 + 2?") and try again.';
+        }
 
         return [
             'title' => $title ?? $fallbackTitle,
@@ -150,6 +160,85 @@ class DocxQuestionParser
             'questions' => $questions,
             'warnings' => $warnings,
         ];
+    }
+
+    /**
+     * Decide what kind of question was read and normalise its answer.
+     *
+     * The convention only asks for an `Answer:` line, so the type has to be
+     * inferred: letters in the answer or option lines mean multiple choice, a
+     * bare true/false means a true/false question, and anything else is free
+     * text. A question with no answer is kept — it is flagged instead, because
+     * losing it would silently drop a mark from the paper.
+     *
+     * @param  array{prompt: string, options: list<array{key: string, text: string}>, answer: ?string, points: ?float}  $question
+     * @param  list<string>  $warnings
+     * @return array{prompt: string, options: list<array{key: string, text: string}>, answer: ?string, points: ?float, type: string}
+     */
+    private function classify(array $question, array &$warnings): array
+    {
+        $answer = is_string($question['answer']) ? trim($question['answer']) : null;
+        $answer = $answer === '' ? null : $answer;
+        $question['answer'] = $answer;
+
+        if ($question['options'] === []) {
+            $lowered = $answer === null ? null : mb_strtolower($answer);
+
+            if ($lowered === 'true' || $lowered === 'false') {
+                $question['type'] = 'true_false';
+                $question['options'] = [
+                    ['key' => 'A', 'text' => 'True'],
+                    ['key' => 'B', 'text' => 'False'],
+                ];
+                $question['answer'] = $lowered === 'true' ? 'A' : 'B';
+
+                return $question;
+            }
+
+            $question['type'] = 'short_answer';
+
+            if ($answer === null) {
+                $warnings[] = $this->missingAnswerWarning($question['prompt']);
+            }
+
+            return $question;
+        }
+
+        $question['type'] = 'multiple_choice';
+
+        if ($answer === null) {
+            $warnings[] = $this->missingAnswerWarning($question['prompt']);
+
+            return $question;
+        }
+
+        // "Answer: Riyadh" is as valid as "Answer: B", so an answer written as
+        // option text is converted back to its option letter.
+        $question['answer'] = $this->matchOptionKey($question['options'], $answer);
+
+        return $question;
+    }
+
+    private function missingAnswerWarning(string $prompt): string
+    {
+        return 'Question "'.Str::limit(trim($prompt), 60).'" has no clear "Answer:" line, so it will need a key before marking.';
+    }
+
+    /**
+     * @param  list<array{key: string, text: string}>  $options
+     */
+    private function matchOptionKey(array $options, string $answer): string
+    {
+        $needle = mb_strtolower($answer);
+
+        foreach ($options as $option) {
+            if (mb_strtolower($option['key']) === $needle || mb_strtolower(trim($option['text'])) === $needle) {
+                return $option['key'];
+            }
+        }
+
+        // An answer that matches nothing is kept as typed rather than dropped.
+        return $answer;
     }
 
     /**

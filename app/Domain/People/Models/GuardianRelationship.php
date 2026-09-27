@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'is_financial_guardian',
     'can_pickup',
     'notes',
+    'notes_ar',
 ])]
 class GuardianRelationship extends Model
 {

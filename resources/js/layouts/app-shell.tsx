@@ -54,7 +54,6 @@ import {
     SlidersHorizontal,
     Globe,
     Mail,
-    Sun,
     Languages,
     FileBarChart,
 } from 'lucide-react';
@@ -194,7 +193,6 @@ export const NAV_GROUPS: NavGroup[] = [
             { key: 'nav.settingsPaymentLogs', href: '/settings/payments/logs', icon: ScrollText, roles: ADMINS },
             { key: 'nav.settingsSecurity', href: '/settings/security', icon: ShieldCheck, roles: ADMINS },
             { key: 'nav.appearance', href: '/settings/appearance', icon: Palette, roles: ADMINS },
-            { key: 'nav.settingsTheme', href: '/settings/theme', icon: Sun, roles: ADMINS },
             { key: 'nav.navigationLabels', href: '/settings/navigation', icon: LayoutGrid, roles: ADMINS },
         ],
     },
@@ -515,10 +513,10 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                                         variant="ghost"
                                         size="icon-sm"
                                         asChild
-                                        aria-label="Theme"
-                                        title="Theme"
+                                        aria-label={t(locale, 'nav.appearance')}
+                                        title={t(locale, 'nav.appearance')}
                                     >
-                                        <Link href="/settings/theme">
+                                        <Link href="/settings/appearance">
                                             <Palette className="size-[1.1rem]" aria-hidden="true" />
                                         </Link>
                                     </Button>

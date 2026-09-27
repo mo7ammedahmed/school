@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Academics\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
@@ -14,6 +13,7 @@ use Database\Factories\Domain\Academics\Models\SectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'capacity',
     'current_count',
     'notes',
+    'notes_ar',
 ])]
 #[Appends([
     'name',
@@ -46,6 +47,7 @@ class Section extends Model
     {
         return Attribute::make(get: function () {
             $locale = app()->getLocale();
+
             return $this->{"name_$locale"} ?? $this->name_en ?? $this->name_ar ?? '';
         });
     }

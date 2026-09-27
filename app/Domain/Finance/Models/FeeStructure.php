@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'grade_level_id',
     'amount',
     'description',
+    'description_ar',
 ])]
 class FeeStructure extends Model
 {

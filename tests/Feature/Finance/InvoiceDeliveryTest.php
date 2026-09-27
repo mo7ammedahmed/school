@@ -43,7 +43,7 @@ class InvoiceDeliveryTest extends TestCase
         $this->assertTrue((bool) $invoice->delivery_channels['email']);
         $this->assertTrue((bool) $invoice->delivery_channels['inapp']);
 
-        Mail::assertSent(InvoiceMail::class, fn(InvoiceMail $mail) => $mail->invoice->id === $invoice->id && $mail->kind === InvoiceMail::KIND_ISSUED);
+        Mail::assertSent(InvoiceMail::class, fn (InvoiceMail $mail) => $mail->invoice->id === $invoice->id && $mail->kind === InvoiceMail::KIND_ISSUED);
 
         Mail::assertSent(InvoiceMail::class, fn (InvoiceMail $mail) => $mail->hasTo($guardian->email));
     }

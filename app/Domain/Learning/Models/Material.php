@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Learning\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Appends;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,7 +17,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'school_id',
     'offering_id',
     'title',
+    'title_ar',
     'description',
+    'description_ar',
     'file_path',
     'file_type',
     'file_size',
@@ -27,17 +29,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Material extends Model
 {
     use SoftDeletes;
+
     protected function subject(): Attribute
     {
-        return Attribute::make(get: fn() => $this->offering?->subject);
+        return Attribute::make(get: fn () => $this->offering?->subject);
     }
+
     protected function section(): Attribute
     {
-        return Attribute::make(get: fn() => $this->offering?->section);
+        return Attribute::make(get: fn () => $this->offering?->section);
     }
+
     protected function uploadedAt(): Attribute
     {
-        return Attribute::make(get: fn() => $this->created_at?->toDateTimeString());
+        return Attribute::make(get: fn () => $this->created_at?->toDateTimeString());
     }
 
     public function school(): BelongsTo

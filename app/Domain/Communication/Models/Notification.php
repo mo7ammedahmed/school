@@ -16,7 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'user_id',
     'type',
     'title',
+    'title_ar',
     'body',
+    'body_ar',
     'action_url',
     'read_at',
 ])]

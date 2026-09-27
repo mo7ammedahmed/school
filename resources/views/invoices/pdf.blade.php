@@ -27,14 +27,16 @@
     </style>
 </head>
 <body>
+    {{-- Data (school, student, guardian, line items) can be Arabic; dompdf
+         cannot join Arabic letters, so the values are shaped. --}}
     <div class="header">
         <table class="row">
             <tr>
                 <td>
-                    <h1>{{ $schoolName }}</h1>
-                    @if ($school?->address)<p class="muted">{{ $school->address }}</p>@endif
-                    @if ($school?->phone)<p class="muted">{{ $school->phone }}</p>@endif
-                    @if ($school?->email)<p class="muted">{{ $school->email }}</p>@endif
+                    <h1>@shaped($schoolName)</h1>
+                    @if ($school?->address)<p class="muted">@shaped($school->address)</p>@endif
+                    @if ($school?->phone)<p class="muted">@shaped($school->phone)</p>@endif
+                    @if ($school?->email)<p class="muted">@shaped($school->email)</p>@endif
                 </td>
                 <td class="right">
                     <p class="badge">{{ $invoice->status }}</p>
@@ -50,10 +52,10 @@
         <tr>
             <td>
                 <h2>Billed to</h2>
-                <p><strong>{{ $studentName }}</strong></p>
+                <p><strong>@shaped($studentName)</strong></p>
                 @if ($student?->student_number)<p class="muted">Student no. {{ $student->student_number }}</p>@endif
                 @if ($guardians->isNotEmpty())
-                    <p class="muted">Guardian: {{ trim($guardians->first()->first_name.' '.$guardians->first()->last_name) }}</p>
+                    <p class="muted">Guardian: @shaped(trim($guardians->first()->first_name.' '.$guardians->first()->last_name))</p>
                 @endif
             </td>
             <td class="right">
@@ -78,14 +80,14 @@
         <tbody>
             @forelse ($lines as $line)
                 <tr>
-                    <td>{{ $line->description }}</td>
+                    <td>@shaped($line->description)</td>
                     <td>{{ rtrim(rtrim(number_format((float) $line->quantity, 2), '0'), '.') }}</td>
                     <td>{{ number_format((float) $line->unit_price, 2) }}</td>
                     <td>{{ number_format((float) $line->amount, 2) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td>{{ $invoice->notes ?: 'School fees' }}</td>
+                    <td>@shaped($invoice->notes ?: 'School fees')</td>
                     <td>1</td>
                     <td>{{ number_format((float) $invoice->subtotal, 2) }}</td>
                     <td>{{ number_format((float) $invoice->subtotal, 2) }}</td>
@@ -133,7 +135,7 @@
 
     @if ($invoice->notes)
         <h2>Notes</h2>
-        <p class="muted">{{ $invoice->notes }}</p>
+        <p class="muted">@shaped($invoice->notes)</p>
     @endif
 
     <p class="muted" style="margin-top: 24px;">Generated {{ $generatedAt->toDayDateTimeString() }}.</p>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Services\SchoolResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
@@ -12,6 +13,8 @@ use Inertia\Middleware;
 class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
+
+    public function __construct(private readonly SchoolResolver $schools) {}
 
     public function version(Request $request): ?string
     {
@@ -21,21 +24,14 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $schoolId = session('school_id');
-        $school = $schoolId ? School::find($schoolId) : null;
 
-        // Public (guest) requests have no school session: fall back to the
-        // default school so the marketing pages still apply its branding.
-        // Cache the id only — serialising models into the cache store
-        // unserialises as an incomplete object on the next request.
-        if ($school === null && $user === null) {
-            $defaultSchoolId = Cache::remember(
-                'school.default',
-                now()->addMinutes(5),
-                fn () => School::query()->orderBy('id')->value('id'),
-            );
-            $school = $defaultSchoolId ? School::find($defaultSchoolId) : null;
-        }
+        // Public (guest) requests have no school session: the resolver falls
+        // back to the default school so the marketing pages still apply its
+        // branding. A signed-in user without a school selected gets nothing.
+        $school = $this->schools->current(
+            (int) session('school_id') ?: null,
+            allowFallback: $user === null,
+        );
 
         // Cache the appearance fields for the frontend
         $appearance = $school ? Cache::remember(

@@ -37,11 +37,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'national_id_number',
     'passport_number',
     'address',
+    'address_ar',
     'phone',
     'email',
     'enrollment_date',
     'status',
     'medical_notes',
+    'medical_notes_ar',
     'metadata',
 ])]
 #[UseFactory(StudentFactory::class)]

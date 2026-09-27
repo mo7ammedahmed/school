@@ -26,8 +26,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'phone',
     'hire_date',
     'qualification',
+    'qualification_ar',
     'bio',
+    'bio_ar',
     'specialization',
+    'specialization_ar',
     'avatar_path',
     'metadata',
 ])]

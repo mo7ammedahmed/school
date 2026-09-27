@@ -17,6 +17,14 @@ use Spatie\Activitylog\Facades\Activity;
 
 class AppearanceSettingsController extends Controller
 {
+    /**
+     * The five headline tokens the palette editor can tune, in the order the
+     * screen shows them.
+     *
+     * @var list<string>
+     */
+    private const TOKENS = ['accent', 'background', 'surface', 'text', 'muted'];
+
     public function index(): Response
     {
         $school = $this->activeSchool();
@@ -92,7 +100,7 @@ class AppearanceSettingsController extends Controller
             'dark.surface' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'dark.text' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'dark.muted' => ['sometimes', 'required_with:dark', 'regex:/^#[0-9a-fA-F]{6}$/'],
-        ]);
+        ] + $this->gradientRules());
 
         $oldLogo = $school->logo_path;
         $oldFavicon = $school->favicon_path;
@@ -184,7 +192,37 @@ class AppearanceSettingsController extends Controller
         // Clear appearance cache for this school
         Cache::forget("school-appearance:{$school->id}");
 
-        return redirect()->route('settings.appearance')->with('success', 'Appearance settings updated successfully.');
+        // The screen is bilingual, so the confirmation is too.
+        return redirect()->route('settings.appearance')->with(
+            'success',
+            app()->getLocale() === 'ar'
+                ? 'تم تحديث إعدادات المظهر والسمة بنجاح.'
+                : 'Appearance and theme settings updated successfully.'
+        );
+    }
+
+    /**
+     * The Solid switch and the gradient payload for every token of both modes.
+     *
+     * A gradient arrives as JSON (or an empty string for a flat colour), so it
+     * is validated as a string here and decoded by the school model; the stop
+     * colours themselves are re-validated in the frontend parser, which is the
+     * only place that can read them before they are stored.
+     *
+     * @return array<string, list<string>>
+     */
+    private function gradientRules(): array
+    {
+        $rules = [];
+
+        foreach (['light', 'dark'] as $mode) {
+            foreach (self::TOKENS as $token) {
+                $rules["{$mode}.{$token}_solid"] = ['sometimes', 'boolean'];
+                $rules["{$mode}.{$token}_gradient"] = ['sometimes', 'nullable', 'string', 'max:2000'];
+            }
+        }
+
+        return $rules;
     }
 
     private function activeSchool(): ?School

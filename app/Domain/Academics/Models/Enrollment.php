@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'withdrawal_date',
     'status',
     'notes',
+    'notes_ar',
 ])]
 class Enrollment extends Model
 {

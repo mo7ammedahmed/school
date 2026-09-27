@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'amount',
     'currency',
     'reason',
+    'reason_ar',
     'status',
     'processed_by',
     'processed_at',

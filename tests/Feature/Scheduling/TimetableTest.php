@@ -267,6 +267,64 @@ class TimetableTest extends TestCase
         $this->assertStringContainsString('application/pdf', (string) $response->headers->get('content-type'));
     }
 
+    public function test_the_arabic_pdf_export_carries_joined_arabic_glyphs(): void
+    {
+        $this->actingAsSchoolUser();
+        $this->entry();
+
+        // The locale is decided per request (session, then profile), so the test
+        // asks for Arabic the same way the app does.
+        $this->withSession(['locale' => 'ar']);
+        $this->school->update(['name_ar' => 'مدرسة النور']);
+
+        $response = $this->get('/timetable/export/pdf');
+        $response->assertOk();
+
+        $points = $this->shapedCodePoints($response->getContent());
+
+        // Arabic Presentation Forms-B: the sheet was drawn with positional
+        // glyphs, not with the unjoined base letters dompdf would have used.
+        $joined = array_filter($points, fn (int $point): bool => $point >= 0xFE70 && $point <= 0xFEFC);
+
+        $this->assertNotEmpty($joined, 'The Arabic timetable PDF embedded no shaped glyphs.');
+    }
+
+    /**
+     * Every code point the PDF draws, read back out of its content stream.
+     *
+     * dompdf writes text as UTF-16BE runs (`[(..)..] TJ`) inside a compressed
+     * stream, so the streams are inflated and the runs decoded.
+     *
+     * @return list<int>
+     */
+    private function shapedCodePoints(string $pdf): array
+    {
+        preg_match_all('/stream\r?\n(.*?)\r?\nendstream/s', $pdf, $streams);
+
+        $points = [];
+
+        foreach ($streams[1] as $stream) {
+            $inflated = @gzuncompress($stream);
+            $text = $inflated === false ? $stream : $inflated;
+
+            preg_match_all('/\[\((.*?)\)\]\s*TJ/s', $text, $runs);
+
+            foreach ($runs[1] as $run) {
+                if (strlen($run) % 2 !== 0) {
+                    continue;
+                }
+
+                $decoded = mb_convert_encoding($run, 'UTF-8', 'UTF-16BE');
+
+                foreach (preg_split('//u', $decoded, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $char) {
+                    $points[] = mb_ord($char, 'UTF-8');
+                }
+            }
+        }
+
+        return $points;
+    }
+
     public function test_the_ics_export_returns_a_calendar(): void
     {
         $this->actingAsSchoolUser();

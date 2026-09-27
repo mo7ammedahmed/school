@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Domain\Scheduling\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Appends;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Schools\Models\School;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -35,9 +35,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TimetableEntry extends Model
 {
     use SoftDeletes;
+
     protected function subject(): Attribute
     {
-        return Attribute::make(get: fn() => $this->offering?->subject);
+        return Attribute::make(get: fn () => $this->offering?->subject);
     }
 
     public function school(): BelongsTo

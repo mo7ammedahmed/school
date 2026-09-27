@@ -4,12 +4,13 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { LocaleProvider } from '@/lib/i18n/locale-context';
 import type { Locale } from '@/lib/i18n/copy';
 import {
-    DEFAULT_PALETTES,
     ThemeProvider,
     applyTheme,
     getContrastingColor,
+    normalisePalettes,
     readStoredMode,
-    type Palettes,
+    setServerPersistence,
+    type RawThemeModes,
     type ThemeMode,
 } from '@/lib/theme';
 import '../css/app.css';
@@ -25,7 +26,8 @@ type AppearanceProps = {
 
 type RootProps = {
     appearance?: AppearanceProps;
-    themeModes?: Palettes | null;
+    themeModes?: RawThemeModes | null;
+    auth?: { user?: unknown | null };
 };
 
 function initialLocale(props: unknown): Locale {
@@ -92,13 +94,11 @@ function applyBranding(branding?: AppearanceProps | null): void {
     }
 }
 
-function normalisePalettes(modes?: Palettes | null): Palettes {
-    if (!modes?.light || !modes?.dark) return DEFAULT_PALETTES;
-    return modes;
-}
-
 function applyAppearanceFromProps(props: RootProps): void {
     applyBranding(props.appearance);
+    // The public site is browsable signed-out: keep the light/dark choice local
+    // in that case instead of posting a preference nobody owns yet.
+    setServerPersistence(Boolean(props.auth?.user));
     // A choice made in this browser wins over the (possibly stale) server value,
     // otherwise the next navigation would undo an in-flight toggle.
     const mode = readStoredMode() ?? props.appearance?.theme ?? 'system';
@@ -106,7 +106,6 @@ function applyAppearanceFromProps(props: RootProps): void {
 }
 
 createInertiaApp({
-    title: (title) => `${title} - Al Noor School`,
     resolve: (name) =>
         resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')) as never,
     setup({ el, App, props }) {

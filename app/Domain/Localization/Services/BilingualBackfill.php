@@ -106,54 +106,54 @@ final readonly class BilingualBackfill
         }
 
         $query->chunkById(self::CHUNK, function (Collection $records) use (
-                &$report, &$budget, &$stop, &$error, $pairs, $schoolId,
-            ): bool {
-                foreach ($records as $record) {
-                    $report['scanned']++;
+            &$report, &$budget, &$stop, &$error, $pairs, $schoolId,
+        ): bool {
+            foreach ($records as $record) {
+                $report['scanned']++;
 
-                    foreach ($pairs as $pair) {
-                        $english = $this->text($record->{$pair['en']});
-                        $arabic = $this->text($record->{$pair['ar']});
+                foreach ($pairs as $pair) {
+                    $english = $this->text($record->{$pair['en']});
+                    $arabic = $this->text($record->{$pair['ar']});
 
-                        // Nothing to translate from, or already bilingual.
-                        if (($english === null && $arabic === null) || ($english !== null && $arabic !== null)) {
-                            continue;
-                        }
-
-                        $report['missing']++;
-
-                        if ($budget <= 0) {
-                            continue;
-                        }
-
-                        $emptyColumn = $english !== null ? $pair['ar'] : $pair['en'];
-
-                        $translated = $english !== null
-                            ? $this->translations->translateQuietly($english, 'en', 'ar', $schoolId)
-                            : $this->translations->translateQuietly((string) $arabic, 'ar', 'en', $schoolId);
-
-                        if ($translated === null) {
-                            $report['failed']++;
-                            $error ??= 'The translation service did not answer for at least one value. Check the key, model and provider above.';
-
-                            if ($report['failed'] >= self::MAX_FAILURES) {
-                                $stop = true;
-
-                                return false;
-                            }
-
-                            continue;
-                        }
-
-                        $record->forceFill([$emptyColumn => $translated])->save();
-
-                        $budget--;
-                        $report['translated']++;
+                    // Nothing to translate from, or already bilingual.
+                    if (($english === null && $arabic === null) || ($english !== null && $arabic !== null)) {
+                        continue;
                     }
-                }
 
-                return true;
-            });
+                    $report['missing']++;
+
+                    if ($budget <= 0) {
+                        continue;
+                    }
+
+                    $emptyColumn = $english !== null ? $pair['ar'] : $pair['en'];
+
+                    $translated = $english !== null
+                        ? $this->translations->translateQuietly($english, 'en', 'ar', $schoolId)
+                        : $this->translations->translateQuietly((string) $arabic, 'ar', 'en', $schoolId);
+
+                    if ($translated === null) {
+                        $report['failed']++;
+                        $error ??= 'The translation service did not answer for at least one value. Check the key, model and provider above.';
+
+                        if ($report['failed'] >= self::MAX_FAILURES) {
+                            $stop = true;
+
+                            return false;
+                        }
+
+                        continue;
+                    }
+
+                    $record->forceFill([$emptyColumn => $translated])->save();
+
+                    $budget--;
+                    $report['translated']++;
+                }
+            }
+
+            return true;
+        });
 
         return $report;
     }
@@ -166,7 +166,7 @@ final readonly class BilingualBackfill
      *
      * @param  Builder<Model>  $query
      * @param  array<string, mixed>  $target
-     * @return bool  false when there is nothing to scope to and the target must be skipped
+     * @return bool false when there is nothing to scope to and the target must be skipped
      */
     private function scopeQuery(Builder $query, array $target, int $schoolId): bool
     {

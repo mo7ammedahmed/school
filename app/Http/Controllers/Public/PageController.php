@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Public;
 
 use App\Domain\Content\Models\ContentPage;
+use App\Domain\Content\Services\SiteMetadata;
 use Inertia\Response;
+use Laravel\Head\Facades\Head;
 
 class PageController
 {
@@ -25,6 +27,18 @@ class PageController
                 ]);
             }])
             ->firstOrFail();
+
+        // The CMS page owns its own SEO copy, so it sets it at runtime rather
+        // than through a reactive <Head> element in the React page.
+        app(SiteMetadata::class)->applyPage(
+            $page->seo_title ?: $page->title,
+            $page->seo_description,
+            indexable: ($page->robots ?? 'index,follow') === 'index,follow',
+        );
+
+        if ($page->canonical_url) {
+            Head::canonical($page->canonical_url);
+        }
 
         return inertia('public/page', [
             'page' => $page->only([

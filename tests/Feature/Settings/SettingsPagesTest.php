@@ -39,7 +39,6 @@ class SettingsPagesTest extends TestCase
             'security' => ['/settings/security', 'settings/security'],
             'localization' => ['/settings/localization', 'settings/localization'],
             'appearance' => ['/settings/appearance', 'settings/appearance'],
-            'theme' => ['/settings/theme', 'settings/theme'],
             'navigation' => ['/settings/navigation', 'settings/navigation'],
             'translations' => ['/settings/translations', 'settings/translations'],
             'payments' => ['/settings/payments', 'settings/payments'],
@@ -68,6 +67,18 @@ class SettingsPagesTest extends TestCase
         $this->get($url)
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component($component));
+    }
+
+    /**
+     * The palettes are edited on the Appearance screen now; the old URL keeps
+     * working by redirecting.
+     */
+    public function test_the_theme_screen_redirects_to_appearance(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSettingsAdmin($school);
+
+        $this->get('/settings/theme')->assertRedirect(route('settings.appearance'));
     }
 
     #[DataProvider('personalPages')]

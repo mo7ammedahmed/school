@@ -15,9 +15,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'school_id',
     'name',
+    'name_ar',
     'code',
     'weight',
     'description',
+    'description_ar',
 ])]
 class GradingCategory extends Model
 {

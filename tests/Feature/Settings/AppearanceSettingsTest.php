@@ -48,4 +48,31 @@ class AppearanceSettingsTest extends TestCase
             'description' => 'appearance_updated',
         ]);
     }
+
+    /**
+     * The screen is bilingual, so the confirmation the operator reads after a
+     * save is too: an Arabic session gets an Arabic message.
+     */
+    public function test_the_saved_confirmation_follows_the_locale(): void
+    {
+        Permission::create(['name' => 'manage-settings', 'guard_name' => 'web']);
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-settings');
+        $school = School::factory()->create();
+        UserMembership::factory()->create([
+            'user_id' => $user->id,
+            'school_id' => $school->id,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['school_id' => $school->id, 'locale' => 'ar'])
+            ->post('/settings/appearance', [
+                'theme' => 'system',
+                'primary_color' => '#0a5c42',
+                'secondary_color' => '#f2efe8',
+                'accent_color' => '#efecdf',
+            ])
+            ->assertSessionHas('success', 'تم تحديث إعدادات المظهر والسمة بنجاح.');
+    }
 }

@@ -35,6 +35,10 @@ trait HandlesBilingualInput
     /**
      * Fill in whichever language the operator left blank.
      *
+     * `$required` decides whether an empty pair is an error. A record's *name*
+     * must exist in some language, but an optional column such as a description
+     * should simply stay empty rather than block the whole save.
+     *
      * @param  array<string, mixed>  $attributes
      * @param  list<string>  $bases
      * @return array<string, mixed>
@@ -43,6 +47,7 @@ trait HandlesBilingualInput
         array $attributes,
         array $bases = ['name'],
         School|int|null $school = null,
+        bool $required = true,
     ): array {
         $attributes = app(TranslationService::class)->fillMissingTranslations(
             $attributes,
@@ -50,7 +55,9 @@ trait HandlesBilingualInput
             $school ?? (int) session('school_id'),
         );
 
-        $this->assertBilingualFilled($attributes, $bases);
+        if ($required) {
+            $this->assertBilingualFilled($attributes, $bases);
+        }
 
         return $attributes;
     }

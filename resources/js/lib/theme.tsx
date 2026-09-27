@@ -1,27 +1,205 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { router } from '@inertiajs/react';
+import type { CopyKey } from '@/lib/i18n/copy';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ResolvedMode = 'light' | 'dark';
 
 /** The five headline tokens a school can tune per colour mode. */
-export type Palette = {
-    accent: string;
-    background: string;
-    surface: string;
-    text: string;
-    muted: string;
+export const TOKEN_KEYS = ['accent', 'background', 'surface', 'text', 'muted'] as const;
+
+export type TokenKey = (typeof TOKEN_KEYS)[number];
+
+/**
+ * Only the painting tokens can be a gradient. A gradient on text or on the
+ * muted caption colour has no meaning, so the editor hides the option and the
+ * applier ignores one if it somehow arrives.
+ */
+export const GRADIENT_TOKENS: readonly TokenKey[] = ['accent', 'background', 'surface'];
+
+export function canHoldGradient(key: TokenKey): boolean {
+    return GRADIENT_TOKENS.includes(key);
+}
+
+export type GradientStop = { color: string; position: number };
+
+export type TokenGradient = {
+    /** `linear` honours the angle; `radial` fades out from the top centre. */
+    type: 'linear' | 'radial';
+    angle: number;
+    stops: GradientStop[];
 };
 
-export type Palettes = { light: Palette; dark: Palette };
+/** A token is either one flat colour or a gradient — never both. */
+export type TokenValue = {
+    color: string;
+    /** A tint renders semi-transparent, which is what the Solid switch turns off. */
+    solid: boolean;
+    gradient: TokenGradient | null;
+};
 
-export const DEFAULT_PALETTES: Palettes = {
+export type ModeTokens = Record<TokenKey, TokenValue>;
+
+export type Palettes = { light: ModeTokens; dark: ModeTokens };
+
+/**
+ * The raw shape the server stores and sends: `{ accent: '#006c55',
+ * accent_solid: true, accent_gradient: '<json>' }`.
+ */
+export type RawThemeModes = Record<string, Record<string, string | boolean | null>>;
+
+const DEFAULT_COLORS: Record<'light' | 'dark', Record<TokenKey, string>> = {
     light: { accent: '#006c55', background: '#f4f3ee', surface: '#ffffff', text: '#0a0a0a', muted: '#6b6b64' },
     dark: { accent: '#006c55', background: '#070707', surface: '#0b0b0b', text: '#f4f4f1', muted: '#a4a4a8' },
 };
 
+/** A fresh, fully solid palette for one colour mode. */
+export function defaultMode(mode: 'light' | 'dark'): ModeTokens {
+    return TOKEN_KEYS.reduce((tokens, key) => {
+        tokens[key] = { color: DEFAULT_COLORS[mode][key], solid: true, gradient: null };
+        return tokens;
+    }, {} as ModeTokens);
+}
+
+export function defaultModes(): Palettes {
+    return { light: defaultMode('light'), dark: defaultMode('dark') };
+}
+
+export const DEFAULT_PALETTES: Palettes = defaultModes();
+
+/** Keeps a percentage inside the 0–100 range a CSS stop accepts. */
+function clampPercent(value: number): number {
+    if (!Number.isFinite(value)) return 0;
+    return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/** Reads back a gradient the editor stored as JSON, ignoring anything malformed. */
+export function parseGradient(value: unknown): TokenGradient | null {
+    if (typeof value !== 'string' || value.trim() === '') return null;
+
+    let raw: unknown;
+
+    try {
+        raw = JSON.parse(value);
+    } catch {
+        return null;
+    }
+
+    if (typeof raw !== 'object' || raw === null) return null;
+
+    const candidate = raw as Partial<TokenGradient>;
+    const stops = Array.isArray(candidate.stops)
+        ? candidate.stops
+              .filter((stop): stop is GradientStop =>
+                  typeof stop === 'object' && stop !== null && HEX_COLOR.test(String((stop as GradientStop).color))
+              )
+              .map((stop, index, all) => ({
+                  color: stop.color,
+                  // An omitted position spreads the stop between its neighbours.
+                  position: clampPercent(Number.isFinite(Number(stop.position)) ? Number(stop.position) : (index / Math.max(1, all.length - 1)) * 100),
+              }))
+        : [];
+
+    // A single stop is a flat colour, so the token should stay solid instead.
+    if (stops.length < 2) return null;
+
+    const type: TokenGradient['type'] = candidate.type === 'radial' ? 'radial' : 'linear';
+    const angle = Number.isFinite(Number(candidate.angle)) ? Math.min(360, Math.max(0, Number(candidate.angle))) : 0;
+
+    return { type, angle, stops };
+}
+
+/**
+ * A multipart form turns a boolean into "1"/"0", so a truthy check would read
+ * "0" as solid. Anything unrecognised falls back to the supplied default.
+ */
+export function parseSolid(raw: unknown, fallback = true): boolean {
+    if (raw === undefined || raw === null || raw === '') return fallback;
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'number') return raw !== 0;
+
+    const text = String(raw).trim().toLowerCase();
+
+    if (text === '0' || text === 'false' || text === 'off' || text === 'no') return false;
+    if (text === '1' || text === 'true' || text === 'on' || text === 'yes') return true;
+
+    return fallback;
+}
+
+/** One token out of the raw server payload. */
+export function parseToken(raw: Record<string, string | boolean | null> | undefined, key: TokenKey, mode: 'light' | 'dark'): TokenValue {
+    const source = raw ?? {};
+    const color = typeof source[key] === 'string' && HEX_COLOR.test(source[key] as string)
+        ? (source[key] as string)
+        : DEFAULT_COLORS[mode][key];
+
+    return {
+        color,
+        // Tokens saved before the Solid switch existed are solid.
+        solid: parseSolid(source[`${key}_solid`], true),
+        gradient: canHoldGradient(key) ? parseGradient(source[`${key}_gradient`]) : null,
+    };
+}
+
+function parseMode(raw: Record<string, string | boolean | null> | undefined, mode: 'light' | 'dark'): ModeTokens {
+    return TOKEN_KEYS.reduce((tokens, key) => {
+        tokens[key] = parseToken(raw, key, mode);
+        return tokens;
+    }, {} as ModeTokens);
+}
+
+/** Turns the shared `themeModes` prop (or anything else) into a safe palette pair. */
+export function normalisePalettes(raw?: RawThemeModes | null, fallback: Palettes = DEFAULT_PALETTES): Palettes {
+    if (!raw?.light || !raw?.dark) return fallback;
+
+    return { light: parseMode(raw.light, 'light'), dark: parseMode(raw.dark, 'dark') };
+}
+
+/** The flat record the Appearance form posts back to the server. */
+export function serialiseMode(tokens: ModeTokens): Record<string, string | boolean> {
+    return TOKEN_KEYS.reduce<Record<string, string | boolean>>((payload, key) => {
+        payload[key] = tokens[key].color;
+        payload[`${key}_solid`] = tokens[key].solid;
+        payload[`${key}_gradient`] = tokens[key].gradient ? JSON.stringify(tokens[key].gradient) : '';
+        return payload;
+    }, {});
+}
+
+export function serialisePalettes(palettes: Palettes): Record<string, Record<string, string | boolean>> {
+    return { light: serialiseMode(palettes.light), dark: serialiseMode(palettes.dark) };
+}
+
+/** The CSS gradient a token paints. */
+export function gradientCss(gradient: TokenGradient): string {
+    const stops = gradient.stops.map((stop) => `${stop.color} ${clampPercent(stop.position)}%`).join(', ');
+
+    return gradient.type === 'radial'
+        ? `radial-gradient(circle at 50% 0%, ${stops})`
+        : `linear-gradient(${gradient.angle}deg, ${stops})`;
+}
+
+/**
+ * What the token paints: its gradient, its colour, or a 55% tint of it when the
+ * Solid switch is off.
+ */
+export function tokenBackground(token: TokenValue): string {
+    if (token.gradient) return gradientCss(token.gradient);
+
+    return token.solid ? token.color : `color-mix(in srgb, ${token.color} 55%, transparent)`;
+}
+
+/**
+ * A gradient has no single colour, so anything that needs one (contrast, a
+ * border, an email) reads the first stop.
+ */
+export function tokenBaseColor(token: TokenValue): string {
+    return token.gradient?.stops[0]?.color ?? token.color;
+}
+
 /** Which CSS custom properties each headline token drives. */
-const TOKEN_VARS: Record<keyof Palette, string[]> = {
+const TOKEN_VARS: Record<TokenKey, string[]> = {
     accent: [
         '--color-primary',
         '--color-ring',
@@ -69,17 +247,31 @@ export function resolveMode(mode: ThemeMode): ResolvedMode {
 }
 
 /** Writes the palette for the active mode onto <html> as inline custom properties. */
-export function applyPalette(palette: Palette): void {
+export function applyPalette(tokens: ModeTokens): void {
     const root = document.documentElement;
 
-    (Object.keys(TOKEN_VARS) as (keyof Palette)[]).forEach((token) => {
-        const value = palette[token];
+    TOKEN_KEYS.forEach((token) => {
+        const value = tokens[token];
+
         if (!value) return;
-        TOKEN_VARS[token].forEach((cssVar) => root.style.setProperty(cssVar, value));
+
+        const base = tokenBaseColor(value);
+
+        TOKEN_VARS[token].forEach((cssVar) => root.style.setProperty(cssVar, base));
+
+        // A gradient rides its own variable. `--color-*` has to stay a plain
+        // colour: it is reused for borders, focus rings and text, where a
+        // gradient would be invalid.
+        root.style.setProperty(
+            `--gradient-${token}`,
+            value.gradient ? gradientCss(value.gradient) : 'none'
+        );
     });
 
-    root.style.setProperty('--color-primary-foreground', getContrastingColor(palette.accent));
-    root.style.setProperty('--color-button-primary-foreground', getContrastingColor(palette.accent));
+    const accent = tokenBaseColor(tokens.accent);
+
+    root.style.setProperty('--color-primary-foreground', getContrastingColor(accent));
+    root.style.setProperty('--color-button-primary-foreground', getContrastingColor(accent));
 }
 
 /** Single entry point that flips the mode class and applies the matching palette. */
@@ -105,10 +297,25 @@ function storeMode(mode: ThemeMode): void {
     if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, mode);
 }
 
+/**
+ * Whether the preference can be mirrored onto the server. A guest browsing the
+ * public site has no profile to store it on, and posting to the authenticated
+ * endpoint would bounce them to the login screen, so the toggle stays a local
+ * (localStorage) preference until they sign in.
+ */
+let serverPersistence = true;
+
+export function setServerPersistence(enabled: boolean): void {
+    serverPersistence = enabled;
+}
+
 /** Persists the preference server-side so it follows the user between devices. */
 export function persistMode(mode: ThemeMode): void {
     storeMode(mode);
-    router.post('/settings/theme/mode', { mode }, { preserveState: true, preserveScroll: true, preserveUrl: true });
+
+    if (!serverPersistence) return;
+
+    router.post('/settings/theme/mode', { mode }, { preserveState: true, preserveScroll: true, preserveUrl: true, onError: () => undefined });
 }
 
 type ThemeContextValue = {
@@ -170,6 +377,154 @@ export function ThemeProvider({ children, initialMode, palettes }: ThemeProvider
     );
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
+/** A six-digit hex colour, the only shape a swatch can edit directly. */
+export function isHexColor(value: string | undefined | null): boolean {
+    return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
+/**
+ * One group of `color*` tokens on the Appearance screen. Grouping is what keeps
+ * fifty-odd colours readable: a heading, then a grid of labelled controls.
+ */
+export type WebsiteTokenGroup = {
+    id: string;
+    labelKey: CopyKey;
+    tokens: string[];
+};
+
+/**
+ * Every colour the school stores in `theme_config`, in the order the Appearance
+ * screen lists them. The registry lives next to the palette model so there is a
+ * single source of truth for token names on the client.
+ */
+export const WEBSITE_COLOR_GROUPS: WebsiteTokenGroup[] = [
+    {
+        id: 'brand',
+        labelKey: 'settings.appearance.group.brand',
+        tokens: [
+            'colorPrimary',
+            'colorPrimaryForeground',
+            'colorSecondary',
+            'colorSecondaryForeground',
+            'colorAccent',
+            'colorAccentForeground',
+        ],
+    },
+    {
+        id: 'surfaces',
+        labelKey: 'settings.appearance.group.surfaces',
+        tokens: [
+            'colorBackground',
+            'colorForeground',
+            'colorCard',
+            'colorCardForeground',
+            'colorPopover',
+            'colorPopoverForeground',
+            'colorMuted',
+            'colorMutedForeground',
+        ],
+    },
+    {
+        id: 'links',
+        labelKey: 'settings.appearance.group.links',
+        tokens: ['colorLink', 'colorLinkHover'],
+    },
+    {
+        id: 'borders',
+        labelKey: 'settings.appearance.group.borders',
+        tokens: [
+            'colorBorder',
+            'colorInput',
+            'colorRing',
+            'colorInputBackground',
+            'colorInputForeground',
+            'colorInputPlaceholder',
+            'colorInputBorder',
+            'colorInputFocus',
+        ],
+    },
+    {
+        id: 'sidebar',
+        labelKey: 'settings.appearance.group.sidebar',
+        tokens: [
+            'colorSidebar',
+            'colorSidebarForeground',
+            'colorSidebarPrimary',
+            'colorSidebarPrimaryForeground',
+            'colorSidebarAccent',
+            'colorSidebarAccentForeground',
+            'colorSidebarBorder',
+            'colorSidebarRing',
+        ],
+    },
+    {
+        id: 'header',
+        labelKey: 'settings.appearance.group.header',
+        tokens: ['colorHeader', 'colorHeaderForeground', 'colorHeaderBorder'],
+    },
+    {
+        id: 'footer',
+        labelKey: 'settings.appearance.group.footer',
+        tokens: ['colorFooter', 'colorFooterForeground', 'colorFooterBorder'],
+    },
+    {
+        id: 'table',
+        labelKey: 'settings.appearance.group.table',
+        tokens: [
+            'colorTableHeader',
+            'colorTableHeaderForeground',
+            'colorTableRow',
+            'colorTableRowHover',
+            'colorTableBorder',
+        ],
+    },
+    {
+        id: 'button',
+        labelKey: 'settings.appearance.group.button',
+        tokens: [
+            'colorButtonPrimary',
+            'colorButtonPrimaryForeground',
+            'colorButtonSecondary',
+            'colorButtonSecondaryForeground',
+            'colorButtonOutline',
+            'colorButtonGhost',
+        ],
+    },
+    {
+        id: 'feedback',
+        labelKey: 'settings.appearance.group.feedback',
+        tokens: [
+            'colorSuccess',
+            'colorSuccessForeground',
+            'colorWarning',
+            'colorWarningForeground',
+            'colorError',
+            'colorErrorForeground',
+            'colorInfo',
+            'colorInfoForeground',
+        ],
+    },
+];
+
+/** The colour tokens the registry knows about, as one flat set. */
+export const KNOWN_COLOR_TOKENS: ReadonlySet<string> = new Set(
+    WEBSITE_COLOR_GROUPS.flatMap((group) => group.tokens)
+);
+
+/**
+ * Splits `colorSidebarPrimaryForeground` into `Sidebar primary foreground`, so
+ * anything the registry does not name yet still gets a readable label.
+ */
+export function humaniseTokenKey(key: string): string {
+    const bare = key.replace(/^color/, '').replace(/^([a-z])/, (first) => first.toUpperCase());
+    const words = bare
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        // `radius2xl` should read "Radius 2xl", not "Radius2xl".
+        .replace(/([A-Za-z])([0-9])/g, '$1 $2');
+
+    return words.charAt(0) + words.slice(1);
 }
 
 export function useThemeMode(): ThemeContextValue {

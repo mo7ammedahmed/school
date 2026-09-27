@@ -66,7 +66,9 @@ class SchoolSettingsController extends Controller
         // Fill whichever language was left blank, then drop the upload key so it
         // is never written to a column that does not exist.
         $validated = $this->translateBilingual($validated, ['name'], $school->id);
-        $validated = $this->translateBilingual($validated, ['description'], $school->id);
+        // The description is optional: translate it when one side was typed,
+        // but never refuse the save because both sides are empty.
+        $validated = $this->translateBilingual($validated, ['description'], $school->id, required: false);
 
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');

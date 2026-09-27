@@ -557,5 +557,27 @@
             transparent
         );
     }
+
+    /* ---------- Token gradients (Settings → Appearance → Solid / Gradient) ----------
+       lib/theme writes `--gradient-<token>` and keeps `--color-<token>` as the
+       flat colour, so borders, rings and text stay valid while the surfaces
+       below can paint the gradient the school chose. Unset means `none`, which
+       leaves the flat colour in charge — the behaviour before gradients. */
+    .bg-background,
+    .bg-paper {
+        background-image: var(--gradient-background, none);
+    }
+
+    .bg-card,
+    .bg-popover,
+    .bg-surface {
+        background-image: var(--gradient-surface, none);
+    }
+
+    .bg-primary,
+    .bg-sidebar-primary,
+    .bg-button-primary {
+        background-image: var(--gradient-accent, none);
+    }
 }
 

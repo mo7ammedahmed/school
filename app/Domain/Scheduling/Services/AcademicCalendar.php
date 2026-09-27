@@ -72,7 +72,7 @@ final readonly class AcademicCalendar
             ));
         }
 
-        usort($items, static fn(CalendarItem $a, CalendarItem $b): int => [$a->date, $a->title] <=> [$b->date, $b->title]);
+        usort($items, static fn (CalendarItem $a, CalendarItem $b): int => [$a->date, $a->title] <=> [$b->date, $b->title]);
 
         return $items;
     }

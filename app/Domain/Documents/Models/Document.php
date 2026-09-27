@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'school_id',
     'document_category_id',
     'title',
+    'title_ar',
     'file_path',
     'file_type',
     'file_size',
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'linked_entity_id',
     'uploaded_by',
     'description',
+    'description_ar',
 ])]
 class Document extends Model
 {

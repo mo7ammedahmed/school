@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'conversation_id',
     'sender_id',
     'body',
+    'body_ar',
     'attachment_path',
     'attachment_type',
     'read_at',

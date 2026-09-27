@@ -14,10 +14,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'school_id',
     'name',
+    'name_ar',
     'start_date',
     'end_date',
     'is_active',
     'description',
+    'description_ar',
 ])]
 class AdmissionPeriod extends Model
 {

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'status',
     'reference_number',
     'notes',
+    'notes_ar',
 ])]
 class Payment extends Model
 {

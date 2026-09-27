@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'amount',
     'discount_amount',
     'notes',
+    'notes_ar',
 ])]
 class FeeAssignment extends Model
 {
