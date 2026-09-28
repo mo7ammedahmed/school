@@ -27,6 +27,12 @@ class AiTranslator
         'en' => 'English',
     ];
 
+    /** The hardest ceiling any single provider call may have. */
+    private static function maxRequestSeconds(): int
+    {
+        return max(1, (int) config('bilingual.request_timeout_seconds', 12));
+    }
+
     /**
      * @throws TranslationFailed
      */
@@ -161,7 +167,12 @@ class AiTranslator
         $baseUrl = rtrim($settings->baseUrl(), '/');
         $key = (string) $settings->apiKey();
 
-        $client = Http::baseUrl($baseUrl)->acceptJson()->asJson()->timeout($settings->timeout());
+        // Capped: a provider call that outlives the request is killed by PHP
+        // anyway, and a cap keeps an interactive translate from hanging the
+        // page. The school's own timeout still wins when it is shorter.
+        $timeout = min($settings->timeout(), self::maxRequestSeconds());
+
+        $client = Http::baseUrl($baseUrl)->acceptJson()->asJson()->timeout($timeout);
 
         return match ($provider->driver()) {
             // Anthropic authenticates with a header and pins the API version.

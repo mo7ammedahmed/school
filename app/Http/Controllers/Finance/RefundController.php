@@ -40,6 +40,8 @@ class RefundController extends Controller
             'status' => 'required|in:pending,completed,rejected',
         ]);
 
+        $validated['school_id'] = (int) session('school_id');
+
         Refund::create($validated);
 
         return redirect()->route('finance.refunds.index')->with('success', 'Refund created successfully.');

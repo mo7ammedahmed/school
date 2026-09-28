@@ -95,6 +95,34 @@ class GradingSettingsController extends Controller
         ]);
     }
 
+    /**
+     * The rounding/extracurricular form on the grading screen.
+     *
+     * The route used to point at a `store()` that did not exist, so every save
+     * from that card answered with a 500 instead of persisting.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $school = $this->school($request);
+
+        $validated = $request->validate([
+            'rounding_method' => 'required|in:nearest,floor,ceil',
+            'include_extracurricular' => 'required|boolean',
+        ]);
+
+        SchoolSetting::updateOrCreate(
+            ['school_id' => $school->id, 'key' => 'grading_rounding_method'],
+            ['value' => $validated['rounding_method'], 'type' => 'string']
+        );
+
+        SchoolSetting::updateOrCreate(
+            ['school_id' => $school->id, 'key' => 'grading_include_extracurricular'],
+            ['value' => $request->boolean('include_extracurricular') ? 'true' : 'false', 'type' => 'boolean']
+        );
+
+        return redirect()->route('settings.grading')->with('success', 'Grading settings updated successfully.');
+    }
+
     public function update(Request $request): RedirectResponse
     {
         $school = $this->school($request);
@@ -290,7 +318,7 @@ class GradingSettingsController extends Controller
         $scale = GradingScale::create([
             'school_id' => $school->id,
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'scale' => json_encode($validated['scale']),
             'is_default' => $validated['is_default'] ?? false,
         ]);
@@ -380,7 +408,7 @@ class GradingSettingsController extends Controller
         $scale->update([
             'name' => $validated['name'] ?? $scale->name,
             'description' => $validated['description'] ?? $scale->description,
-            'scale' => $validated['scale'] ? json_encode($validated['scale']) : $scale->scale,
+            'scale' => isset($validated['scale']) ? json_encode($validated['scale']) : $scale->scale,
             'is_default' => $validated['is_default'] ?? $scale->is_default,
         ]);
 
@@ -434,9 +462,9 @@ class GradingSettingsController extends Controller
         GradingCategory::create([
             'school_id' => $school->id,
             'name' => $validated['name'],
-            'code' => $validated['code'],
+            'code' => $validated['code'] ?? null,
             'weight' => $validated['weight'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         return redirect()->route('settings.grading')->with('success', 'Grading category created successfully.');

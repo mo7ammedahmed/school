@@ -41,7 +41,7 @@ export default function AcademicYearsCreate() {
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Academic Year Name (English)</Label>
-                                <Input id="name_en" name="name_en" placeholder="e.g., 2024-2025" required />
+                                <Input id="name_en" name="name_en" placeholder="e.g., 2024-2025" />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

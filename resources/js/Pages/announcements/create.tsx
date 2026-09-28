@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
@@ -35,8 +36,15 @@ export default function AnnouncementsCreate() {
                     <form className="space-y-6" method="POST" action="/announcements">
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="title">Title</Label>
-                                <Input id="title" name="title" required />
+                                <Label htmlFor="title">Title (English)</Label>
+                                <Input id="title" name="title" />
+                            </div>
+                            <div>
+                                <Label htmlFor="title_ar">Title (Arabic)</Label>
+                                <Input id="title_ar" name="title_ar" dir="rtl" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="title" arId="title_ar" />
                             </div>
                             <div>
                                 <Label htmlFor="target_audience">Target Audience</Label>
@@ -49,23 +57,30 @@ export default function AnnouncementsCreate() {
                                 </select>
                             </div>
                             <div>
-                                <Label htmlFor="publish_date">Publish Date</Label>
-                                <Input id="publish_date" name="publish_date" type="date" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="expiry_date">Expiry Date</Label>
-                                <Input id="expiry_date" name="expiry_date" type="date" required />
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label htmlFor="content">Content</Label>
-                                <textarea id="content" name="content" className="input min-h-[200px]" required />
-                            </div>
-                            <div>
-                                <Label htmlFor="is_active">Active</Label>
-                                <select id="is_active" name="is_active" className="input" required defaultValue="1">
+                                <Label htmlFor="is_published">Published</Label>
+                                <select id="is_published" name="is_published" className="input" required defaultValue="1">
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="start_date">Start Date</Label>
+                                <Input id="start_date" name="start_date" type="date" required />
+                            </div>
+                            <div>
+                                <Label htmlFor="end_date">End Date</Label>
+                                <Input id="end_date" name="end_date" type="date" required />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="body">Body (English)</Label>
+                                <textarea id="body" name="body" className="input min-h-[200px]" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="body_ar">Body (Arabic)</Label>
+                                <textarea id="body_ar" name="body_ar" dir="rtl" className="input min-h-[200px]" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="body" arId="body_ar" />
                             </div>
                         </div>
 

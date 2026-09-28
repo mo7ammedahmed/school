@@ -274,8 +274,72 @@ export function applyPalette(tokens: ModeTokens): void {
     root.style.setProperty('--color-button-primary-foreground', getContrastingColor(accent));
 }
 
-/** Single entry point that flips the mode class and applies the matching palette. */
-export function applyTheme(mode: ThemeMode, palettes: Palettes): void {
+/**
+ * The website tokens that carry the school's identity rather than a surface:
+ * the brand colour and the semantics that should read the same in both modes.
+ */
+const BRAND_TOKENS = new Set([
+    'colorPrimary',
+    'colorPrimaryForeground',
+    'colorLink',
+    'colorLinkHover',
+    'colorRing',
+    'colorInputFocus',
+    'colorButtonPrimary',
+    'colorButtonPrimaryForeground',
+    'colorSidebarPrimary',
+    'colorSidebarPrimaryForeground',
+    'colorSidebarRing',
+    'colorSuccess',
+    'colorSuccessForeground',
+    'colorWarning',
+    'colorWarningForeground',
+    'colorError',
+    'colorErrorForeground',
+    'colorInfo',
+    'colorInfoForeground',
+]);
+
+/**
+ * Writes the school's website palette onto the page.
+ *
+ * `theme_config` was stored and shipped to the browser but never used: the
+ * fifty-odd colours on the Appearance screen painted nothing, and the site was
+ * really drawn by the five headline tokens. Every `colorXxx` key becomes its
+ * `--color-xxx` custom property, so what the screen shows is what pages get.
+ *
+ * The surfaces were chosen against a light page, so in dark mode only the brand
+ * tokens carry over and the neutrals stay with the dark palette — otherwise a
+ * cream website palette would put white cards on a black dashboard.
+ */
+export function applyWebsitePalette(
+    website?: Record<string, string> | null,
+    mode: ResolvedMode = 'light',
+): void {
+    if (!website) return;
+
+    const root = document.documentElement;
+
+    for (const [key, value] of Object.entries(website)) {
+        if (!key.startsWith('color') || typeof value !== 'string' || value === '') continue;
+        if (mode === 'dark' && !BRAND_TOKENS.has(key)) continue;
+
+        root.style.setProperty(
+            `--${key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`,
+            value,
+        );
+    }
+}
+
+/**
+ * Single entry point that flips the mode class and applies the matching palette,
+ * then the school's own colours on top so they are never the ones overwritten.
+ */
+export function applyTheme(
+    mode: ThemeMode,
+    palettes: Palettes,
+    website?: Record<string, string> | null,
+): void {
     const root = document.documentElement;
     const resolved = resolveMode(mode);
 
@@ -283,6 +347,7 @@ export function applyTheme(mode: ThemeMode, palettes: Palettes): void {
     root.dataset.theme = resolved;
 
     applyPalette(palettes[resolved]);
+    applyWebsitePalette(website, resolved);
 }
 
 const STORAGE_KEY = 'aether.theme-mode';
@@ -332,9 +397,11 @@ type ThemeProviderProps = {
     children: ReactNode;
     initialMode: ThemeMode;
     palettes?: Palettes | null;
+    /** The school's website colours, applied over the headline palette. */
+    website?: Record<string, string> | null;
 };
 
-export function ThemeProvider({ children, initialMode, palettes }: ThemeProviderProps) {
+export function ThemeProvider({ children, initialMode, palettes, website }: ThemeProviderProps) {
     const [mode, setModeState] = useState<ThemeMode>(() => readStoredMode() ?? initialMode);
     const [resolved, setResolved] = useState<ResolvedMode>(() => resolveMode(readStoredMode() ?? initialMode));
 
@@ -342,21 +409,21 @@ export function ThemeProvider({ children, initialMode, palettes }: ThemeProvider
 
     // Apply on mount and whenever the mode or the school palettes change.
     useEffect(() => {
-        applyTheme(mode, activePalettes);
+        applyTheme(mode, activePalettes, website);
         setResolved(resolveMode(mode));
-    }, [mode, activePalettes]);
+    }, [mode, activePalettes, website]);
 
     // Follow the OS when the preference is "system".
     useEffect(() => {
         if (mode !== 'system') return;
         const media = window.matchMedia('(prefers-color-scheme: dark)');
         const onChange = () => {
-            applyTheme('system', activePalettes);
+            applyTheme('system', activePalettes, website);
             setResolved(resolveMode('system'));
         };
         media.addEventListener('change', onChange);
         return () => media.removeEventListener('change', onChange);
-    }, [mode, activePalettes]);
+    }, [mode, activePalettes, website]);
 
     const setMode = useCallback((next: ThemeMode) => {
         setModeState(next);

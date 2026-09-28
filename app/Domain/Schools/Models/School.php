@@ -215,8 +215,12 @@ class School extends Model
 
     /**
      * Get the default theme configuration based on the current design system.
+     *
+     * Public because the Appearance screen compares what a school has stored
+     * against it: a value the school never touched should read as derived rather
+     * than as a deliberate choice.
      */
-    protected function getDefaultThemeConfig(): array
+    public function getDefaultThemeConfig(): array
     {
         return [
             // Base

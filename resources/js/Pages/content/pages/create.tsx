@@ -63,8 +63,11 @@ export default function PageCreate({ sectionTypes, page }: { sectionTypes: Secti
                             {errors[field] && <p className="text-sm text-destructive">{errors[field]}</p>}
                         </div>
                     ))}
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 space-y-1">
                         <TranslatePair enId="title" arId="title_ar" />
+                        <p className="text-xs text-muted-foreground">
+                            Either language is enough — fill one and save, and the other is translated for you.
+                        </p>
                     </div>
                     <div><Label htmlFor="status">Status</Label><select id="status" className="input w-full" value={data.status} onChange={(event) => setData('status', event.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option></select></div>
                     <div><Label htmlFor="template">Template</Label><select id="template" className="input w-full" value={data.template} onChange={(event) => setData('template', event.target.value)}><option value="standard">Standard</option><option value="landing">Landing</option></select></div>

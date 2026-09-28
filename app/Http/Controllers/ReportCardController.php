@@ -39,6 +39,8 @@ class ReportCardController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
+        $validated['school_id'] = (int) session('school_id');
+
         $reportCard = ReportCard::create($validated);
 
         return redirect()->route('report-cards.show', $reportCard)->with('success', 'Report card created successfully.');

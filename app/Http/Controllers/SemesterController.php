@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Semester;
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -16,8 +15,6 @@ use Inertia\Response;
 
 class SemesterController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $semesters = Semester::where('school_id', $this->schoolId())
@@ -51,7 +48,7 @@ class SemesterController extends Controller
         $validated['school_id'] = $this->schoolId();
         $validated['is_current'] = $request->boolean('is_current');
 
-        $semester = Semester::create($this->translateBilingual($validated));
+        $semester = Semester::create($validated);
 
         return redirect()->route('semesters.show', $semester)->with('success', 'Semester created successfully.');
     }
@@ -96,7 +93,7 @@ class SemesterController extends Controller
 
         $validated['is_current'] = $request->boolean('is_current');
 
-        $semester->update($this->translateBilingual($validated));
+        $semester->update($validated);
 
         return redirect()->route('semesters.show', $semester)->with('success', 'Semester updated successfully.');
     }

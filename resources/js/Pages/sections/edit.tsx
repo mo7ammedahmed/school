@@ -42,7 +42,7 @@ export default function SectionsEdit({ section, gradeLevels, academicYears }: { 
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Section Name (English)</Label>
-                                <Input id="name_en" name="name_en" defaultValue={section.name_en} required />
+                                <Input id="name_en" name="name_en" defaultValue={section.name_en} />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

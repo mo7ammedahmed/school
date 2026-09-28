@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TranslatePair } from '@/components/ui/translate-pair';
+import { ColorField } from '@/components/ui/color-field';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
 
@@ -257,26 +258,12 @@ export default function SchoolForm({ school, organizations }: SchoolFormProps) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="primary_color">Primary colour</Label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    id="primary_color"
-                                    type="color"
-                                    aria-label="Primary colour swatch"
-                                    value={form.data.primary_color}
-                                    onChange={(e) => form.setData('primary_color', e.target.value)}
-                                    className="h-9 w-10 shrink-0 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
-                                />
-                                <Input
-                                    value={form.data.primary_color}
-                                    onChange={(e) => form.setData('primary_color', e.target.value)}
-                                    className="h-9 font-mono text-xs"
-                                    spellCheck={false}
-                                />
-                            </div>
-                            {form.errors.primary_color && (
-                                <p className="text-sm text-destructive">{form.errors.primary_color}</p>
-                            )}
+                            <ColorField
+                                label="Primary colour"
+                                value={form.data.primary_color}
+                                onChange={(value) => form.setData('primary_color', value)}
+                                error={form.errors.primary_color}
+                            />
                         </div>
 
                         <div className="flex flex-wrap gap-3 border-t border-border pt-4">

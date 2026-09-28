@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\Organization;
 use App\Domain\Schools\Models\School;
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +22,6 @@ use Inertia\Response;
  */
 class SchoolController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $schools = $this->scopedSchools()
@@ -102,7 +99,6 @@ class SchoolController extends Controller
     {
         $validated = $request->validate($this->rules());
         $this->assertOrganizationAllowed((int) $validated['organization_id']);
-        $validated = $this->translateBilingual($validated, ['name']);
 
         $school = School::create([
             ...$validated,
@@ -148,7 +144,6 @@ class SchoolController extends Controller
     {
         $validated = $request->validate($this->rules());
         $this->assertOrganizationAllowed((int) $validated['organization_id']);
-        $validated = $this->translateBilingual($validated, ['name'], $school->id);
 
         $school->update([
             ...$validated,

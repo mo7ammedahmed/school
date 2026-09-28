@@ -25,7 +25,7 @@ export default function Profile({ user }: { user: { name: string; email: string;
             title="Profile Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Profile' },
             ]}
         >
@@ -34,7 +34,7 @@ export default function Profile({ user }: { user: { name: string; email: string;
                 description="Update your profile information"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/general"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/settings/school"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />
@@ -65,7 +65,7 @@ export default function Profile({ user }: { user: { name: string; email: string;
 
                         <div className="flex gap-4">
                             <Button type="button" variant="outline" asChild>
-                                <Link href="/settings/general">Cancel</Link>
+                                <Link href="/settings/school">Cancel</Link>
                             </Button>
                             <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving...' : 'Save Profile'}

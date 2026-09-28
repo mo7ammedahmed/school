@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +11,6 @@ use Inertia\Response;
 
 class SchoolSettingsController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $school = auth()->user()->currentSchool;
@@ -39,11 +36,6 @@ class SchoolSettingsController extends Controller
         ]);
     }
 
-    public function edit(): Response
-    {
-        return $this->index();
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $school = auth()->user()->currentSchool;
@@ -63,12 +55,8 @@ class SchoolSettingsController extends Controller
             'accent_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
-        // Fill whichever language was left blank, then drop the upload key so it
-        // is never written to a column that does not exist.
-        $validated = $this->translateBilingual($validated, ['name'], $school->id);
-        // The description is optional: translate it when one side was typed,
-        // but never refuse the save because both sides are empty.
-        $validated = $this->translateBilingual($validated, ['description'], $school->id, required: false);
+        // The upload key is dropped so it is never written to a column that
+        // does not exist; the empty language side is filled by the observer.
 
         if ($request->hasFile('logo')) {
             $validated['logo_path'] = $request->file('logo')->store('school-logos', 'public');
@@ -79,10 +67,5 @@ class SchoolSettingsController extends Controller
         $school->update($validated);
 
         return redirect()->route('settings.school')->with('success', 'School settings updated successfully.');
-    }
-
-    public function update(Request $request): RedirectResponse
-    {
-        return $this->store($request);
     }
 }

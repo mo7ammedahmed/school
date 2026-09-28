@@ -91,7 +91,7 @@ export default function SettingsPayments({
             title="Payment Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Payment Settings' },
             ]}
         >

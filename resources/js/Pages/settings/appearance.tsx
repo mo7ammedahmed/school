@@ -21,8 +21,16 @@ import { cn } from '@/lib/utils';
 import { t, tk, type CopyKey, type Locale } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import {
+    SEED_KEYS,
+    advancedFrom,
+    composePalette,
+    overridesFrom,
+    seedsFrom,
+    type Palette,
+    type SeedKey,
+} from '@/lib/palette';
+import {
     DEFAULT_PALETTES,
-    KNOWN_COLOR_TOKENS,
     WEBSITE_COLOR_GROUPS,
     canHoldGradient,
     getContrastingColor,
@@ -78,6 +86,8 @@ type ThemeConfig = Record<string, string>;
 type AppearanceProps = {
     appearance: Appearance;
     themeConfig: ThemeConfig;
+    /** What an untouched school has stored, so nothing untouched reads as a choice. */
+    themeDefaults: ThemeConfig;
     themeModes: RawThemeModes;
     userThemeMode: ThemeMode;
 };
@@ -304,7 +314,13 @@ function WebsitePreview({ tokens }: { tokens: PreviewTokens }) {
     );
 }
 
-export default function AppearanceSettings({ appearance, themeConfig, themeModes, userThemeMode }: AppearanceProps) {
+export default function AppearanceSettings({
+    appearance,
+    themeConfig,
+    themeDefaults,
+    themeModes,
+    userThemeMode,
+}: AppearanceProps) {
     const { locale } = useLocale();
     // The controller redirects with a flash message, so the confirmation comes
     // from the session rather than from Inertia's two-second form state, which a
@@ -313,7 +329,22 @@ export default function AppearanceSettings({ appearance, themeConfig, themeModes
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [palettes, setPalettes] = useState<Palettes>(() => normalisePalettes(themeModes));
     const [themeModeState, setThemeModeState] = useState<ThemeMode>(userThemeMode);
-    const [websiteTokens, setWebsiteTokens] = useState<ThemeConfig>(themeConfig);
+    /**
+     * The website palette is stored whole, but it is *edited* as five seeds plus
+     * whatever the school has deliberately overridden. Deriving the rest means a
+     * school that changes its brand colour gets borders, links, the sidebar and
+     * the footer that still match it.
+     */
+    const [seeds, setSeeds] = useState<Record<SeedKey, string>>(() => seedsFrom(themeConfig));
+    const [overrides, setOverrides] = useState<Palette>(() =>
+        overridesFrom(themeConfig, seedsFrom(themeConfig), themeDefaults),
+    );
+    const [advanced, setAdvanced] = useState<Palette>(() => advancedFrom(themeConfig));
+
+    const websiteTokens = useMemo(
+        () => composePalette(seeds, overrides, advanced),
+        [seeds, overrides, advanced],
+    );
     const [activePaletteMode, setActivePaletteMode] = useState<Mode>('light');
 
     useEffect(() => {
@@ -324,8 +355,10 @@ export default function AppearanceSettings({ appearance, themeConfig, themeModes
 
     // A fresh page load (or a save that redirects back) is the source of truth.
     useEffect(() => {
-        setWebsiteTokens(themeConfig);
-    }, [themeConfig]);
+        setSeeds(seedsFrom(themeConfig));
+        setOverrides(overridesFrom(themeConfig, seedsFrom(themeConfig), themeDefaults));
+        setAdvanced(advancedFrom(themeConfig));
+    }, [themeConfig, themeDefaults]);
 
     const {
         setData,
@@ -485,35 +518,43 @@ export default function AppearanceSettings({ appearance, themeConfig, themeModes
         });
     };
 
+    /** A colour the operator edited by hand, which stops following the seeds. */
     const setWebsiteToken = (key: string, value: string) => {
-        setWebsiteTokens((prev) => ({ ...prev, [key]: value }));
+        setOverrides((prev) => ({ ...prev, [key]: value }));
+    };
+
+    /** Hands a token back to the derivation it came from. */
+    const clearWebsiteToken = (key: string) => {
+        setOverrides((prev) => {
+            const next = { ...prev };
+            delete next[key];
+
+            return next;
+        });
     };
 
     /**
      * Everything in `theme_config` that the colour registry does not list, split
      * into the colour-free tokens (fonts, radii, shadows) and any stray colour.
      */
-    const { otherTokens, advancedTokens } = useMemo(() => {
-        const rest = Object.keys(websiteTokens).filter((key) => !KNOWN_COLOR_TOKENS.has(key));
-
-        return {
-            otherTokens: rest.filter((key) => key.startsWith('color')),
-            advancedTokens: rest.filter((key) => !key.startsWith('color')),
-        };
-    }, [websiteTokens]);
+    const advancedTokens = useMemo(() => Object.keys(advanced), [advanced]);
 
     /** Resets only the mode on screen, so the other palette is left alone. */
     const resetPalette = () => {
         setPalettes((prev) => ({ ...prev, [activePaletteMode]: DEFAULT_PALETTES[activePaletteMode] }));
     };
 
-    const resetWebsiteTokens = () => setWebsiteTokens(themeConfig);
+    const resetWebsiteTokens = () => {
+        setSeeds(seedsFrom(themeConfig));
+        setOverrides(overridesFrom(themeConfig, seedsFrom(themeConfig), themeDefaults));
+        setAdvanced(advancedFrom(themeConfig));
+    };
 
     const resetForm = () => {
         reset();
         setLogoPreview(null);
         setPalettes(normalisePalettes(themeModes));
-        setWebsiteTokens(themeConfig);
+        resetWebsiteTokens();
         setThemeModeState(userThemeMode);
         setActivePaletteMode('light');
     };
@@ -538,7 +579,7 @@ export default function AppearanceSettings({ appearance, themeConfig, themeModes
         <AppShell
             title={t(locale, 'settings.appearance.title')}
             breadcrumbs={[
-                { label: t(locale, 'nav.settings'), href: '/settings/general' },
+                { label: t(locale, 'nav.settings'), href: '/settings/school' },
                 { label: t(locale, 'nav.appearance') },
             ]}
         >
@@ -944,43 +985,101 @@ export default function AppearanceSettings({ appearance, themeConfig, themeModes
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-8">
-                        {WEBSITE_COLOR_GROUPS.map((group) => (
-                            <section key={group.id} className="space-y-3">
-                                <h3 className="text-sm font-semibold text-foreground">
-                                    {t(locale, group.labelKey)}
-                                </h3>
-                                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                    {group.tokens.map((key) => (
-                                        <ColorField
-                                            key={key}
-                                            id={key}
-                                            label={labelFor(locale, key)}
-                                            value={websiteTokens[key] ?? ''}
-                                            onChange={(next) => setWebsiteToken(key, next)}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))}
+                        {/* The five colours the school picks. */}
+                        <section className="space-y-3">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                {t(locale, 'settings.appearance.seeds.title')}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                                {t(locale, 'settings.appearance.seeds.description')}
+                            </p>
+                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                                {SEED_KEYS.map((key) => (
+                                    <ColorField
+                                        key={key}
+                                        id={key}
+                                        label={labelFor(locale, key)}
+                                        value={seeds[key]}
+                                        onChange={(next) => setSeeds((prev) => ({ ...prev, [key]: next }))}
+                                    />
+                                ))}
+                            </div>
+                        </section>
 
-                        {otherTokens.length > 0 && (
-                            <section className="space-y-3">
+                        {/* Everything else, derived and read-only until asked for. */}
+                        <section className="space-y-6">
+                            <div className="space-y-1">
                                 <h3 className="text-sm font-semibold text-foreground">
-                                    {t(locale, 'settings.appearance.website.other')}
+                                    {t(locale, 'settings.appearance.derived.title')}
                                 </h3>
-                                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                    {otherTokens.map((key) => (
-                                        <ColorField
-                                            key={key}
-                                            id={key}
-                                            label={labelFor(locale, key)}
-                                            value={websiteTokens[key] ?? ''}
-                                            onChange={(next) => setWebsiteToken(key, next)}
-                                        />
-                                    ))}
+                                <p className="text-xs text-muted-foreground">
+                                    {t(locale, 'settings.appearance.derived.description')}
+                                </p>
+                            </div>
+
+                            {WEBSITE_COLOR_GROUPS.map((group) => (
+                                <div key={group.id} className="space-y-2">
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {t(locale, group.labelKey)}
+                                    </h4>
+                                    <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                                        {group.tokens.map((key) => {
+                                            const overridden = key in overrides;
+
+                                            return (
+                                                <li
+                                                    key={key}
+                                                    className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5"
+                                                >
+                                                    <span className="flex min-w-0 items-center gap-2">
+                                                        <span
+                                                            aria-hidden="true"
+                                                            className="size-4 shrink-0 rounded-sm border border-border"
+                                                            style={{ background: websiteTokens[key] }}
+                                                        />
+                                                        <span className="truncate text-xs">
+                                                            {labelFor(locale, key)}
+                                                        </span>
+                                                    </span>
+
+                                                    {overridden ? (
+                                                        <span className="flex shrink-0 items-center gap-1.5">
+                                                            <input
+                                                                type="color"
+                                                                aria-label={labelFor(locale, key)}
+                                                                value={websiteTokens[key]}
+                                                                onChange={(event) =>
+                                                                    setWebsiteToken(key, event.target.value)
+                                                                }
+                                                                className="h-6 w-8 cursor-pointer rounded border border-border bg-transparent"
+                                                            />
+                                                            <code className="text-[11px] tabular-nums text-muted-foreground">
+                                                                {websiteTokens[key]}
+                                                            </code>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => clearWebsiteToken(key)}
+                                                                className="text-[11px] text-primary underline"
+                                                            >
+                                                                {t(locale, 'settings.appearance.derived.revert')}
+                                                            </button>
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setWebsiteToken(key, websiteTokens[key])}
+                                                            className="shrink-0 text-[11px] text-muted-foreground underline hover:text-foreground"
+                                                        >
+                                                            {t(locale, 'settings.appearance.derived.override')}
+                                                        </button>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
                                 </div>
-                            </section>
-                        )}
+                            ))}
+                        </section>
 
                         {advancedTokens.length > 0 && (
                             <details className="rounded-lg border border-border/60 p-3">

@@ -90,6 +90,7 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TranslateController;
+use App\Http\Controllers\UiCopyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -179,6 +180,13 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 Route::middleware(['auth', 'school.context'])
     ->post('/translate', TranslateController::class)
     ->name('translate');
+
+// Translates the dashboard's own interface words, so choosing Arabic does not
+// leave English headings and buttons around Arabic content. Same rate limit
+// reasoning as /translate: it spends the school's provider credits.
+Route::middleware(['auth', 'school.context'])
+    ->post('/ui/copy', UiCopyController::class)
+    ->name('ui.copy');
 
 Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(function () {
     // Dashboard
@@ -346,8 +354,10 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
     // Settings
     Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings|manage-schools')->group(function () {
-        Route::get('/general', [SchoolSettingsController::class, 'index'])->name('general');
-        Route::post('/general', [SchoolSettingsController::class, 'store']);
+        // One school editor, one URL. /settings/general stays as the historic
+        // Settings landing that the sidebar and every breadcrumb pointed at, but
+        // now forwards to the school form so the two can never drift apart.
+        Route::get('/general', fn () => redirect()->route('settings.school'))->name('general');
         Route::get('/school', [SchoolSettingsController::class, 'index'])->name('school');
         Route::post('/school', [SchoolSettingsController::class, 'store']);
         Route::get('/academic', [AcademicSettingsController::class, 'index'])->name('academic');
@@ -356,6 +366,15 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/attendance', [AttendanceSettingsController::class, 'store']);
         Route::get('/grading', [GradingSettingsController::class, 'index'])->name('grading');
         Route::post('/grading', [GradingSettingsController::class, 'store']);
+
+        // Grading scales and categories are edited one row at a time from the
+        // grading screen; these routes back the buttons that used to be dead.
+        Route::post('/grading/scales', [GradingSettingsController::class, 'storeScale'])->name('grading.scales.store');
+        Route::put('/grading/scales/{scale}', [GradingSettingsController::class, 'updateScale'])->name('grading.scales.update');
+        Route::delete('/grading/scales/{scale}', [GradingSettingsController::class, 'destroyScale'])->name('grading.scales.destroy');
+        Route::post('/grading/categories', [GradingSettingsController::class, 'storeCategory'])->name('grading.categories.store');
+        Route::put('/grading/categories/{category}', [GradingSettingsController::class, 'updateCategory'])->name('grading.categories.update');
+        Route::delete('/grading/categories/{category}', [GradingSettingsController::class, 'destroyCategory'])->name('grading.categories.destroy');
         Route::get('/notifications-config', [NotificationSettingsController::class, 'index'])->name('notifications-config');
         Route::post('/notifications-config', [NotificationSettingsController::class, 'store']);
         Route::get('/email', [EmailSettingsController::class, 'index'])->name('email');

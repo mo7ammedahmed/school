@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Domain\Scheduling\Models\Period;
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
 class PeriodController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $periods = Period::where('school_id', $this->schoolId())
@@ -30,7 +27,7 @@ class PeriodController extends Controller
     {
         $this->authorize('create', Period::class);
 
-        $validated = $this->translateBilingual($request->validate($this->rules()));
+        $validated = $request->validate($this->rules());
 
         Period::create([
             ...$validated,
@@ -44,7 +41,7 @@ class PeriodController extends Controller
     {
         $this->authorize('update', $period);
 
-        $period->update($this->translateBilingual($request->validate($this->rules())));
+        $period->update($request->validate($this->rules()));
 
         return back()->with('success', 'Period updated.');
     }

@@ -7,29 +7,43 @@ import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
 
-export default function AnnouncementsIndex({ announcements }: { announcements: { id: number; title: string; target_audience: string; publish_date: string; expiry_date: string; is_active: boolean }[] }) {
+type Announcement = {
+    id: number;
+    title: string | null;
+    title_ar: string | null;
+    target_audience: string | null;
+    start_date: string;
+    end_date: string;
+    is_published: boolean;
+};
+
+export default function AnnouncementsIndex({ announcements }: { announcements: { data: Announcement[] } }) {
     const columns: ColumnDef<any>[] = [
         {
             accessorKey: 'title',
             header: 'Title',
+            cell: ({ row }) => row.original.title ?? row.original.title_ar ?? '—',
         },
         {
             accessorKey: 'target_audience',
             header: 'Audience',
-            cell: ({ row }) => row.original.target_audience.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            cell: ({ row }) =>
+                (row.original.target_audience ?? '—').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         },
         {
-            accessorKey: 'publish_date',
-            header: 'Publish Date',
+            accessorKey: 'start_date',
+            header: 'Start Date',
+            cell: ({ row }) => row.original.start_date?.slice(0, 10) ?? '—',
         },
         {
-            accessorKey: 'expiry_date',
-            header: 'Expiry Date',
+            accessorKey: 'end_date',
+            header: 'End Date',
+            cell: ({ row }) => row.original.end_date?.slice(0, 10) ?? '—',
         },
         {
-            accessorKey: 'is_active',
+            accessorKey: 'is_published',
             header: 'Status',
-            cell: ({ row }) => row.original.is_active ? <Badge>Active</Badge> : <Badge variant="secondary">Inactive</Badge>,
+            cell: ({ row }) => row.original.is_published ? <Badge>Published</Badge> : <Badge variant="secondary">Draft</Badge>,
         },
         {
             id: 'actions',

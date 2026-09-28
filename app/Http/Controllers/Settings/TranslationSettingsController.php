@@ -92,8 +92,16 @@ class TranslationSettingsController extends Controller
      * language is empty, so content that predates the AI provider can be brought
      * fully bilingual in one action.
      */
-    public function backfill(): JsonResponse
+    public function backfill(Request $request): JsonResponse
     {
+        // The sweep is one provider call per value, so the screen walks it in
+        // batches and shows progress instead of holding one request open for
+        // minutes. `limit = 0` scans without translating, which is how the
+        // screen sizes the backlog before it starts.
+        $validated = $request->validate([
+            'limit' => 'nullable|integer|min:0|max:50',
+        ]);
+
         $schoolId = $this->schoolId();
         $settings = TranslationSettings::for($schoolId);
 
@@ -101,15 +109,20 @@ class TranslationSettingsController extends Controller
         if (! $settings->isConfigured()) {
             return response()->json([
                 'ok' => false,
+                'done' => true,
                 'message' => 'Add an API key for '.$settings->provider()->label().' before translating. Nothing was changed.',
             ], 422);
         }
 
-        $result = $this->backfill->run($schoolId);
+        $limit = array_key_exists('limit', $validated) ? (int) $validated['limit'] : null;
+
+        $result = $this->backfill->run($schoolId, $limit);
         $totals = $result['totals'];
+        $ok = $result['error'] === null;
 
         return response()->json([
-            'ok' => $result['error'] === null,
+            'ok' => $ok,
+            'done' => $ok && $totals['remaining'] === 0,
             'message' => $this->backfillMessage($totals),
             'error' => $result['error'],
             'totals' => $totals,
@@ -117,11 +130,11 @@ class TranslationSettingsController extends Controller
                 $result['targets'],
                 static fn (array $target): bool => $target['scanned'] > 0,
             )),
-        ], $result['error'] === null ? 200 : 422);
+        ], $ok ? 200 : 422);
     }
 
     /**
-     * @param  array{scanned: int, missing: int, translated: int, failed: int, remaining: int}  $totals
+     * @param  array{scanned: int, missing: int, translated: int, failed: int, remaining: int, en_to_ar: int, ar_to_en: int}  $totals
      */
     private function backfillMessage(array $totals): string
     {
@@ -134,6 +147,20 @@ class TranslationSettingsController extends Controller
         }
 
         $message = 'Translated '.$totals['translated'].' of '.$totals['missing'].' missing values';
+
+        // Say which way they went: a school that types in Arabic needs the
+        // English side filled, and the reverse, so report both.
+        $directions = [];
+        if ($totals['en_to_ar'] > 0) {
+            $directions[] = $totals['en_to_ar'].' into Arabic';
+        }
+        if ($totals['ar_to_en'] > 0) {
+            $directions[] = $totals['ar_to_en'].' into English';
+        }
+
+        if ($directions !== []) {
+            $message .= ' ('.implode(', ', $directions).')';
+        }
 
         if ($totals['failed'] > 0) {
             $message .= ', '.$totals['failed'].' failed';

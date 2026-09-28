@@ -128,7 +128,6 @@ export default function PeriodsIndex({ periods }: { periods: PeriodRow[] }) {
                                 id="name_en"
                                 value={form.data.name_en}
                                 onChange={(e) => form.setData('name_en', e.target.value)}
-                                required
                             />
                             {form.errors.name_en && <p className="text-sm text-destructive">{form.errors.name_en}</p>}
                         </div>

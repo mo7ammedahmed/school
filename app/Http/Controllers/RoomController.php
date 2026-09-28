@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +11,6 @@ use Inertia\Response;
 
 class RoomController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $schoolId = session('school_id');
@@ -40,7 +37,7 @@ class RoomController extends Controller
 
         $validated['school_id'] = session('school_id');
 
-        $room = Room::create($this->translateBilingual($validated));
+        $room = Room::create($validated);
 
         return redirect()->route('rooms.show', $room)->with('success', 'Room created successfully.');
     }
@@ -78,7 +75,7 @@ class RoomController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $room->update($this->translateBilingual($validated));
+        $room->update($validated);
 
         return redirect()->route('rooms.show', $room)->with('success', 'Room updated successfully.');
     }

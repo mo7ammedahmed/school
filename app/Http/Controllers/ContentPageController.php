@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Domain\Content\Models\ContentPage;
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,8 +12,6 @@ use Inertia\Response;
 
 class ContentPageController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         return inertia('content/pages/index', [
@@ -69,8 +66,10 @@ class ContentPageController extends Controller
     private function validated(Request $request, ?ContentPage $page = null): array
     {
         $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'title_ar' => ['nullable', 'string', 'max:255'],
+            // Either language is enough: the other side is translated for the
+            // operator, so an Arabic-first author never has to type English.
+            'title' => ['nullable', 'string', 'max:255', 'required_without:title_ar'],
+            'title_ar' => ['nullable', 'string', 'max:255', 'required_without:title'],
             'slug' => ['required', 'alpha_dash', 'max:255'],
             'content' => ['nullable', 'string'],
             'template' => ['required', 'in:standard,landing'],
@@ -89,7 +88,6 @@ class ContentPageController extends Controller
         ]);
 
         // Pages store a single Arabic title column alongside the English one.
-        $validated = $this->translateInto($validated, 'title', 'title_ar');
 
         $status = $validated['status'];
         $validated['is_published'] = $status === 'published';

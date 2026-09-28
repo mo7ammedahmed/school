@@ -525,10 +525,74 @@ return [
     |
     | Each translated value is a paid provider call, so a single run stops after
     | this many translations and reports what is left. Operators can press the
-    | button again to continue where the run stopped.
+    | button again to continue where the run stopped, and the settings screen
+    | walks the sweep in smaller batches of its own so progress is visible.
     |
     */
 
     'max_translations_per_run' => (int) env('TRANSLATION_BACKFILL_LIMIT', 100),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Run clock
+    |--------------------------------------------------------------------------
+    |
+    | Every translated value is a provider call, so a run is stopped by two
+    | clocks rather than one:
+    |
+    |   * `max_seconds_per_run` is the soft one. Past it the run stops starting
+    |     calls and reports what is left, so a request comes back while the screen
+    |     can still show progress.
+    |   * PHP's own `max_execution_time` is the hard one. A call is only begun
+    |     while `request_timeout_seconds` still fits inside it, because the fatal
+    |     "Maximum execution time of 30 seconds exceeded" killed the request mid
+    |     call, wrote nothing, and left the screen on "Translating…" for ever.
+    |
+    | Both are read live (the CLI reports no limit while the server that serves
+    | the app enforces 30s), and on a tighter host the per-call ceiling is
+    | shortened to fit instead of being left to be killed. The screen then walks
+    | the backlog in further batches.
+    |
+    */
+
+    'max_seconds_per_run' => (float) env('TRANSLATION_RUN_SECONDS', 16),
+
+    'request_timeout_seconds' => (int) env('TRANSLATION_REQUEST_SECONDS', 10),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Translation cache
+    |--------------------------------------------------------------------------
+    |
+    | Identical source text is translated once and reused for this many days,
+    | so a school with 96 offerings but eight distinct names pays for eight
+    | translations. The cache key includes the provider and model, so changing
+    | either re-translates instead of serving the previous wording. Set to 0 to
+    | always call the provider.
+    |
+    */
+
+    'translation_cache_days' => (int) env('TRANSLATION_CACHE_DAYS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Translate on save
+    |--------------------------------------------------------------------------
+    |
+    | Saving a record fills whichever side is empty, whichever page or action
+    | wrote it — the observer is attached to every target above, so the pages
+    | that were never wired up individually translate too.
+    |
+    | `on_save_seconds` bounds that: an import saving a thousand rows stops
+    | calling the provider once this much time has gone and leaves the rest to
+    | the sweep above, which is budgeted and reports what it did. Filling runs
+    | during requests only; commands and imports (and the test suite) leave the
+    | work to the sweep unless `autofill_in_console` is turned on.
+    |
+    */
+
+    'on_save_seconds' => (float) env('TRANSLATION_ON_SAVE_SECONDS', 6),
+
+    'autofill_in_console' => (bool) env('TRANSLATION_AUTOFILL_IN_CONSOLE', false),
 
 ];

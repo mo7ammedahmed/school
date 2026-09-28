@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { useForm } from '@inertiajs/react';
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
@@ -54,6 +54,8 @@ type BackfillTotals = {
     translated: number;
     failed: number;
     remaining: number;
+    en_to_ar: number;
+    ar_to_en: number;
 };
 
 type BackfillTarget = {
@@ -62,20 +64,55 @@ type BackfillTarget = {
     missing: number;
     translated: number;
     failed: number;
+    /** What the server says is still empty after the scan it just made. */
+    remaining: number;
+    en_to_ar: number;
+    ar_to_en: number;
+};
+
+/** One table's contribution to the run, summed over every batch. */
+type BackfillAdded = {
+    label: string;
+    intoArabic: number;
+    intoEnglish: number;
 };
 
 type BackfillReport = {
     ok: boolean;
     message: string;
     error: string | null;
-    totals: BackfillTotals;
+    /** The last scan, so "left" is measured after the run rather than before it. */
     targets: BackfillTarget[];
+    /** What the run actually added, per table, in both directions. */
+    added: BackfillAdded[];
 };
 
-const EMPTY_TOTALS: BackfillTotals = { scanned: 0, missing: 0, translated: 0, failed: 0, remaining: 0 };
+const EMPTY_TOTALS: BackfillTotals = {
+    scanned: 0,
+    missing: 0,
+    translated: 0,
+    failed: 0,
+    remaining: 0,
+    en_to_ar: 0,
+    ar_to_en: 0,
+};
 
-/** POST helper for the two JSON actions on this screen. */
-async function postJson(url: string): Promise<{ ok: boolean; payload: Record<string, unknown> }> {
+/**
+ * How many values one request translates.
+ *
+ * Every value is its own provider call, so a whole-school sweep in a single
+ * request could run for many minutes and left the screen stuck on
+ * "Translating…". The run is therefore walked in small batches, each one short
+ * enough to finish comfortably, with the progress reported between them.
+ */
+const BACKFILL_BATCH = 10;
+
+/** POST helper for the JSON actions on this screen. */
+async function postJson(
+    url: string,
+    body?: Record<string, unknown>,
+    signal?: AbortSignal,
+): Promise<{ ok: boolean; status: number; payload: Record<string, unknown> }> {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
 
     const response = await fetch(url, {
@@ -86,12 +123,41 @@ async function postJson(url: string): Promise<{ ok: boolean; payload: Record<str
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': token,
         },
+        body: body ? JSON.stringify(body) : undefined,
         credentials: 'same-origin',
+        signal,
     });
 
     const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
 
-    return { ok: response.ok, payload };
+    return { ok: response.ok, status: response.status, payload };
+}
+
+/** Totals as the server reports them, with every key present. */
+function totalsFrom(payload: Record<string, unknown>): BackfillTotals {
+    return { ...EMPTY_TOTALS, ...((payload.totals ?? {}) as Partial<BackfillTotals>) };
+}
+
+function targetsFrom(payload: Record<string, unknown>): BackfillTarget[] {
+    return (Array.isArray(payload.targets) ? (payload.targets as BackfillTarget[]) : []).map((target) => ({
+        ...target,
+        // Older payloads have no `remaining`; the difference is the same number.
+        remaining: target.remaining ?? Math.max(0, target.missing - target.translated - target.failed),
+    }));
+}
+
+/** Adds one payload's per-table counts onto the running totals for the run. */
+function accumulate(
+    added: Map<string, BackfillAdded>,
+    targets: BackfillTarget[],
+): void {
+    for (const target of targets) {
+        const entry = added.get(target.label) ?? { label: target.label, intoArabic: 0, intoEnglish: 0 };
+
+        entry.intoArabic += target.en_to_ar;
+        entry.intoEnglish += target.ar_to_en;
+        added.set(target.label, entry);
+    }
 }
 
 export default function TranslationSettingsPage({
@@ -119,6 +185,11 @@ export default function TranslationSettingsPage({
     const [modelsError, setModelsError] = useState<string | null>(null);
     const [backfilling, setBackfilling] = useState(false);
     const [report, setReport] = useState<BackfillReport | null>(null);
+    const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+    const abortBackfill = useRef<AbortController | null>(null);
+    // A ref, not state: the guard has to be correct on the very first click,
+    // before React has re-rendered the button into its "stop" shape.
+    const running = useRef(false);
 
     const activeProvider = providers.find((p) => p.value === form.data.provider) ?? providers[0];
     const keyState = settings.providers_with_keys?.[form.data.provider] ?? {
@@ -208,30 +279,145 @@ export default function TranslationSettingsPage({
         }
     };
 
-    /** Scans every bilingual table, translates the empty side and reports back. */
+    const stopBackfill = () => {
+        abortBackfill.current?.abort();
+    };
+
+    /**
+     * Walks every bilingual table and fills whichever side is empty — Arabic
+     * from English and English from Arabic — in batches, reporting progress as
+     * it goes so a long sweep never looks frozen.
+     */
     const runBackfill = async () => {
+        // While a sweep is in flight the button becomes "stop" rather than
+        // starting a second run that would fight the first over the same rows.
+        if (running.current) {
+            stopBackfill();
+            return;
+        }
+
+        running.current = true;
+
+        const controller = new AbortController();
+        abortBackfill.current = controller;
+
         setBackfilling(true);
         setReport(null);
+        setProgress(null);
+
+        const url = '/settings/translations/backfill';
+        let translated = 0;
+        let failed = 0;
+        let enToAr = 0;
+        let arToEn = 0;
+        let backlog = 0;
+        let targets: BackfillTarget[] = [];
+        let serverError: string | null = null;
+        // Every request re-scans from the top, so the per-table numbers in a
+        // single response only describe that batch. Summing them over the run is
+        // what lets the report say what the run added, per table and direction.
+        const added = new Map<string, BackfillAdded>();
+        const addedList = (): BackfillAdded[] =>
+            [...added.values()].filter((entry) => entry.intoArabic + entry.intoEnglish > 0);
 
         try {
-            const { ok, payload } = await postJson('/settings/translations/backfill');
+            // A scan costs nothing: it counts what is missing without calling
+            // the provider, so progress can be measured against a real total.
+            const scan = await postJson(url, { limit: 0 }, controller.signal);
+
+            if (!scan.ok) {
+                setReport({
+                    ok: false,
+                    message: String(scan.payload.message ?? 'Could not scan for missing translations.'),
+                    error: typeof scan.payload.error === 'string' ? scan.payload.error : null,
+                    targets: [],
+                    added: [],
+                });
+                return;
+            }
+
+            backlog = totalsFrom(scan.payload).missing;
+            targets = targetsFrom(scan.payload);
+            setProgress({ done: 0, total: backlog });
+
+            // Each batch keeps going while it is making progress; a batch that
+            // translates nothing means the provider is refusing, so stop rather
+            // than loop forever on the same value. The ceiling is generous
+            // because the server also stops on its own clock, which can return
+            // fewer values than were asked for.
+            const attempts = backlog + 20;
+
+            for (let round = 0; round < attempts; round++) {
+                if (backlog - translated - failed <= 0) break;
+
+                const step = await postJson(url, { limit: BACKFILL_BATCH }, controller.signal);
+                const totals = totalsFrom(step.payload);
+
+                if (!step.ok) {
+                    serverError = String(step.payload.error ?? step.payload.message ?? 'The last batch failed.');
+                    targets = targetsFrom(step.payload);
+                    failed += totals.failed;
+                    break;
+                }
+
+                translated += totals.translated;
+                failed += totals.failed;
+                enToAr += totals.en_to_ar;
+                arToEn += totals.ar_to_en;
+                targets = targetsFrom(step.payload);
+                accumulate(added, targets);
+                serverError = typeof step.payload.error === 'string' ? step.payload.error : null;
+
+                setProgress({ done: translated, total: backlog });
+
+                if (step.payload.done === true) break;
+
+                // Nothing translated and something failed: the provider is
+                // unhappy, so hand the decision back to the operator.
+                if (totals.translated === 0) {
+                    serverError ??= 'The translation service did not answer for the values it tried. Check the key, model and provider.';
+                    break;
+                }
+            }
+
+            const remaining = Math.max(0, backlog - translated - failed);
+            const directions: string[] = [];
+            if (enToAr > 0) directions.push(`${enToAr} into Arabic`);
+            if (arToEn > 0) directions.push(`${arToEn} into English`);
+            const directionText = directions.length > 0 ? ` (${directions.join(', ')})` : '';
+
+            setProgress({ done: translated, total: backlog });
 
             setReport({
-                ok,
-                message: String(payload.message ?? 'No response from the translation service.'),
-                error: typeof payload.error === 'string' ? payload.error : null,
-                totals: { ...EMPTY_TOTALS, ...((payload.totals ?? {}) as Partial<BackfillTotals>) },
-                targets: Array.isArray(payload.targets) ? (payload.targets as BackfillTarget[]) : [],
+                ok: serverError === null && remaining === 0,
+                message:
+                    backlog === 0
+                        ? 'Nothing was missing — every record already has both Arabic and English.'
+                        : serverError !== null
+                          ? `Translated ${translated} of ${backlog}${directionText} before stopping.`
+                          : remaining === 0
+                            ? `Done — translated ${translated} of ${backlog} missing values${directionText}.`
+                            : `Translated ${translated} of ${backlog}${directionText}. ${remaining} left — press again to continue.`,
+                error: serverError,
+                targets,
+                added: addedList(),
             });
-        } catch {
+        } catch (error) {
+            const aborted = error instanceof DOMException && error.name === 'AbortError';
+            const remaining = Math.max(0, backlog - translated - failed);
+
             setReport({
                 ok: false,
-                message: 'Could not reach the server.',
-                error: null,
-                totals: EMPTY_TOTALS,
-                targets: [],
+                message: aborted
+                    ? `Stopped. Translated ${translated} of ${backlog}; ${remaining} left.`
+                    : 'Could not reach the server. Nothing else was changed.',
+                error: aborted ? null : 'The request to the translation service did not complete.',
+                targets,
+                added: addedList(),
             });
         } finally {
+            running.current = false;
+            abortBackfill.current = null;
             setBackfilling(false);
         }
     };
@@ -248,7 +434,7 @@ export default function TranslationSettingsPage({
             title="Translations"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Translations' },
             ]}
         >
@@ -546,22 +732,33 @@ export default function TranslationSettingsPage({
                             </CardTitle>
                             <CardDescription>
                                 Checks every Arabic and English field in the system and translates the empty
-                                side, so older records catch up with the ones created since.
+                                side, so older records catch up with the ones created since. Runs in small
+                                batches, so you can watch the progress and stop at any time.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <p className="text-sm text-muted-foreground">
-                                Both languages are tested. Anything you typed yourself is left untouched.
+                                English writes Arabic and Arabic writes English — whichever side is empty is the
+                                one that gets filled. Anything you typed yourself is left untouched.
                             </p>
 
                             <Button
                                 type="button"
                                 className="w-full justify-start"
                                 onClick={() => void runBackfill()}
-                                disabled={backfilling || !settings.configured}
+                                disabled={!settings.configured}
                             >
-                                <Sparkles className="mr-2 h-4 w-4" />
-                                {backfilling ? 'Translating…' : 'Test all missing Arabic & English'}
+                                {backfilling ? (
+                                    <>
+                                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                        Stop translating
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        Translate everything that is missing
+                                    </>
+                                )}
                             </Button>
 
                             {!settings.configured && (
@@ -570,57 +767,116 @@ export default function TranslationSettingsPage({
                                 </p>
                             )}
 
+                            {progress && (backfilling || progress.total > 0) && (
+                                <div className="space-y-2" aria-live="polite">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">
+                                            {backfilling ? 'Translating…' : 'Translated'}
+                                        </span>
+                                        <span className="font-medium tabular-nums text-foreground">
+                                            {Math.min(progress.done, progress.total)} / {progress.total}
+                                        </span>
+                                    </div>
+                                    <div
+                                        className="h-1.5 w-full overflow-hidden rounded-full bg-border/60"
+                                        role="progressbar"
+                                        aria-valuemin={0}
+                                        aria-valuemax={progress.total}
+                                        aria-valuenow={Math.min(progress.done, progress.total)}
+                                    >
+                                        <div
+                                            className="h-full rounded-full bg-primary transition-[width] duration-300"
+                                            style={{
+                                                width: `${
+                                                    progress.total > 0
+                                                        ? Math.min(
+                                                              100,
+                                                              Math.round(
+                                                                  (Math.min(progress.done, progress.total) /
+                                                                      progress.total) *
+                                                                      100,
+                                                              ),
+                                                          )
+                                                        : 0
+                                                }%`,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             {report && (
                                 <div className="space-y-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs">
                                     <p className={report.ok ? 'text-success' : 'text-destructive'}>
                                         {report.message}
                                     </p>
 
-                                    {report.error && (
-                                        <p className="text-destructive">{report.error}</p>
+                                    {report.error && <p className="text-destructive">{report.error}</p>}
+
+                                    {report.added.length > 0 && (
+                                        <div className="border-t border-border/60 pt-2">
+                                            <p className="mb-1 font-medium text-foreground">
+                                                Added in this run
+                                            </p>
+                                            <ul className="space-y-1">
+                                                {report.added
+                                                    .slice()
+                                                    .sort(
+                                                        (a, b) =>
+                                                            b.intoArabic +
+                                                            b.intoEnglish -
+                                                            (a.intoArabic + a.intoEnglish),
+                                                    )
+                                                    .slice(0, 12)
+                                                    .map((entry) => (
+                                                        <li
+                                                            key={entry.label}
+                                                            className="flex items-center justify-between gap-2"
+                                                        >
+                                                            <span className="truncate text-muted-foreground">
+                                                                {entry.label}
+                                                            </span>
+                                                            {/* Spelled out rather than arrowed: arrows are mirrored in an RTL layout. */}
+                                                            <span className="shrink-0 tabular-nums text-foreground">
+                                                                {entry.intoArabic > 0 &&
+                                                                    `${entry.intoArabic} into Arabic`}
+                                                                {entry.intoArabic > 0 &&
+                                                                    entry.intoEnglish > 0 &&
+                                                                    ' · '}
+                                                                {entry.intoEnglish > 0 &&
+                                                                    `${entry.intoEnglish} into English`}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </div>
                                     )}
 
-                                    {report.totals.missing > 0 && (
-                                        <dl className="grid grid-cols-3 gap-2 border-t border-border/60 pt-2 tabular-nums">
-                                            <div>
-                                                <dt className="text-muted-foreground">Checked</dt>
-                                                <dd className="font-medium text-foreground">
-                                                    {report.totals.scanned}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-muted-foreground">Translated</dt>
-                                                <dd className="font-medium text-foreground">
-                                                    {report.totals.translated}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-muted-foreground">Left</dt>
-                                                <dd className="font-medium text-foreground">
-                                                    {report.totals.remaining}
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    )}
-
-                                    {report.targets.some((target) => target.missing > 0) && (
-                                        <ul className="space-y-1 border-t border-border/60 pt-2">
-                                            {report.targets
-                                                .filter((target) => target.missing > 0)
-                                                .map((target) => (
-                                                    <li
-                                                        key={target.label}
-                                                        className="flex items-center justify-between gap-2"
-                                                    >
-                                                        <span className="truncate text-muted-foreground">
-                                                            {target.label}
-                                                        </span>
-                                                        <span className="shrink-0 tabular-nums text-foreground">
-                                                            {target.translated}/{target.missing}
-                                                        </span>
-                                                    </li>
-                                                ))}
-                                        </ul>
+                                    {report.targets.some((target) => target.remaining > 0) && (
+                                        <div className="border-t border-border/60 pt-2">
+                                            <p className="mb-1 font-medium text-foreground">
+                                                Still empty
+                                            </p>
+                                            <ul className="space-y-1">
+                                                {report.targets
+                                                    .filter((target) => target.remaining > 0)
+                                                    .sort((a, b) => b.remaining - a.remaining)
+                                                    .slice(0, 12)
+                                                    .map((target) => (
+                                                        <li
+                                                            key={target.label}
+                                                            className="flex items-center justify-between gap-2"
+                                                        >
+                                                            <span className="truncate text-muted-foreground">
+                                                                {target.label}
+                                                            </span>
+                                                            <span className="shrink-0 tabular-nums text-foreground">
+                                                                {target.remaining} left
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </div>
                                     )}
                                 </div>
                             )}

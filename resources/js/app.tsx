@@ -27,6 +27,8 @@ type AppearanceProps = {
 type RootProps = {
     appearance?: AppearanceProps;
     themeModes?: RawThemeModes | null;
+    /** The school's website colours, derived from its few chosen colours. */
+    themeConfig?: Record<string, string> | null;
     auth?: { user?: unknown | null };
 };
 
@@ -102,7 +104,9 @@ function applyAppearanceFromProps(props: RootProps): void {
     // A choice made in this browser wins over the (possibly stale) server value,
     // otherwise the next navigation would undo an in-flight toggle.
     const mode = readStoredMode() ?? props.appearance?.theme ?? 'system';
-    applyTheme(mode, normalisePalettes(props.themeModes));
+    // The website palette goes in last, so the school's own colours win wherever
+    // the two name the same variable.
+    applyTheme(mode, normalisePalettes(props.themeModes), props.themeConfig);
 }
 
 createInertiaApp({
@@ -123,6 +127,7 @@ createInertiaApp({
                 <ThemeProvider
                     initialMode={initialProps.appearance?.theme ?? 'system'}
                     palettes={normalisePalettes(initialProps.themeModes)}
+                    website={initialProps.themeConfig}
                 >
                     <App {...props} />
                 </ThemeProvider>

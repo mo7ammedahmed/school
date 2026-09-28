@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
 export default function AttendanceSettings({ settings }: { settings: { late_threshold_minutes: number; excused_types: string[] } }) {
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         late_threshold_minutes: settings.late_threshold_minutes || 15,
         excused_types: settings.excused_types?.join(',') || 'sick,excused',
     });
@@ -24,7 +25,7 @@ export default function AttendanceSettings({ settings }: { settings: { late_thre
             title="Attendance Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Attendance' },
             ]}
         >
@@ -33,7 +34,7 @@ export default function AttendanceSettings({ settings }: { settings: { late_thre
                 description="Configure attendance rules and thresholds"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/general"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/settings/school"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />
@@ -51,17 +52,24 @@ export default function AttendanceSettings({ settings }: { settings: { late_thre
                             </div>
                             <div>
                                 <Label htmlFor="excused_types">Excused Types (comma-separated)</Label>
-                                <Input id="excused_types" name="excused_types" value={data.excused_types} onChange={(e) => setData('excused_types', e.target.value)} />
+                                <Input
+                                    id="excused_types"
+                                    value={data.excused_types}
+                                    onChange={(e) => setData('excused_types', e.target.value)}
+                                    error={errors.excused_types}
+                                    hint="For example: sick, family, travel"
+                                />
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <Button type="button" variant="outline" asChild>
-                                <Link href="/settings/general">Cancel</Link>
-                            </Button>
+                        <div className="flex flex-wrap items-center gap-4">
                             <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving...' : 'Save Settings'}
                             </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <Link href="/settings/school">Cancel</Link>
+                            </Button>
+                            <FormFeedback />
                         </div>
                     </form>
                 </CardContent>

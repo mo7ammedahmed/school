@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\AcademicYear;
 use App\Models\GradeLevel;
 use App\Models\Section;
@@ -17,8 +16,6 @@ use Inertia\Response;
 
 class SectionController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $sections = Section::where('school_id', $this->schoolId())
@@ -50,7 +47,7 @@ class SectionController extends Controller
         // `school_id` is required by the table; the tenant scope supplies it.
         $validated['school_id'] = $this->schoolId();
 
-        $section = Section::create($this->translateBilingual($validated));
+        $section = Section::create($validated);
 
         return redirect()->route('sections.show', $section)->with('success', 'Section created successfully.');
     }
@@ -87,7 +84,7 @@ class SectionController extends Controller
             'capacity' => 'required|integer|min:1',
         ]);
 
-        $section->update($this->translateBilingual($validated));
+        $section->update($validated);
 
         return redirect()->route('sections.show', $section)->with('success', 'Section updated successfully.');
     }

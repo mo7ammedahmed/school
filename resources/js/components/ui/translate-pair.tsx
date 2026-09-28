@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -75,6 +75,48 @@ async function requestTranslation(text: string, from: Locale, to: Locale): Promi
 }
 
 /**
+ * Makes a bilingual pair accept either language.
+ *
+ * Forms used to mark the English field `required`, which quietly made the app
+ * English-first: a school that types Arabic could not save at all, even though
+ * the server accepts either side and translates the other. Neither field is
+ * required on its own — the pair only needs one value, so the guard reports an
+ * error on the English field (the one the operator is most likely to fill last)
+ * when both are blank.
+ */
+function useEitherLanguageGuard(enId: string, arId: string): void {
+    useEffect(() => {
+        const english = document.getElementById(enId) as HTMLInputElement | HTMLTextAreaElement | null;
+        const arabic = document.getElementById(arId) as HTMLInputElement | HTMLTextAreaElement | null;
+
+        if (!english || !arabic) return;
+
+        const EN_MESSAGE = 'Fill in one language — the other one is translated for you.';
+
+        const revalidate = (): void => {
+            // Re-asserted on every keystroke because a re-render or a plain
+            // `required` attribute in the JSX would bring the hard rule back.
+            english.required = false;
+            arabic.required = false;
+            english.setCustomValidity(
+                english.value.trim() === '' && arabic.value.trim() === '' ? EN_MESSAGE : '',
+            );
+            arabic.setCustomValidity('');
+        };
+
+        revalidate();
+
+        english.addEventListener('input', revalidate);
+        arabic.addEventListener('input', revalidate);
+
+        return () => {
+            english.removeEventListener('input', revalidate);
+            arabic.removeEventListener('input', revalidate);
+        };
+    }, [enId, arId]);
+}
+
+/**
  * Fills one language field from the other using the school's translation
  * provider. Kept next to the fields it drives so the operator can see what will
  * be overwritten (nothing — only the empty side is filled unless they press the
@@ -92,6 +134,8 @@ export function TranslatePair({
     const [busy, setBusy] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState<string | null>(null);
+
+    useEitherLanguageGuard(enId, arId);
 
     const run = async (from: Locale, to: Locale) => {
         const sourceId = from === 'en' ? enId : arId;
@@ -155,7 +199,7 @@ export function TranslatePair({
                     );
                 })}
                 <span className="text-xs text-muted-foreground">
-                    or leave the other language empty and it is filled on save
+                    fill either language — the other is translated on save
                 </span>
             </div>
             {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}

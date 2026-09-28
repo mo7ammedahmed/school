@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\AcademicYear;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,8 +13,6 @@ use Inertia\Response;
 
 class AcademicYearController extends Controller
 {
-    use HandlesBilingualInput;
-
     private function schoolId(): int
     {
         return (int) session('school_id');
@@ -47,9 +44,6 @@ class AcademicYearController extends Controller
             'end_date' => 'required|date|after:start_date',
             'is_current' => 'required|boolean',
         ]);
-
-        // One language is enough: the other is translated and stored for you.
-        $validated = $this->translateBilingual($validated);
 
         DB::transaction(function () use ($validated) {
             if ($validated['is_current']) {
@@ -95,7 +89,6 @@ class AcademicYearController extends Controller
             'is_current' => 'required|boolean',
         ]);
 
-        $validated = $this->translateBilingual($validated);
 
         DB::transaction(function () use ($academicYear, $validated) {
             if ($validated['is_current']) {

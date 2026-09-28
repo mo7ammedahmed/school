@@ -34,6 +34,15 @@ export function isRTL(locale: string): boolean {
     return locale === 'ar';
 }
 
+/**
+ * Turn a role slug such as `super_admin` into `Super Admin` for display.
+ */
+export function humaniseRole(role: string | null | undefined): string {
+    if (!role) return '—';
+
+    return role.replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export function truncate(text: string, length: number): string {
     if (text.length <= length) return text;
     return text.slice(0, length) + '...';

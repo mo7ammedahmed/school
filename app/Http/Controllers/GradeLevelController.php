@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\GradeLevel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,8 +12,6 @@ use Inertia\Response;
 
 class GradeLevelController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $gradeLevels = GradeLevel::where('school_id', $this->schoolId())
@@ -44,7 +41,7 @@ class GradeLevelController extends Controller
         // A grade level always belongs to the school the user is working in.
         $validated['school_id'] = $this->schoolId();
 
-        $gradeLevel = GradeLevel::create($this->translateBilingual($validated));
+        $gradeLevel = GradeLevel::create($validated);
 
         return redirect()->route('grade-levels.show', $gradeLevel)->with('success', 'Grade level created successfully.');
     }
@@ -79,7 +76,7 @@ class GradeLevelController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $gradeLevel->update($this->translateBilingual($validated));
+        $gradeLevel->update($validated);
 
         return redirect()->route('grade-levels.show', $gradeLevel)->with('success', 'Grade level updated successfully.');
     }

@@ -1,16 +1,14 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
-import { Shield } from 'lucide-react';
-
+import { humaniseRole } from '@/lib/utils';
 
 export default function RolesIndex({ roles }: { roles: { id: number; name: string; guard_name: string; permissions_count: number }[] }) {
     const columns = [
         {
             accessorKey: 'name',
             header: 'Role Name',
-            cell: ({ row }: any) => row.original.name.charAt(0).toUpperCase() + row.original.name.slice(1).replace('_', ' '),
+            cell: ({ row }: any) => humaniseRole(row.original.name),
         },
         {
             accessorKey: 'guard_name',
@@ -28,19 +26,13 @@ export default function RolesIndex({ roles }: { roles: { id: number; name: strin
             title="Roles"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Roles' },
             ]}
         >
             <PageHeader
                 title="Roles"
-                description="Manage system roles"
-                actions={
-                    <Button>
-                        <Shield className="mr-2 h-4 w-4" />
-                        New Role
-                    </Button>
-                }
+                description="Roles are assigned to users from the Settings → Users screen."
             />
 
             <DataTable columns={columns} data={roles} />

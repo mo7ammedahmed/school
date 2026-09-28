@@ -6,8 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
+import { humaniseRole } from '@/lib/utils';
 
-export default function UsersIndex({ users }: { users: { id: number; name: string; email: string; role: string; is_active: boolean; last_login_at: string }[] }) {
+type UserRow = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    is_active: boolean;
+    last_login_at: string | null;
+};
+
+export default function UsersIndex({ users }: { users: UserRow[] | { data: UserRow[] } }) {
     const columns: ColumnDef<any>[] = [
         {
             accessorKey: 'name',
@@ -20,12 +30,13 @@ export default function UsersIndex({ users }: { users: { id: number; name: strin
         {
             accessorKey: 'role',
             header: 'Role',
-            cell: ({ row }) => row.original.role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            cell: ({ row }) => humaniseRole(row.original.role),
         },
         {
             accessorKey: 'is_active',
             header: 'Status',
-            cell: ({ row }) => row.original.is_active ? <Badge>Active</Badge> : <Badge variant="destructive">Inactive</Badge>,
+            cell: ({ row }) =>
+                row.original.is_active ? <Badge>Active</Badge> : <Badge variant="destructive">Inactive</Badge>,
         },
         {
             accessorKey: 'last_login_at',
@@ -38,7 +49,10 @@ export default function UsersIndex({ users }: { users: { id: number; name: strin
             cell: ({ row }) => (
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/settings/users/${row.original.id}`}>Edit</Link>
+                        <Link href={`/settings/users/${row.original.id}`}>View</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/settings/users/${row.original.id}/edit`}>Edit</Link>
                     </Button>
                 </div>
             ),
@@ -50,7 +64,7 @@ export default function UsersIndex({ users }: { users: { id: number; name: strin
             title="Users"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Users' },
             ]}
         >

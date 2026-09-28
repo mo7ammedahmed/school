@@ -53,7 +53,7 @@ export default function SemestersCreate({ academicYears }: Props) {
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Semester Name (English)</Label>
-                                <Input id="name_en" name="name_en" required placeholder="e.g., First Semester" />
+                                <Input id="name_en" name="name_en" placeholder="e.g., First Semester" />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

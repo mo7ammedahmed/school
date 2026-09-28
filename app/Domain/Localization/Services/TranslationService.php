@@ -6,6 +6,7 @@ namespace App\Domain\Localization\Services;
 
 use App\Domain\Localization\Exceptions\TranslationFailed;
 use App\Domain\Schools\Models\School;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -23,11 +24,48 @@ class TranslationService
     /**
      * Translate or fail loudly — this backs the explicit "translate" action.
      *
+     * Results are cached per provider, model, direction and source text. School
+     * content repeats heavily (96 course offerings share eight distinct names),
+     * so the cache is the difference between a sweep costing hundreds of
+     * provider calls and one costing a few dozen. Switching provider or model
+     * changes the key, so a better model re-translates rather than reusing the
+     * old wording.
+     *
      * @throws TranslationFailed
      */
     public function translate(string $text, string $from, string $to, School|int|null $school = null): string
     {
-        return $this->translator->translate($text, $from, $to, $this->settings($school));
+        $settings = $this->settings($school);
+
+        if (trim($text) === '' || $from === $to) {
+            return $this->translator->translate($text, $from, $to, $settings);
+        }
+
+        $key = 'translation:'.sha1(implode('|', [
+            $settings->provider()->value,
+            $settings->model(),
+            $from,
+            $to,
+            $text,
+        ]));
+
+        $cached = Cache::get($key);
+
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        $translated = $this->translator->translate($text, $from, $to, $settings);
+
+        Cache::put($key, $translated, now()->addDays($this->cacheDays()));
+
+        return $translated;
+    }
+
+    /** How long a translated string stays reusable. */
+    private function cacheDays(): int
+    {
+        return max(0, (int) config('bilingual.translation_cache_days', 30));
     }
 
     /**
@@ -75,8 +113,13 @@ class TranslationService
     }
 
     /**
-     * Fill a single target column from a source column, for tables that only
-     * carry one Arabic column (content pages, for example).
+     * Fill one column from the other for tables that only carry a single
+     * translated column (content pages, for example).
+     *
+     * Works in both directions: typing only the Arabic side fills the English
+     * side, and the other way round. The configured source/target pair decides
+     * which language the AI is asked for, so the school's own setup still
+     * governs the wording.
      *
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
@@ -94,19 +137,31 @@ class TranslationService
         $source = $this->text($attributes, $sourceKey);
         $target = $this->text($attributes, $targetKey);
 
-        if ($source === null || $target !== null) {
+        // Nothing typed, or both sides already written: leave it alone.
+        if (($source === null && $target === null) || ($source !== null && $target !== null)) {
             return $attributes;
         }
 
-        $translation = $this->translateQuietly(
-            $source,
-            $this->settings($school)->sourceLocale(),
-            $this->settings($school)->targetLocale(),
-            $school,
-        );
+        $settings = $this->settings($school);
+        $sourceLocale = $settings->sourceLocale();
+        $targetLocale = $settings->targetLocale();
+
+        if ($source !== null) {
+            $translation = $this->translateQuietly($source, $sourceLocale, $targetLocale, $school);
+
+            if ($translation !== null) {
+                $attributes[$targetKey] = $translation;
+            }
+
+            return $attributes;
+        }
+
+        // Only the translated column was filled, so translate back the other
+        // way and give the record an English (source) side too.
+        $translation = $this->translateQuietly((string) $target, $targetLocale, $sourceLocale, $school);
 
         if ($translation !== null) {
-            $attributes[$targetKey] = $translation;
+            $attributes[$sourceKey] = $translation;
         }
 
         return $attributes;

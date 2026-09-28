@@ -9,6 +9,7 @@ use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -42,6 +43,57 @@ class ContentPageTest extends TestCase
             'status' => 'draft',
             'is_published' => 0,
         ]);
+    }
+
+    public function test_an_arabic_only_page_gets_its_english_title_translated(): void
+    {
+        config(['services.nvidia.api_key' => 'nvapi-deployment-key']);
+
+        Permission::firstOrCreate(['name' => 'manage-content', 'guard_name' => 'web']);
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-content');
+        $school = School::factory()->create();
+        UserMembership::factory()->create(['user_id' => $user->id, 'school_id' => $school->id, 'is_active' => true]);
+
+        Http::fake([
+            'integrate.api.nvidia.com/*' => Http::response([
+                'choices' => [['message' => ['content' => 'Admissions']]],
+            ]),
+        ]);
+
+        $this->actingAs($user)->post('/content/pages', [
+            'title' => '',
+            'title_ar' => 'القبول',
+            'slug' => 'admissions-ar',
+            'template' => 'standard',
+            'status' => 'draft',
+            'robots' => 'index,follow',
+        ])->assertRedirect();
+
+        $page = ContentPage::where('slug', 'admissions-ar')->firstOrFail();
+        $this->assertSame('القبول', $page->title_ar);
+        $this->assertSame('Admissions', $page->title);
+
+        // The direction sent to the provider is Arabic to English.
+        Http::assertSent(fn ($request) => str_contains($request['messages'][1]['content'], 'Arabic to English'));
+    }
+
+    public function test_a_page_with_neither_title_is_still_rejected(): void
+    {
+        Permission::firstOrCreate(['name' => 'manage-content', 'guard_name' => 'web']);
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-content');
+        $school = School::factory()->create();
+        UserMembership::factory()->create(['user_id' => $user->id, 'school_id' => $school->id, 'is_active' => true]);
+
+        $this->actingAs($user)->post('/content/pages', [
+            'title' => '',
+            'title_ar' => '',
+            'slug' => 'nameless',
+            'template' => 'standard',
+            'status' => 'draft',
+            'robots' => 'index,follow',
+        ])->assertSessionHasErrors('title');
     }
 
     public function test_published_pages_are_public_but_drafts_are_not(): void

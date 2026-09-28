@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domain\Localization\Observers\FillsMissingTranslations;
 use App\Domain\Localization\Services\ArabicShaper;
 use App\Http\Middleware\ApplySiteMetadata;
 use Illuminate\Support\Facades\Blade;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerHeadDefaults();
         $this->registerErrorMetadata();
         $this->registerArabicShaper();
+
+        FillsMissingTranslations::register();
     }
 
     /**

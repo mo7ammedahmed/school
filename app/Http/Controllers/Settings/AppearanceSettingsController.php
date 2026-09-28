@@ -40,6 +40,10 @@ class AppearanceSettingsController extends Controller
                 'favicon_path' => $school->favicon_path,
             ],
             'themeConfig' => $school->getThemeConfig(),
+            // What a school that changed nothing has stored, so the screen can
+            // tell a deliberate colour from one the old full-length editor just
+            // copied along with everything else.
+            'themeDefaults' => $school->getDefaultThemeConfig(),
             'themeModes' => $school->getThemeModes(),
             'userThemeMode' => auth()->user()->theme ?? 'system',
         ]);
@@ -136,17 +140,19 @@ class AppearanceSettingsController extends Controller
         // Update school with appearance settings (logo_path, favicon_path, and possibly color columns if no theme_config)
         $school->update($validated);
 
-        // If theme_config is provided, set the theme configuration
-        if ($themeConfig !== null) {
-            $school->setThemeConfig($themeConfig);
-        }
-
-        // Update theme modes if provided
+        // Update theme modes if provided. Saved first because it syncs the brand
+        // colour from the dashboard accent, and the website primary below is the
+        // one the school actually chose on this screen.
         if ($request->has('light') && $request->has('dark')) {
             $school->setThemeModes([
                 'light' => $request->input('light'),
                 'dark' => $request->input('dark'),
             ]);
+        }
+
+        // If theme_config is provided, set the theme configuration
+        if ($themeConfig !== null) {
+            $school->setThemeConfig($themeConfig);
         }
 
         // Update user's theme preference

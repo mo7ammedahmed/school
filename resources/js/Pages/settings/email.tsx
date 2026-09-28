@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FormFeedback } from '@/components/ui/form-feedback';
 
 type MailSettings = {
     mail_driver?: string;
@@ -22,7 +23,7 @@ export default function SettingsEmail({ settings = {} }: { settings?: MailSettin
             title="Email Configuration"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Email Configuration' },
             ]}
         >
@@ -82,9 +83,12 @@ export default function SettingsEmail({ settings = {} }: { settings?: MailSettin
                                 <Label htmlFor="mail_from_name">From Name</Label>
                                 <Input id="mail_from_name" name="mail_from_name" defaultValue={settings.mail_from_name ?? 'School Administration'} />
                             </div>
-                            <div className="flex gap-4">
-                                <Button type="button" variant="outline">Cancel</Button>
+                            <div className="flex flex-wrap items-center gap-4">
                                 <Button type="submit">Save Changes</Button>
+                                <Button type="button" variant="outline" asChild>
+                                    <a href="/settings/school">Cancel</a>
+                                </Button>
+                                <FormFeedback />
                             </div>
                         </form>
                     </CardContent>
@@ -96,7 +100,7 @@ export default function SettingsEmail({ settings = {} }: { settings?: MailSettin
                     </CardHeader>
                     <CardContent className="space-y-2">
                         <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/general">General Settings</a>
+                            <a href="/settings/school">General Settings</a>
                         </Button>
                         <Button variant="outline" className="w-full justify-start" asChild>
                             <a href="/settings/notifications-config">Notifications</a>

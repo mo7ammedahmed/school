@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 type LocalizationSettings = {
@@ -22,7 +24,7 @@ export default function SettingsLocalization({ settings = {} }: { settings?: Loc
             title="Localization Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Localization' },
             ]}
         >
@@ -42,7 +44,10 @@ export default function SettingsLocalization({ settings = {} }: { settings?: Loc
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div>
                                     <Label htmlFor="default_locale">Default Language</Label>
-                                    <Input id="default_locale" name="default_locale" defaultValue={settings.default_locale ?? 'en'} />
+                                    <Select id="default_locale" name="default_locale" defaultValue={settings.default_locale ?? 'en'}>
+                                        <option value="en">English</option>
+                                        <option value="ar">العربية</option>
+                                    </Select>
                                 </div>
                                 <div>
                                     <Label htmlFor="default_timezone">Default Timezone</Label>
@@ -79,9 +84,12 @@ export default function SettingsLocalization({ settings = {} }: { settings?: Loc
                                     <Input id="week_start" name="week_start" type="number" min={0} max={6} defaultValue={String(settings.week_start ?? 0)} />
                                 </div>
                             </div>
-                            <div className="flex gap-4">
-                                <Button type="button" variant="outline">Cancel</Button>
+                            <div className="flex flex-wrap items-center gap-4">
                                 <Button type="submit">Save Changes</Button>
+                                <Button type="button" variant="outline" asChild>
+                                    <a href="/settings/school">Cancel</a>
+                                </Button>
+                                <FormFeedback />
                             </div>
                         </form>
                     </CardContent>
@@ -93,7 +101,7 @@ export default function SettingsLocalization({ settings = {} }: { settings?: Loc
                     </CardHeader>
                     <CardContent className="space-y-2">
                         <Button variant="outline" className="w-full justify-start" asChild>
-                            <a href="/settings/general">General Settings</a>
+                            <a href="/settings/school">General Settings</a>
                         </Button>
                         <Button variant="outline" className="w-full justify-start" asChild>
                             <a href="/settings/notifications-config">Notifications</a>

@@ -3,11 +3,24 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function AnnouncementsEdit({ announcement }: { announcement: { id: number; title: string; target_audience: string; publish_date: string; expiry_date: string; content: string; is_active: boolean } }) {
+type Announcement = {
+    id: number;
+    title: string | null;
+    title_ar: string | null;
+    body: string | null;
+    body_ar: string | null;
+    target_audience: string;
+    start_date: string;
+    end_date: string;
+    is_published: boolean;
+};
+
+export default function AnnouncementsEdit({ announcement }: { announcement: Announcement }) {
     return (
         <AppShell
             title="Edit Announcement"
@@ -19,7 +32,7 @@ export default function AnnouncementsEdit({ announcement }: { announcement: { id
         >
             <PageHeader
                 title="Edit Announcement"
-                description={announcement.title}
+                description={announcement.title ?? announcement.title_ar ?? ''}
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/announcements"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
@@ -36,8 +49,15 @@ export default function AnnouncementsEdit({ announcement }: { announcement: { id
                         <input type="hidden" name="_method" value="PUT" />
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
-                                <Label htmlFor="title">Title</Label>
-                                <Input id="title" name="title" defaultValue={announcement.title} required />
+                                <Label htmlFor="title">Title (English)</Label>
+                                <Input id="title" name="title" defaultValue={announcement.title ?? ''} />
+                            </div>
+                            <div>
+                                <Label htmlFor="title_ar">Title (Arabic)</Label>
+                                <Input id="title_ar" name="title_ar" dir="rtl" defaultValue={announcement.title_ar ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="title" arId="title_ar" />
                             </div>
                             <div>
                                 <Label htmlFor="target_audience">Target Audience</Label>
@@ -50,23 +70,30 @@ export default function AnnouncementsEdit({ announcement }: { announcement: { id
                                 </select>
                             </div>
                             <div>
-                                <Label htmlFor="publish_date">Publish Date</Label>
-                                <Input id="publish_date" name="publish_date" type="date" defaultValue={announcement.publish_date} required />
-                            </div>
-                            <div>
-                                <Label htmlFor="expiry_date">Expiry Date</Label>
-                                <Input id="expiry_date" name="expiry_date" type="date" defaultValue={announcement.expiry_date} required />
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label htmlFor="content">Content</Label>
-                                <textarea id="content" name="content" className="input min-h-[200px]" required defaultValue={announcement.content} />
-                            </div>
-                            <div>
-                                <Label htmlFor="is_active">Active</Label>
-                                <select id="is_active" name="is_active" className="input" required defaultValue={String(announcement.is_active)}>
+                                <Label htmlFor="is_published">Published</Label>
+                                <select id="is_published" name="is_published" className="input" required defaultValue={announcement.is_published ? '1' : '0'}>
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="start_date">Start Date</Label>
+                                <Input id="start_date" name="start_date" type="date" defaultValue={announcement.start_date?.slice(0, 10)} required />
+                            </div>
+                            <div>
+                                <Label htmlFor="end_date">End Date</Label>
+                                <Input id="end_date" name="end_date" type="date" defaultValue={announcement.end_date?.slice(0, 10)} required />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="body">Body (English)</Label>
+                                <textarea id="body" name="body" className="input min-h-[200px]" defaultValue={announcement.body ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="body_ar">Body (Arabic)</Label>
+                                <textarea id="body_ar" name="body_ar" dir="rtl" className="input min-h-[200px]" defaultValue={announcement.body_ar ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="body" arId="body_ar" />
                             </div>
                         </div>
 

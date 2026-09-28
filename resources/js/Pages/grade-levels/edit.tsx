@@ -42,7 +42,7 @@ export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: numb
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Grade Name (English)</Label>
-                                <Input id="name_en" name="name_en" defaultValue={gradeLevel.name_en} required />
+                                <Input id="name_en" name="name_en" defaultValue={gradeLevel.name_en} />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

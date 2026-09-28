@@ -55,7 +55,7 @@ export default function TwoFactorSecurity({
             title="Two-Factor Security"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Two-Factor Security' },
             ]}
         >
@@ -64,7 +64,7 @@ export default function TwoFactorSecurity({
                 description="Manage your two-factor authentication settings"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/general">
+                        <Link href="/settings/school">
                             <ArrowLeft className="me-2 h-4 w-4" />
                             Back
                         </Link>

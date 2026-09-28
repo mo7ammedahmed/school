@@ -43,7 +43,7 @@ export default function PaymentLogs({ transactions, events }: Props) {
             title="Payment Logs"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Payments', href: '/settings/payments' },
                 { label: 'Logs' },
             ]}

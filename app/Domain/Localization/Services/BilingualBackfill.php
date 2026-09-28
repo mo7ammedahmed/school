@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Localization\Services;
 
+use App\Domain\Localization\Observers\FillsMissingTranslations;
+use App\Domain\Localization\Support\BilingualTargets;
+use App\Domain\Localization\Support\TranslationBudget;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +19,9 @@ use Illuminate\Support\Collection;
  *
  * Runs off the same {@see TranslationService} the on-save auto-fill uses, so it
  * obeys the school's provider, key and model, and it never overwrites a value an
- * operator typed.
+ * operator typed. What it may spend — the count, the wall clock and the host's
+ * own limit — comes from {@see TranslationBudget}, which the on-save fill shares:
+ * one definition of "a call that still fits" for both.
  */
 final readonly class BilingualBackfill
 {
@@ -29,28 +34,42 @@ final readonly class BilingualBackfill
     public function __construct(private TranslationService $translations) {}
 
     /**
+     * @param  int|null  $limit  translations to perform before returning; null
+     *                           uses the configured budget, 0 scans without
+     *                           translating (used to size the backlog)
+     * @param  float|null  $seconds  wall-clock budget for the whole run; null
+     *                               uses the configured limit
      * @return array{
-     *     totals: array{scanned: int, missing: int, translated: int, failed: int, remaining: int},
-     *     targets: list<array{label: string, scanned: int, missing: int, translated: int, failed: int}>,
+     *     totals: array{scanned: int, missing: int, translated: int, failed: int, remaining: int, en_to_ar: int, ar_to_en: int},
+     *     targets: list<array{label: string, scanned: int, missing: int, translated: int, failed: int, remaining: int, en_to_ar: int, ar_to_en: int}>,
      *     error: string|null
      * }
      */
-    public function run(int $schoolId): array
+    public function run(int $schoolId, ?int $limit = null, ?float $seconds = null): array
     {
-        $budget = max(0, (int) config('bilingual.max_translations_per_run', 100));
+        // Two clocks and a count, from one place: the soft clock keeps each
+        // request short so the screen shows progress between batches, and PHP's
+        // own wall clock is what a call must still finish inside.
+        $budget = TranslationBudget::forRun($seconds, $limit);
+
         $stop = false;
         $error = null;
         $targets = [];
 
-        /** @var list<array<string, mixed>> $configured */
-        $configured = config('bilingual.targets', []);
-
-        foreach ($configured as $target) {
+        foreach (BilingualTargets::all() as $target) {
             $targets[] = $this->fillTarget($target, $schoolId, $budget, $stop, $error);
 
             if ($stop) {
                 break;
             }
+        }
+
+        // Per-target totals were counted as the scan walked the table, so a
+        // target can still read "2 missing" after the run filled both of them in
+        // the same request. `remaining` is what the screen shows, so the report
+        // cannot claim there is work left that the run just did.
+        foreach ($targets as $index => $target) {
+            $targets[$index]['remaining'] = max(0, $target['missing'] - $target['translated'] - $target['failed']);
         }
 
         $totals = [
@@ -59,6 +78,8 @@ final readonly class BilingualBackfill
             'translated' => array_sum(array_column($targets, 'translated')),
             'failed' => array_sum(array_column($targets, 'failed')),
             'remaining' => 0,
+            'en_to_ar' => array_sum(array_column($targets, 'en_to_ar')),
+            'ar_to_en' => array_sum(array_column($targets, 'ar_to_en')),
         ];
 
         $totals['remaining'] = max(0, $totals['missing'] - $totals['translated'] - $totals['failed']);
@@ -68,10 +89,15 @@ final readonly class BilingualBackfill
 
     /**
      * @param  array<string, mixed>  $target
-     * @return array{label: string, scanned: int, missing: int, translated: int, failed: int}
+     * @return array{label: string, scanned: int, missing: int, translated: int, failed: int, remaining: int, en_to_ar: int, ar_to_en: int}
      */
-    private function fillTarget(array $target, int $schoolId, int &$budget, bool &$stop, ?string &$error): array
-    {
+    private function fillTarget(
+        array $target,
+        int $schoolId,
+        TranslationBudget $budget,
+        bool &$stop,
+        ?string &$error,
+    ): array {
         /** @var class-string<Model> $model */
         $model = $target['model'];
         $scope = (string) ($target['scope'] ?? 'school_id');
@@ -85,6 +111,11 @@ final readonly class BilingualBackfill
             'missing' => 0,
             'translated' => 0,
             'failed' => 0,
+            'remaining' => 0,
+            // Which way each value travelled, so the screen can show that both
+            // directions are covered rather than claiming "translated 12".
+            'en_to_ar' => 0,
+            'ar_to_en' => 0,
         ];
 
         $columns = ['id'];
@@ -106,7 +137,7 @@ final readonly class BilingualBackfill
         }
 
         $query->chunkById(self::CHUNK, function (Collection $records) use (
-            &$report, &$budget, &$stop, &$error, $pairs, $schoolId,
+            &$report, $budget, &$stop, &$error, $pairs, $schoolId,
         ): bool {
             foreach ($records as $record) {
                 $report['scanned']++;
@@ -122,11 +153,14 @@ final readonly class BilingualBackfill
 
                     $report['missing']++;
 
-                    if ($budget <= 0) {
+                    // Out of room: the value is counted and left for the next
+                    // batch, which is what makes "still empty" honest.
+                    if (! $budget->canStartCall()) {
                         continue;
                     }
 
                     $emptyColumn = $english !== null ? $pair['ar'] : $pair['en'];
+                    $direction = $english !== null ? 'en_to_ar' : 'ar_to_en';
 
                     $translated = $english !== null
                         ? $this->translations->translateQuietly($english, 'en', 'ar', $schoolId)
@@ -145,10 +179,17 @@ final readonly class BilingualBackfill
                         continue;
                     }
 
-                    $record->forceFill([$emptyColumn => $translated])->save();
+                    // The sweep translates deliberately, so the on-save fill is
+                    // suppressed: otherwise every write here would try to
+                    // translate its own pair again inside the run's budget.
+                    FillsMissingTranslations::withoutFilling(
+                        fn () => $record->forceFill([$emptyColumn => $translated])->save(),
+                    );
 
-                    $budget--;
+                    // One value from the run's count; the wall clock looks after itself.
+                    $budget->spend();
                     $report['translated']++;
+                    $report[$direction]++;
                 }
             }
 
@@ -161,8 +202,9 @@ final readonly class BilingualBackfill
     /**
      * Narrows the query to one school. Most tables carry `school_id`, but the
      * school row itself is scoped by its own id, an organisation is scoped
-     * through the school that owns it, and child rows are scoped through their
-     * parent relation.
+     * through the school that owns it, child rows are scoped through their
+     * parent relation, and a handful of tables (theme presets) are global and
+     * belong to no school at all.
      *
      * @param  Builder<Model>  $query
      * @param  array<string, mixed>  $target
@@ -170,6 +212,10 @@ final readonly class BilingualBackfill
      */
     private function scopeQuery(Builder $query, array $target, int $schoolId): bool
     {
+        if (($target['scope'] ?? null) === 'global') {
+            return true;
+        }
+
         if ($relation = $target['scope_relation'] ?? null) {
             $query->whereHas(
                 (string) $relation,

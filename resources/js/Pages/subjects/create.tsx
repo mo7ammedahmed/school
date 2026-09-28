@@ -41,7 +41,7 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Subject Name (English)</Label>
-                                <Input id="name_en" name="name_en" required />
+                                <Input id="name_en" name="name_en" />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

@@ -42,7 +42,7 @@ export default function AcademicYearsEdit({ academicYear }: { academicYear: { id
                             </div>
                             <div>
                                 <Label htmlFor="name_en">Academic Year Name (English)</Label>
-                                <Input id="name_en" name="name_en" defaultValue={academicYear.name_en} required />
+                                <Input id="name_en" name="name_en" defaultValue={academicYear.name_en} />
                                 <TranslatePair enId="name_en" arId="name_ar" />
                             </div>
                             <div>

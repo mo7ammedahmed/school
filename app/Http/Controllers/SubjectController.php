@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\HandlesBilingualInput;
 use App\Models\GradeLevel;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
@@ -16,8 +15,6 @@ use Inertia\Response;
 
 class SubjectController extends Controller
 {
-    use HandlesBilingualInput;
-
     public function index(): Response
     {
         $subjects = Subject::where('school_id', $this->schoolId())
@@ -51,7 +48,7 @@ class SubjectController extends Controller
         // both used to be dropped on the floor here.
         $validated['school_id'] = $this->schoolId();
 
-        $subject = Subject::create($this->translateBilingual($validated));
+        $subject = Subject::create($validated);
 
         return redirect()->route('subjects.show', $subject)->with('success', 'Subject created successfully.');
     }
@@ -92,7 +89,7 @@ class SubjectController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $subject->update($this->translateBilingual($validated));
+        $subject->update($validated);
 
         return redirect()->route('subjects.show', $subject)->with('success', 'Subject updated successfully.');
     }

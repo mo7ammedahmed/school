@@ -40,6 +40,10 @@ class EnrollmentController extends Controller
             'status' => 'required|in:active,completed,withdrawn',
         ]);
 
+        // The row belongs to the school the operator is working in; the form
+        // does not send it, and the column is not nullable.
+        $validated['school_id'] = (int) session('school_id');
+
         $enrollment = Enrollment::create($validated);
 
         return redirect()->route('enrollments.show', $enrollment)->with('success', 'Student enrolled successfully.');

@@ -3,13 +3,16 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select } from '@/components/ui/select';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
 export default function Preferences({ preferences }: { preferences: { locale: string; timezone: string; theme: string; email_notifications: boolean; sms_notifications: boolean } }) {
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         locale: preferences.locale || 'en',
         timezone: preferences.timezone || 'UTC',
         theme: preferences.theme || 'light',
@@ -27,7 +30,7 @@ export default function Preferences({ preferences }: { preferences: { locale: st
             title="Preferences"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Preferences' },
             ]}
         >
@@ -36,7 +39,7 @@ export default function Preferences({ preferences }: { preferences: { locale: st
                 description="Update your preferences"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/general"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/settings/school"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />
@@ -50,10 +53,15 @@ export default function Preferences({ preferences }: { preferences: { locale: st
                         <div className="grid gap-6 md:grid-cols-2">
                             <div>
                                 <Label htmlFor="locale">Language</Label>
-                                <select id="locale" name="locale" className="input" value={data.locale} onChange={(e) => setData('locale', e.target.value)}>
+                                <Select
+                                    id="locale"
+                                    value={data.locale}
+                                    onChange={(e) => setData('locale', e.target.value)}
+                                    error={errors.locale}
+                                >
                                     <option value="en">English</option>
-                                    <option value="ar">Arabic</option>
-                                </select>
+                                    <option value="ar">العربية</option>
+                                </Select>
                             </div>
                             <div>
                                 <Label htmlFor="timezone">Timezone</Label>
@@ -61,29 +69,43 @@ export default function Preferences({ preferences }: { preferences: { locale: st
                             </div>
                             <div>
                                 <Label htmlFor="theme">Theme</Label>
-                                <select id="theme" name="theme" className="input" value={data.theme} onChange={(e) => setData('theme', e.target.value)}>
+                                <Select
+                                    id="theme"
+                                    value={data.theme}
+                                    onChange={(e) => setData('theme', e.target.value)}
+                                    error={errors.theme}
+                                >
                                     <option value="light">Light</option>
                                     <option value="dark">Dark</option>
                                     <option value="system">System</option>
-                                </select>
+                                </Select>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <input id="email_notifications" name="email_notifications" type="checkbox" checked={data.email_notifications} onChange={(e) => setData('email_notifications', e.target.checked)} />
-                                <Label htmlFor="email_notifications">Email Notifications</Label>
+                            <div className="flex items-center">
+                                <Checkbox
+                                    id="email_notifications"
+                                    label="Email notifications"
+                                    checked={data.email_notifications}
+                                    onChange={(e) => setData('email_notifications', e.target.checked)}
+                                />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <input id="sms_notifications" name="sms_notifications" type="checkbox" checked={data.sms_notifications} onChange={(e) => setData('sms_notifications', e.target.checked)} />
-                                <Label htmlFor="sms_notifications">SMS Notifications</Label>
+                            <div className="flex items-center">
+                                <Checkbox
+                                    id="sms_notifications"
+                                    label="SMS notifications"
+                                    checked={data.sms_notifications}
+                                    onChange={(e) => setData('sms_notifications', e.target.checked)}
+                                />
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <Button type="button" variant="outline" asChild>
-                                <Link href="/settings/general">Cancel</Link>
-                            </Button>
+                        <div className="flex flex-wrap items-center gap-4">
                             <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving...' : 'Save Preferences'}
                             </Button>
+                            <Button type="button" variant="outline" asChild>
+                                <Link href="/settings/school">Cancel</Link>
+                            </Button>
+                            <FormFeedback />
                         </div>
                     </form>
                 </CardContent>

@@ -45,7 +45,10 @@ class DiscountController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        // `has()` is true for `is_active=0` too, which made every discount active
+        // however the operator set the field.
+        $validated['is_active'] = (bool) $validated['is_active'];
+        $validated['school_id'] = (int) session('school_id');
 
         Discount::create($validated);
 
@@ -82,7 +85,7 @@ class DiscountController extends Controller
             'is_active' => 'required|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = (bool) $validated['is_active'];
 
         $discount->update($validated);
 

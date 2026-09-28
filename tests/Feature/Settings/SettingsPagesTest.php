@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Settings;
 
+use App\Domain\Academics\Models\GradingCategory;
+use App\Domain\Academics\Models\GradingScale;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
@@ -28,7 +30,6 @@ class SettingsPagesTest extends TestCase
     public static function adminPages(): array
     {
         return [
-            'general' => ['/settings/general', 'settings/school/edit'],
             'school' => ['/settings/school', 'settings/school/edit'],
             'academic' => ['/settings/academic', 'settings/academic'],
             'attendance' => ['/settings/attendance', 'settings/attendance'],
@@ -67,6 +68,19 @@ class SettingsPagesTest extends TestCase
         $this->get($url)
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component($component));
+    }
+
+    /**
+     * Only one school editor exists now. The historic Settings landing URL the
+     * sidebar and breadcrumbs used must forward instead of rendering a second
+     * copy of the form.
+     */
+    public function test_the_general_settings_url_forwards_to_the_school_editor(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSettingsAdmin($school);
+
+        $this->get('/settings/general')->assertRedirect(route('settings.school'));
     }
 
     /**
@@ -193,6 +207,122 @@ class SettingsPagesTest extends TestCase
         $this->assertSame(12, $stored['password_min_length']);
         $this->assertFalse($stored['password_require_symbols'], 'an unchecked box must not be treated as enabled');
         $this->assertSame('10.0.0.0/8', $stored['allowed_ips']);
+    }
+
+    public function test_grading_settings_save_rounding_and_extracurricular(): void
+    {
+        $this->actingAsSettingsAdmin($school = School::factory()->create());
+
+        $this->post('/settings/grading', [
+            'rounding_method' => 'floor',
+            'include_extracurricular' => '0',
+        ])->assertRedirect(route('settings.grading'));
+
+        $this->assertSame(
+            'floor',
+            SchoolSetting::where('school_id', $school->id)->where('key', 'grading_rounding_method')->value('value'),
+        );
+        $this->assertSame(
+            'false',
+            SchoolSetting::where('school_id', $school->id)->where('key', 'grading_include_extracurricular')->value('value'),
+        );
+    }
+
+    public function test_grading_scales_can_be_created_edited_promoted_and_deleted(): void
+    {
+        $this->actingAsSettingsAdmin($school = School::factory()->create());
+
+        $this->post('/settings/grading/scales', [
+            'name' => 'Secondary',
+            'description' => 'Percentage bands',
+            'is_default' => '1',
+            'scale' => [
+                ['grade' => 'A', 'min' => 90, 'max' => 100],
+                ['grade' => 'B', 'min' => 80, 'max' => 89],
+            ],
+        ])->assertRedirect(route('settings.grading'));
+
+        $scale = GradingScale::where('school_id', $school->id)->firstOrFail();
+        $this->assertSame('Secondary', $scale->name);
+        $this->assertTrue((bool) $scale->is_default);
+        $this->assertCount(2, json_decode((string) $scale->scale, true));
+
+        $this->post('/settings/grading/scales', [
+            'name' => 'Primary',
+            'scale' => [['grade' => 'P', 'min' => 50, 'max' => 100]],
+        ])->assertRedirect(route('settings.grading'));
+
+        $other = GradingScale::where('school_id', $school->id)->where('name', 'Primary')->firstOrFail();
+
+        // Promoting the second scale must stand the first one down.
+        $this->put("/settings/grading/scales/{$other->id}", [
+            'name' => 'Primary',
+            'is_default' => '1',
+            'scale' => [['grade' => 'P', 'min' => 50, 'max' => 100]],
+        ])->assertRedirect(route('settings.grading'));
+
+        $this->assertTrue((bool) $other->fresh()->is_default);
+        $this->assertFalse((bool) $scale->fresh()->is_default);
+
+        // Scales are soft deleted, so the row stays for audit while the screen
+        // stops listing it.
+        $this->delete("/settings/grading/scales/{$scale->id}")->assertRedirect(route('settings.grading'));
+        $this->assertSoftDeleted('grading_scales', ['id' => $scale->id]);
+
+        $this->get('/settings/grading')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->has('gradingScales', 1));
+
+        // The remaining scale is the only one left, so it must stay selectable.
+        $this->assertTrue((bool) $other->fresh()->is_default);
+    }
+
+    public function test_grading_categories_can_be_created_edited_and_deleted(): void
+    {
+        $this->actingAsSettingsAdmin($school = School::factory()->create());
+
+        $this->post('/settings/grading/categories', [
+            'name' => 'Coursework',
+            'code' => 'CW',
+            'weight' => 40,
+        ])->assertRedirect(route('settings.grading'));
+
+        $category = GradingCategory::where('school_id', $school->id)->firstOrFail();
+        $this->assertSame(40.0, (float) $category->weight);
+
+        $this->put("/settings/grading/categories/{$category->id}", [
+            'name' => 'Coursework',
+            'code' => 'CW',
+            'weight' => 25,
+        ])->assertRedirect(route('settings.grading'));
+
+        $this->assertSame(25.0, (float) $category->fresh()->weight);
+
+        $this->delete("/settings/grading/categories/{$category->id}")->assertRedirect(route('settings.grading'));
+        $this->assertSoftDeleted('grading_categories', ['id' => $category->id]);
+    }
+
+    public function test_sms_settings_save_and_encrypt_the_token(): void
+    {
+        $this->actingAsSettingsAdmin($school = School::factory()->create());
+
+        $this->post('/settings/sms', [
+            'provider' => 'twilio',
+            'sender_id' => 'SchoolOS',
+            'account_sid' => 'AC123',
+            'auth_token' => 'super-secret-token',
+        ])->assertRedirect();
+
+        $raw = (string) SchoolSetting::where('school_id', $school->id)->where('key', 'sms')->value('value');
+        $this->assertStringNotContainsString('super-secret-token', $raw, 'the auth token must be encrypted at rest');
+
+        $this->get('/settings/sms')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('settings/sms')
+                ->where('settings.provider', 'twilio')
+                ->where('settings.has_auth_token', true)
+                ->where('configured', true));
     }
 
     public function test_school_settings_save_the_bilingual_name(): void

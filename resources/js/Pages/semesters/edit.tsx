@@ -71,7 +71,6 @@ export default function SemestersEdit({ semester, academicYears }: Props) {
                                 <Input
                                     id="name_en"
                                     name="name_en"
-                                    required
                                     defaultValue={semester.name_en ?? ''}
                                 />
                                 <TranslatePair enId="name_en" arId="name_ar" />

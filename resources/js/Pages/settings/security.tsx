@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
 
 type SecuritySettings = {
@@ -22,7 +24,7 @@ export default function SettingsSecurity({ settings = {} }: { settings?: Securit
             title="Security Settings"
             breadcrumbs={[
                 { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Settings', href: '/settings/general' },
+                { label: 'Settings', href: '/settings/school' },
                 { label: 'Security' },
             ]}
         >
@@ -65,44 +67,41 @@ export default function SettingsSecurity({ settings = {} }: { settings?: Securit
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="password_require_uppercase">Require Uppercase</Label>
+                                    <Label htmlFor="password_require_uppercase">Require uppercase</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one uppercase letter</p>
                                 </div>
-                                <Input
+                                <Checkbox
                                     id="password_require_uppercase"
                                     name="password_require_uppercase"
                                     value="1"
-                                    type="checkbox"
                                     defaultChecked={settings.password_require_uppercase ?? true}
-                                    className="h-5 w-5"
+                                    className="shrink-0"
                                 />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="password_require_numbers">Require Numbers</Label>
+                                    <Label htmlFor="password_require_numbers">Require numbers</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one number</p>
                                 </div>
-                                <Input
+                                <Checkbox
                                     id="password_require_numbers"
                                     name="password_require_numbers"
                                     value="1"
-                                    type="checkbox"
                                     defaultChecked={settings.password_require_numbers ?? true}
-                                    className="h-5 w-5"
+                                    className="shrink-0"
                                 />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="password_require_symbols">Require Special Characters</Label>
+                                    <Label htmlFor="password_require_symbols">Require special characters</Label>
                                     <p className="text-sm text-muted-foreground">Password must contain at least one special character</p>
                                 </div>
-                                <Input
+                                <Checkbox
                                     id="password_require_symbols"
                                     name="password_require_symbols"
                                     value="1"
-                                    type="checkbox"
                                     defaultChecked={settings.password_require_symbols ?? true}
-                                    className="h-5 w-5"
+                                    className="shrink-0"
                                 />
                             </div>
                         </CardContent>
@@ -114,7 +113,7 @@ export default function SettingsSecurity({ settings = {} }: { settings?: Securit
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button variant="outline" className="w-full justify-start" asChild>
-                                <a href="/settings/general">General Settings</a>
+                                <a href="/settings/school">General Settings</a>
                             </Button>
                             <Button variant="outline" className="w-full justify-start" asChild>
                                 <a href="/settings/notifications-config">Notifications</a>
@@ -169,11 +168,12 @@ export default function SettingsSecurity({ settings = {} }: { settings?: Securit
                     </CardContent>
                 </Card>
 
-                <div className="flex gap-4">
-                    <Button type="button" variant="outline" asChild>
-                        <a href="/settings/general">Cancel</a>
-                    </Button>
+                <div className="flex flex-wrap items-center gap-4">
                     <Button type="submit">Save Changes</Button>
+                    <Button type="button" variant="outline" asChild>
+                        <a href="/settings/school">Cancel</a>
+                    </Button>
+                    <FormFeedback />
                 </div>
             </form>
         </AppShell>

@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { translateInterfaceCopy } from '@/lib/i18n/ui-copy';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
@@ -390,7 +391,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                         {auth.user?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">
+                        {/* A person's name is data: the translator has no
+                            business rewriting who you are. The role under it is
+                            a label, so that one is translated with the rest. */}
+                        <p data-no-translate className="truncate text-sm font-semibold text-foreground">
                             {auth.user?.name}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
@@ -422,6 +426,12 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
     const canNotify = userRoles.some((r) => ['school_admin', 'super_admin', 'teacher'].includes(r));
     const canSettings = userRoles.some((r) => ['school_admin', 'super_admin'].includes(r));
     const [drawerOpen, setDrawerOpen] = useState(false);
+
+    // The screens themselves are written in English. Asking the school's own
+    // provider to translate the visible interface words — once per string, and
+    // cached — is what makes Arabic cover every page instead of only the ones
+    // that were re-typed by hand.
+    useEffect(() => translateInterfaceCopy(locale), [locale]);
 
     useEffect(() => {
         setDrawerOpen(false);

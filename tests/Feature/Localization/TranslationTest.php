@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Localization;
 
 use App\Domain\Academics\Models\Subject;
+use App\Domain\Content\Models\Event;
 use App\Domain\Identity\Models\UserMembership;
+use App\Domain\Localization\Observers\FillsMissingTranslations;
+use App\Domain\Localization\Services\TranslationService;
 use App\Domain\Localization\Services\TranslationSettings;
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
+use App\Models\Announcement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -508,6 +512,9 @@ class TranslationTest extends TestCase
                 'missing' => 2,
                 'translated' => 2,
                 'failed' => 0,
+                // Emptied by this very run, so the report must not still offer it
+                // as work left to do.
+                'remaining' => 0,
             ]);
 
         $this->assertDatabaseHas('subjects', [
@@ -629,7 +636,8 @@ class TranslationTest extends TestCase
             ->assertOk()
             ->assertJsonPath('totals.missing', 3)
             ->assertJsonPath('totals.translated', 1)
-            ->assertJsonPath('totals.remaining', 2);
+            ->assertJsonPath('totals.remaining', 2)
+            ->assertJsonFragment(['label' => 'Subjects', 'translated' => 1, 'remaining' => 2]);
 
         $this->assertSame(
             1,
@@ -684,6 +692,366 @@ class TranslationTest extends TestCase
         $this->actingAsSchoolUser($school);
 
         $this->postJson('/settings/translations/backfill')->assertForbidden();
+    }
+
+    public function test_a_scan_only_run_reports_the_backlog_without_translating(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        $this->subject($school, 'Mathematics', 'MATH');
+        $this->subject($school, 'Science', 'SCI');
+
+        Http::fake();
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 0])
+            ->assertOk()
+            ->assertJsonPath('totals.missing', 2)
+            ->assertJsonPath('totals.translated', 0)
+            ->assertJsonPath('totals.remaining', 2)
+            ->assertJsonPath('done', false);
+
+        Http::assertNothingSent();
+
+        $this->assertNull(Subject::where('school_id', $school->id)->first()?->name_ar);
+    }
+
+    public function test_a_limited_run_translates_one_batch_and_reports_what_is_left(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        $this->subject($school, 'Mathematics', 'MATH');
+        $this->subject($school, 'Science', 'SCI');
+        $this->subject($school, 'Art', 'ART');
+        $this->fakeTranslation('الرياضيات');
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 2])
+            ->assertOk()
+            ->assertJsonPath('totals.translated', 2)
+            ->assertJsonPath('totals.remaining', 1)
+            ->assertJsonPath('done', false);
+
+        $this->assertSame(
+            2,
+            Subject::where('school_id', $school->id)->whereNotNull('name_ar')->count(),
+        );
+
+        // Pressing on finishes the job: a second batch has nothing left to do.
+        $this->postJson('/settings/translations/backfill', ['limit' => 2])
+            ->assertOk()
+            ->assertJsonPath('totals.translated', 1)
+            ->assertJsonPath('totals.remaining', 0)
+            ->assertJsonPath('done', true);
+    }
+
+    public function test_a_finished_run_reports_done(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        $this->subject($school, 'Mathematics', 'MATH');
+        $this->fakeTranslation('الرياضيات');
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 5])
+            ->assertOk()
+            ->assertJsonPath('done', true)
+            ->assertJsonPath('totals.remaining', 0);
+    }
+
+    public function test_the_run_reports_both_translation_directions(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        // One English-only row needs Arabic; one Arabic-only row needs English.
+        $this->subject($school, 'Mathematics', 'MATH');
+        Subject::create([
+            'school_id' => $school->id,
+            'name_ar' => 'العلوم',
+            'code' => 'SCI',
+        ]);
+
+        $this->fakeTranslation('مترجم');
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 5])
+            ->assertOk()
+            ->assertJsonPath('totals.en_to_ar', 1)
+            ->assertJsonPath('totals.ar_to_en', 1)
+            ->assertJsonPath('done', true);
+
+        $this->assertSame(
+            'مترجم',
+            Subject::where('school_id', $school->id)->where('code', 'MATH')->value('name_ar'),
+        );
+        $this->assertSame(
+            'مترجم',
+            Subject::where('school_id', $school->id)->where('code', 'SCI')->value('name_en'),
+        );
+    }
+
+    public function test_a_run_stops_at_its_time_budget_and_reports_what_is_left(): void
+    {
+        // A slow provider must not carry a run past PHP's execution limit.
+        config(['bilingual.max_seconds_per_run' => 2, 'bilingual.request_timeout_seconds' => 1]);
+
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        foreach (['Mathematics', 'Science', 'Art'] as $index => $name) {
+            $this->subject($school, $name, 'CODE'.$index);
+        }
+
+        Http::fake(function () {
+            usleep(500_000);
+
+            return Http::response([
+                'choices' => [['message' => ['content' => 'مترجم']]],
+            ]);
+        });
+
+        $response = $this->postJson('/settings/translations/backfill', ['limit' => 10])
+            ->assertOk()
+            ->assertJsonPath('done', false);
+
+        $translated = $response->json('totals.translated');
+        $remaining = $response->json('totals.remaining');
+
+        $this->assertGreaterThanOrEqual(1, $translated, 'the run should still make progress');
+        $this->assertLessThan(3, $translated, 'the run should stop before the clock runs out');
+        $this->assertGreaterThanOrEqual(1, $remaining);
+        $this->assertSame(3, $translated + $remaining);
+    }
+
+    public function test_the_run_never_outlives_phps_own_execution_limit(): void
+    {
+        // The web server enforces 30s here; the point is that the run reads the
+        // limit it is actually given rather than the one assumed at design time.
+        ini_set('max_execution_time', '4');
+
+        try {
+            $school = School::factory()->create();
+            $this->actingAsSchoolUser($school, ['manage-settings']);
+
+            foreach (range(1, 10) as $index) {
+                $this->subject($school, 'Subject '.$index, 'CODE'.$index);
+            }
+
+            Http::fake(function () {
+                usleep(500_000);
+
+                return Http::response([
+                    'choices' => [['message' => ['content' => 'مترجم']]],
+                ]);
+            });
+
+            $started = microtime(true);
+
+            $response = $this->postJson('/settings/translations/backfill')->assertOk();
+
+            $elapsed = microtime(true) - $started;
+
+            // Standing in for the fatal that used to kill the request mid-call:
+            // the run has to hand back control before PHP takes it away.
+            $this->assertLessThan(4, $elapsed, 'the run outlived max_execution_time');
+            $this->assertGreaterThanOrEqual(1, $response->json('totals.translated'));
+            $this->assertGreaterThan(0, $response->json('totals.remaining'));
+        } finally {
+            ini_restore('max_execution_time');
+        }
+    }
+
+    public function test_the_configured_budgets_fit_inside_a_thirty_second_limit(): void
+    {
+        $limit = 30;
+        $worstCase = config('bilingual.max_seconds_per_run') + config('bilingual.request_timeout_seconds');
+
+        $this->assertLessThan(
+            $limit,
+            $worstCase,
+            'A run plus the call it is waiting on must finish before PHP kills the request.',
+        );
+    }
+
+    public function test_repeated_text_is_translated_once_and_reused(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        // Three sections share one name, which is normal for school content.
+        $this->subject($school, 'Grade One', 'G1');
+        $this->subject($school, 'Grade One', 'G1B');
+        $this->subject($school, 'Grade One', 'G1C');
+
+        $this->fakeTranslation('الصف الأول');
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 5])
+            ->assertOk()
+            ->assertJsonPath('totals.translated', 3)
+            ->assertJsonPath('done', true);
+
+        // One provider call, three filled columns.
+        Http::assertSentCount(1);
+
+        $this->assertSame(
+            3,
+            Subject::where('school_id', $school->id)->where('name_ar', 'الصف الأول')->count(),
+        );
+    }
+
+    public function test_the_connection_test_is_not_answered_from_the_cache(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        $service = app(TranslationService::class);
+
+        // Warm the cache twice: the second call must not hit the provider.
+        $this->fakeTranslation('مرحبا');
+        $this->assertSame('مرحبا', $service->translate('Hello', 'en', 'ar', $school->id));
+        $this->assertSame('مرحبا', $service->translate('Hello', 'en', 'ar', $school->id));
+        Http::assertSentCount(1);
+
+        // "Test connection" translates the same sample, so it has to prove the
+        // key works rather than replaying the cached answer.
+        $this->postJson('/settings/translations/test')
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_saving_an_announcement_in_english_fills_the_arabic(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+
+        // Switched on only now: the school row itself is bilingual, and filling
+        // it would reach a provider before the fake below is in place.
+        config(['bilingual.autofill_in_console' => true]);
+
+        // Announcements are one of the tables no controller ever hooked up, so
+        // before the observer this row stayed English-only for ever. Created
+        // through the alias the pages use, which an observer registered on the
+        // parent class would not have seen.
+        $this->fakeTranslation('مرحبا');
+
+        $announcement = Announcement::create([
+            'school_id' => $school->id,
+            'title' => 'Sports day',
+            'body' => 'On Thursday.',
+        ]);
+
+        $this->assertSame('مرحبا', $announcement->refresh()->title_ar);
+        $this->assertSame('مرحبا', $announcement->body_ar);
+    }
+
+    public function test_saving_a_record_in_arabic_fills_the_english(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+
+        // Switched on only now: the school row itself is bilingual, and filling
+        // it would reach a provider before the fake below is in place.
+        config(['bilingual.autofill_in_console' => true]);
+
+        Http::fake([
+            'integrate.api.nvidia.com/*' => Http::response([
+                'choices' => [['message' => ['content' => 'Sports day']]],
+            ]),
+        ]);
+
+        $event = Event::create([
+            'school_id' => $school->id,
+            'title_ar' => 'يوم الرياضة',
+            'start_date' => now()->addWeek()->toDateString(),
+        ]);
+
+        $this->assertSame('Sports day', $event->refresh()->title);
+    }
+
+    public function test_a_pair_that_was_not_touched_is_left_alone(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+
+        // Switched on only now: the school row itself is bilingual, and filling
+        // it would reach a provider before the fake below is in place.
+        config(['bilingual.autofill_in_console' => true]);
+
+        // Legacy content, saved before translation was switched on.
+        $subject = FillsMissingTranslations::withoutFilling(
+            fn () => $this->subject($school, 'Mathematics', 'MATH'),
+        );
+
+        Http::fake();
+
+        // Saving for an unrelated reason must not start translating every
+        // record the school already has.
+        $subject->refresh()->save();
+
+        Http::assertNothingSent();
+        $this->assertNull($subject->refresh()->name_ar);
+    }
+
+    public function test_the_sweep_translates_deliberately_rather_than_through_the_observer(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-settings']);
+
+        config(['bilingual.autofill_in_console' => true]);
+
+        $subject = $this->legacySubject($school, 'Mathematics', 'MATH');
+
+        $this->fakeTranslation('الرياضيات');
+
+        $this->postJson('/settings/translations/backfill', ['limit' => 5])->assertOk();
+
+        // One value, one provider call: the sweep's own write must not be
+        // translated a second time by the observer.
+        Http::assertSentCount(1);
+        $this->assertSame('الرياضيات', $subject->refresh()->name_ar);
+    }
+
+    public function test_an_import_stops_filling_once_the_budget_is_spent(): void
+    {
+        // The allowance is set before the first save of the request: a save
+        // sequence shares one clock, which is the point of the budget, so it is
+        // read once rather than per row.
+        config([
+            'bilingual.autofill_in_console' => true,
+            'bilingual.on_save_seconds' => 1,
+        ]);
+
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+
+        Http::fake(function () {
+            usleep(500_000);
+
+            return Http::response([
+                'choices' => [['message' => ['content' => 'مترجم']]],
+            ]);
+        });
+
+        foreach (range(1, 4) as $index) {
+            $this->subject($school, 'Bulk '.$index, 'BULK'.$index);
+        }
+
+        $filled = Subject::where('school_id', $school->id)->whereNotNull('name_ar')->count();
+
+        // Where it stops is timing, that it stops is not: the rest is left to
+        // the sweep, which reports what is still missing.
+        $this->assertGreaterThanOrEqual(1, $filled);
+        $this->assertLessThan(4, $filled);
+    }
+
+    /** A row as it would have been saved before translation existed. */
+    private function legacySubject(School $school, string $english, string $code): Subject
+    {
+        return FillsMissingTranslations::withoutFilling(
+            fn () => $this->subject($school, $english, $code),
+        );
     }
 
     private function subject(School $school, string $english, string $code, ?string $arabic = null): Subject
