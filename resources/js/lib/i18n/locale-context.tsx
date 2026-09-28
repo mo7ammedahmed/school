@@ -13,22 +13,6 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function detectInitialLocale(initial: Locale): Locale {
-    if (typeof window === 'undefined') {
-        return initial;
-    }
-
-    try {
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-        if (stored === 'en' || stored === 'ar') {
-            return stored;
-        }
-    } catch {
-    }
-
-    return document.documentElement.lang === 'ar' ? 'ar' : initial;
-}
-
 export function LocaleProvider({
     children,
     initialLocale = 'en',
@@ -36,7 +20,7 @@ export function LocaleProvider({
     children: ReactNode;
     initialLocale?: Locale;
 }) {
-    const [locale, setLocale] = useState<Locale>(() => detectInitialLocale(initialLocale));
+    const [locale, setLocale] = useState<Locale>(initialLocale);
     const rtl = locale === 'ar';
 
     useEffect(() => {

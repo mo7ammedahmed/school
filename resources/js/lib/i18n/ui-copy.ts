@@ -53,13 +53,8 @@ let loaded = false;
 let ready = false;
 let versionCheck: Promise<void> | null = null;
 
-/**
- * The provider takes seconds per string, so a screen full of copy would take
- * minutes one word at a time. Asking for a few short slices at once is what
- * keeps the first visit to a page bearable; after that the strings come from
- * the cache and nothing is asked at all.
- */
-const CONCURRENCY = 4;
+/** Keep one provider-backed slice in flight so a page does not burst rate limits. */
+const CONCURRENCY = 1;
 const SLICE = 6;
 const ROUNDS = 6;
 
@@ -390,10 +385,10 @@ export function translateInterfaceCopy(locale: Locale): () => void {
     }
 
     load();
+    apply(document.body);
 
     let active = true;
     const refreshCatalog = () => {
-        ready = false;
         void syncCatalogVersion().finally(() => {
             if (!active) return;
             ready = true;

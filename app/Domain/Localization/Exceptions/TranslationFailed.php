@@ -12,6 +12,11 @@ use RuntimeException;
  */
 class TranslationFailed extends RuntimeException
 {
+    public function __construct(string $message, public readonly ?int $statusCode = null)
+    {
+        parent::__construct($message);
+    }
+
     public static function notConfigured(?string $provider = null): self
     {
         $label = $provider !== null && $provider !== '' ? $provider : 'AI';
@@ -19,9 +24,9 @@ class TranslationFailed extends RuntimeException
         return new self("No {$label} API key is configured for translation.");
     }
 
-    public static function requestFailed(string $detail): self
+    public static function requestFailed(string $detail, ?int $statusCode = null): self
     {
-        return new self('The translation service could not be reached: '.$detail);
+        return new self('The translation service could not be reached: '.$detail, $statusCode);
     }
 
     public static function emptyResponse(): self

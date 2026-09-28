@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Localization\Services;
 
+use App\Domain\Localization\Exceptions\TranslationFailed;
 use App\Domain\Localization\Observers\FillsMissingTranslations;
 use App\Domain\Localization\Support\BilingualTargets;
 use App\Domain\Localization\Support\TranslationBudget;
@@ -162,15 +163,15 @@ final readonly class BilingualBackfill
                     $emptyColumn = $english !== null ? $pair['ar'] : $pair['en'];
                     $direction = $english !== null ? 'en_to_ar' : 'ar_to_en';
 
-                    $translated = $english !== null
-                        ? $this->translations->translateQuietly($english, 'en', 'ar', $schoolId)
-                        : $this->translations->translateQuietly((string) $arabic, 'ar', 'en', $schoolId);
-
-                    if ($translated === null) {
+                    try {
+                        $translated = $english !== null
+                            ? $this->translations->translate($english, 'en', 'ar', $schoolId)
+                            : $this->translations->translate((string) $arabic, 'ar', 'en', $schoolId);
+                    } catch (TranslationFailed $failure) {
                         $report['failed']++;
-                        $error ??= 'The translation service did not answer for at least one value. Check the key, model and provider above.';
+                        $error ??= $failure->getMessage();
 
-                        if ($report['failed'] >= self::MAX_FAILURES) {
+                        if ($failure->statusCode === 429 || $report['failed'] >= self::MAX_FAILURES) {
                             $stop = true;
 
                             return false;

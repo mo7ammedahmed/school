@@ -21,11 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
-            HandleInertiaRequests::class,
-            SecurityHeaders::class,
             // Both read the session, so they must run after StartSession; the
             // locale decides which language the page titles are written in.
             SetLocale::class,
+            HandleInertiaRequests::class,
+            SecurityHeaders::class,
             ApplySiteMetadata::class,
         ]);
 

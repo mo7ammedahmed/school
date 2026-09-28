@@ -254,10 +254,15 @@ class UiCopyTest extends TestCase
             'integrate.api.nvidia.com/*' => Http::response(['error' => ['message' => 'quota exceeded']], 429),
         ]);
 
-        $this->postJson('/ui/copy', ['strings' => ['Translations']])
-            ->assertOk()
+        $strings = ['Translations', 'Attendance Settings', 'Dashboard'];
+
+        $this->postJson('/ui/copy', ['strings' => $strings])
+            ->assertStatus(429)
             ->assertJsonPath('configured', true)
-            ->assertJsonPath('translations', []);
+            ->assertJsonPath('translations', [])
+            ->assertJsonPath('pending', $strings);
+
+        Http::assertSentCount(1);
     }
 
     public function test_the_endpoint_requires_authentication(): void

@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useId, useState } from 'react';
+import { type ReactNode, useEffect, useId, useLayoutEffect, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { t, type CopyKey } from '@/lib/i18n/copy';
@@ -430,7 +430,7 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
     // The screens themselves are written in English. Shared super-admin
     // translations take precedence; the school's provider fills any remaining
     // visible interface copy.
-    useEffect(() => translateInterfaceCopy(locale), [locale]);
+    useLayoutEffect(() => translateInterfaceCopy(locale), [locale]);
 
     useEffect(() => {
         setDrawerOpen(false);

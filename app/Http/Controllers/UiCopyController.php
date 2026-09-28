@@ -115,8 +115,9 @@ class UiCopyController extends Controller
         $mustNotFinishAfter = $limit > 0 ? $started + $limit - 2.0 : PHP_FLOAT_MAX;
 
         $pending = [];
+        $rateLimited = false;
 
-        foreach ($missing as $english) {
+        foreach ($missing as $index => $english) {
             // Stop asking for more once the batch has spent its share of the
             // request; the screen repeats with whatever is left.
             if (microtime(true) - $started >= self::SECONDS || microtime(true) + 10.0 > $mustNotFinishAfter) {
@@ -125,9 +126,20 @@ class UiCopyController extends Controller
                 continue;
             }
 
-            $arabic = $this->translations->translateQuietly($english, 'en', 'ar', $schoolId);
+            $failureStatus = null;
+            $arabic = $this->translations->translateQuietly($english, 'en', 'ar', $schoolId, $failureStatus);
 
-            if ($arabic === null || $arabic === '' || $arabic === $english) {
+            if ($arabic === null) {
+                if ($failureStatus === 429) {
+                    $pending = array_merge($pending, array_slice($missing, $index));
+                    $rateLimited = true;
+                    break;
+                }
+
+                continue;
+            }
+
+            if ($arabic === '' || $arabic === $english) {
                 // Not a failure worth reporting: the string may be a proper noun
                 // the provider returns unchanged, and the English stays readable.
                 continue;
@@ -145,6 +157,15 @@ class UiCopyController extends Controller
                     ],
                 );
             }
+        }
+
+        if ($rateLimited) {
+            return response()->json([
+                'translations' => $translations,
+                'pending' => $pending,
+                'configured' => true,
+                'message' => 'The translation provider rate limit was reached (HTTP 429). Wait before retrying or check your provider quota.',
+            ], 429);
         }
 
         return response()->json([

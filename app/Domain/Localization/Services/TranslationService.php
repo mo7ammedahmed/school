@@ -71,13 +71,23 @@ class TranslationService
     /**
      * Translate or return null. Used where a failure must not break the request.
      */
-    public function translateQuietly(string $text, string $from, string $to, School|int|null $school = null): ?string
+    public function translateQuietly(
+        string $text,
+        string $from,
+        string $to,
+        School|int|null $school = null,
+        ?int &$failureStatus = null,
+    ): ?string
     {
         try {
             $translated = $this->translate($text, $from, $to, $school);
 
             return $translated === '' ? null : $translated;
         } catch (Throwable $e) {
+            if ($e instanceof TranslationFailed) {
+                $failureStatus = $e->statusCode;
+            }
+
             Log::warning('Automatic translation skipped', [
                 'from' => $from,
                 'to' => $to,

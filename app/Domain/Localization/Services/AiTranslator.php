@@ -65,7 +65,7 @@ class AiTranslator
                 'message' => $message,
             ]);
 
-            throw TranslationFailed::requestFailed($message);
+            throw TranslationFailed::requestFailed($message, $response->status());
         }
 
         $translated = $this->clean($this->extractText($provider, $response->json() ?? []));
@@ -120,7 +120,7 @@ class AiTranslator
         }
 
         if ($response->failed()) {
-            throw TranslationFailed::requestFailed($this->errorMessage($response));
+            throw TranslationFailed::requestFailed($this->errorMessage($response), $response->status());
         }
 
         $ids = match ($provider->driver()) {
@@ -278,6 +278,14 @@ class AiTranslator
 
     private function errorMessage(Response $response): string
     {
+        if ($response->status() === 429) {
+            $detail = $response->json('error.message') ?? $response->json('message');
+
+            return is_string($detail) && trim($detail) !== ''
+                ? $detail
+                : 'The translation provider rate limit was reached (HTTP 429). Wait before trying again or check your provider quota.';
+        }
+
         return (string) ($response->json('error.message')
             ?? $response->json('error.detail')
             ?? $response->json('message')

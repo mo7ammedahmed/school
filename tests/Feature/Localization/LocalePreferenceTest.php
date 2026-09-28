@@ -77,6 +77,18 @@ class LocalePreferenceTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('locale', 'ar'));
     }
 
+    public function test_the_resolved_browser_locale_matches_the_shared_prop_and_html_language(): void
+    {
+        $school = School::factory()->create(['locale' => 'en']);
+        $user = $this->actingAsSchoolUser($school);
+        $user->forceFill(['locale' => null])->save();
+
+        $this->withHeaders(['Accept-Language' => 'ar'])
+            ->get('/academic-years')
+            ->assertSee('<html lang="ar" dir="rtl">', false)
+            ->assertInertia(fn ($page) => $page->where('locale', 'ar'));
+    }
+
     private function actingAsSchoolUser(School $school): User
     {
         $user = User::factory()->create(['locale' => 'en']);

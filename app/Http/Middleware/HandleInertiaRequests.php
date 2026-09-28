@@ -79,12 +79,7 @@ class HandleInertiaRequests extends Middleware
                     $label->key => ['en' => $label->name_en, 'ar' => $label->name_ar],
                 ])
                 ->all() : [],
-            // Session first: it is what the user last chose in the switcher and
-            // what the server is currently rendering with.
-            'locale' => session('locale')
-                ?? $user?->locale
-                ?? $school?->locale
-                ?? 'en',
+            'locale' => app()->getLocale(),
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),

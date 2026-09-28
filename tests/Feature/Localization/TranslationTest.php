@@ -758,17 +758,21 @@ class TranslationTest extends TestCase
         }
 
         Http::fake([
-            'integrate.api.nvidia.com/*' => Http::response(['error' => ['message' => 'quota exceeded']], 429),
+            'integrate.api.nvidia.com/*' => Http::response([], 429),
         ]);
 
         $this->postJson('/settings/translations/backfill')
             ->assertStatus(422)
             ->assertJsonPath('ok', false)
             ->assertJsonPath('totals.translated', 0)
-            ->assertJsonPath('totals.failed', 3);
+            ->assertJsonPath('totals.failed', 1)
+            ->assertJsonPath(
+                'error',
+                'The translation service could not be reached: The translation provider rate limit was reached (HTTP 429). Wait before trying again or check your provider quota.',
+            );
 
-        // The run stops at the failure ceiling instead of retrying all four.
-        Http::assertSentCount(3);
+        // A provider rate limit is not retried for the remaining values.
+        Http::assertSentCount(1);
     }
 
     public function test_the_backfill_requires_the_settings_permission(): void
