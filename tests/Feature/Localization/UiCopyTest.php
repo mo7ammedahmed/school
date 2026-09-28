@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -43,6 +44,115 @@ class UiCopyTest extends TestCase
             ->assertOk()
             ->assertJsonPath('configured', true)
             ->assertJsonPath('translations.Translations', 'الترجمات');
+    }
+
+    public function test_super_admin_interface_translations_are_shared_across_schools(): void
+    {
+        $adminSchool = School::factory()->create();
+        $admin = $this->actingAsSchoolUser($adminSchool);
+        $admin->assignRole(Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']));
+
+        $this->post('/settings/translations/interface-copy', [
+            'english' => 'Attendance Settings',
+            'arabic' => 'إعدادات الحضور',
+        ])->assertRedirect();
+
+        $this->get('/settings/translations')->assertOk()->assertInertia(fn ($page) => $page
+            ->component('settings/translations')
+            ->where('canManageInterfaceCopy', true)
+            ->where('interfaceTranslations.data.0.english', 'Attendance Settings')
+        );
+
+        $this->post('/settings/translations/interface-copy', [
+            'english' => 'Attendance Settings',
+            'arabic' => 'إعدادات الحضور المدرسي',
+        ])->assertRedirect();
+
+        $otherSchool = School::factory()->create();
+        $this->actingAsSchoolUser($otherSchool);
+        TranslationSettings::for($otherSchool)->save(['auto_translate' => false]);
+        Http::fake();
+
+        $this->postJson('/ui/copy', ['strings' => ['Attendance Settings']])
+            ->assertOk()
+            ->assertJsonPath('translations.Attendance Settings', 'إعدادات الحضور المدرسي');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_super_admin_only_can_edit_shared_interface_translations(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+
+        $this->post('/settings/translations/interface-copy', [
+            'english' => 'Attendance Settings',
+            'arabic' => 'إعدادات الحضور',
+        ])->assertForbidden();
+    }
+
+    public function test_super_admin_generated_interface_translations_are_saved_and_shared(): void
+    {
+        $adminSchool = School::factory()->create();
+        $admin = $this->actingAsSchoolUser($adminSchool);
+        $admin->assignRole(Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']));
+        $this->fakeTranslation('إعدادات الحضور');
+
+        $this->postJson('/ui/copy', ['strings' => ['Attendance Settings']])
+            ->assertOk()
+            ->assertJsonPath('translations.Attendance Settings', 'إعدادات الحضور');
+
+        $this->assertDatabaseHas('interface_translations', [
+            'source_hash' => hash('sha256', 'Attendance Settings'),
+            'english' => 'Attendance Settings',
+            'arabic' => 'إعدادات الحضور',
+            'updated_by' => $admin->id,
+        ]);
+
+        $this->get('/settings/translations')->assertOk()->assertInertia(fn ($page) => $page
+            ->where('interfaceTranslations.data.0.english', 'Attendance Settings')
+            ->where('interfaceTranslations.data.0.arabic', 'إعدادات الحضور')
+        );
+
+        $otherSchool = School::factory()->create();
+        $this->actingAsSchoolUser($otherSchool);
+        TranslationSettings::for($otherSchool)->save(['auto_translate' => false]);
+
+        $this->postJson('/ui/copy', ['strings' => ['Attendance Settings']])
+            ->assertOk()
+            ->assertJsonPath('translations.Attendance Settings', 'إعدادات الحضور');
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_school_auto_translations_do_not_write_to_the_global_catalog(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school);
+        $this->fakeTranslation('إعدادات الحضور');
+
+        $this->postJson('/ui/copy', ['strings' => ['Attendance Settings']])->assertOk();
+
+        $this->assertDatabaseMissing('interface_translations', [
+            'source_hash' => hash('sha256', 'Attendance Settings'),
+        ]);
+    }
+
+    public function test_interface_translation_version_changes_when_the_catalog_changes(): void
+    {
+        $school = School::factory()->create();
+        $admin = $this->actingAsSchoolUser($school);
+        $before = $this->getJson('/ui/copy/version')->assertOk()->json('version');
+        $admin->assignRole(Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']));
+
+        $this->post('/settings/translations/interface-copy', [
+            'english' => 'Attendance Settings',
+            'arabic' => 'إعدادات الحضور',
+        ])->assertRedirect();
+
+        $after = $this->getJson('/ui/copy/version')->assertOk()->json('version');
+
+        $this->assertNotSame($before, $after);
     }
 
     public function test_a_string_is_only_paid_for_once(): void

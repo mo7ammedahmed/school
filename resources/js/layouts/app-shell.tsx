@@ -427,10 +427,9 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
     const canSettings = userRoles.some((r) => ['school_admin', 'super_admin'].includes(r));
     const [drawerOpen, setDrawerOpen] = useState(false);
 
-    // The screens themselves are written in English. Asking the school's own
-    // provider to translate the visible interface words — once per string, and
-    // cached — is what makes Arabic cover every page instead of only the ones
-    // that were re-typed by hand.
+    // The screens themselves are written in English. Shared super-admin
+    // translations take precedence; the school's provider fills any remaining
+    // visible interface copy.
     useEffect(() => translateInterfaceCopy(locale), [locale]);
 
     useEffect(() => {

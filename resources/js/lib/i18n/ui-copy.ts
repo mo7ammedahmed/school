@@ -1,19 +1,18 @@
 import type { Locale } from './copy';
+import { router } from '@inertiajs/react';
 
 /**
  * Translates the dashboard's own interface words when Arabic is selected.
  *
  * The dashboard was written in English — hundreds of screens of headings,
  * labels and buttons — so choosing Arabic used to leave English chrome wrapped
- * around Arabic content. Instead of leaving the choice half-working until every
- * screen is re-typed by hand, this walks the visible *interface* text, asks the
- * server (which uses the school's own translation provider, cached per string),
- * and writes the Arabic back into the page. Content is deliberately out of
- * reach: table cells and anything marked `data-no-translate` are left alone, so
- * a student's name is never machine-translated.
+ * around Arabic content. This walks visible interface copy, applies the shared
+ * super-admin catalog first, then asks the server for any remaining strings.
+ * Content is deliberately out of reach: table cells and anything marked
+ * `data-no-translate` are left alone.
  */
 
-const STORAGE_KEY = 'aether.ui-copy.v1';
+const STORAGE_KEY = 'aether.ui-copy.v2';
 
 /** Interface text, not data: chrome, headings, controls and table headers. */
 const SELECTOR = [
@@ -34,6 +33,10 @@ const SELECTOR = [
     'option',
     'dt',
     'li',
+    'input',
+    '[placeholder]',
+    '[title]',
+    '[aria-label]',
 ].join(',');
 
 const ATTRIBUTES = ['placeholder', 'title', 'aria-label'] as const;
@@ -45,6 +48,10 @@ const MAX_LENGTH = 300;
 
 const memory = new Map<string, string>();
 const requested = new Set<string>();
+let catalogVersion: string | null = null;
+let loaded = false;
+let ready = false;
+let versionCheck: Promise<void> | null = null;
 
 /**
  * The provider takes seconds per string, so a screen full of copy would take
@@ -106,14 +113,22 @@ function isTranslatable(value: string): boolean {
 }
 
 function load(): void {
-    if (memory.size > 0 || typeof window === 'undefined') return;
+    if (loaded || typeof window === 'undefined') return;
+    loaded = true;
 
     try {
         const raw = window.localStorage.getItem(STORAGE_KEY);
 
         if (!raw) return;
 
-        for (const [english, arabic] of Object.entries(JSON.parse(raw) as Record<string, string>)) {
+        const stored = JSON.parse(raw) as {
+            version?: string;
+            translations?: Record<string, string>;
+        };
+
+        catalogVersion = typeof stored.version === 'string' ? stored.version : null;
+
+        for (const [english, arabic] of Object.entries(stored.translations ?? {})) {
             memory.set(english, arabic);
         }
     } catch {
@@ -125,11 +140,42 @@ function save(): void {
     try {
         window.localStorage.setItem(
             STORAGE_KEY,
-            JSON.stringify(Object.fromEntries(memory)),
+            JSON.stringify({ version: catalogVersion, translations: Object.fromEntries(memory) }),
         );
     } catch {
         // Storage full or blocked: the translations still work for this visit.
     }
+}
+
+async function syncCatalogVersion(): Promise<void> {
+    if (versionCheck) return versionCheck;
+
+    versionCheck = (async () => {
+        try {
+            const response = await fetch('/ui/copy/version', {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) return;
+
+            const payload = (await response.json().catch(() => ({}))) as { version?: string };
+            const nextVersion = payload.version;
+            if (!nextVersion || nextVersion === catalogVersion) return;
+
+            restore();
+            memory.clear();
+            requested.clear();
+            attempts.clear();
+            catalogVersion = nextVersion;
+            save();
+        } catch {
+            // Keep the last usable cache when the version endpoint is unavailable.
+        }
+    })().finally(() => {
+        versionCheck = null;
+    });
+
+    return versionCheck;
 }
 
 function skipped(element: Element): boolean {
@@ -279,6 +325,11 @@ let queued = false;
 /** Writes are debounced: a screenful of React updates is one pass, not fifty. */
 function schedule(): void {
     if (typeof window === 'undefined') return;
+    if (!ready) {
+        queued = true;
+
+        return;
+    }
 
     if (debounce !== null) window.clearTimeout(debounce);
 
@@ -340,12 +391,27 @@ export function translateInterfaceCopy(locale: Locale): () => void {
 
     load();
 
-    schedule();
+    let active = true;
+    const refreshCatalog = () => {
+        ready = false;
+        void syncCatalogVersion().finally(() => {
+            if (!active) return;
+            ready = true;
+            schedule();
+        });
+    };
 
     observer = new MutationObserver(schedule);
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    const removeNavigateListener = router.on('navigate', refreshCatalog);
+    window.addEventListener('focus', refreshCatalog);
+    refreshCatalog();
 
     return () => {
+        active = false;
+        ready = false;
+        removeNavigateListener();
+        window.removeEventListener('focus', refreshCatalog);
         observer?.disconnect();
         observer = null;
         queued = false;

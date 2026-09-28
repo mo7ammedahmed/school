@@ -83,6 +83,7 @@ use App\Http\Controllers\Settings\SecuritySettingsController;
 use App\Http\Controllers\Settings\SmsSettingsController;
 use App\Http\Controllers\Settings\ThemeSettingsController;
 use App\Http\Controllers\Settings\TranslationSettingsController;
+use App\Http\Controllers\Settings\InterfaceTranslationController;
 use App\Http\Controllers\Student\PortalController as StudentPortalController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
@@ -192,6 +193,10 @@ Route::middleware(['auth', 'school.context'])
 Route::middleware(['auth', 'school.context'])
     ->post('/ui/copy', UiCopyController::class)
     ->name('ui.copy');
+
+Route::middleware(['auth', 'school.context'])
+    ->get('/ui/copy/version', [UiCopyController::class, 'version'])
+    ->name('ui.copy.version');
 
 Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(function () {
     // Dashboard
@@ -398,6 +403,12 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::post('/navigation', [NavigationSettingsController::class, 'store']);
         Route::get('/translations', [TranslationSettingsController::class, 'index'])->name('translations');
         Route::post('/translations', [TranslationSettingsController::class, 'store']);
+        Route::post('/translations/interface-copy', [InterfaceTranslationController::class, 'store'])
+            ->middleware('role:super_admin')
+            ->name('translations.interface-copy.store');
+        Route::delete('/translations/interface-copy/{translation}', [InterfaceTranslationController::class, 'destroy'])
+            ->middleware('role:super_admin')
+            ->name('translations.interface-copy.destroy');
         Route::post('/translations/test', [TranslationSettingsController::class, 'test'])->name('translations.test');
         Route::post('/translations/backfill', [TranslationSettingsController::class, 'backfill'])->name('translations.backfill');
         Route::post('/translations/models', [TranslationSettingsController::class, 'models'])->name('translations.models');

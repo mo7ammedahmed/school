@@ -13,6 +13,11 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        // Feature tests exercise Laravel responses, not the external Node SSR
+        // process. The package defaults SSR on even in testing, which conflicts
+        // with the suite's fail-closed HTTP fake.
+        config(['inertia.ssr.enabled' => false]);
+
         // The on-save fill declines to run in a console, because that is how an
         // import or a command is kept from translating a thousand rows behind
         // the operator's back. The suite is not a bulk run in that sense: it

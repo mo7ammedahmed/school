@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Domain\Localization\Models\InterfaceTranslation;
 use App\Domain\Localization\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,20 +62,48 @@ class UiCopyController extends Controller
             'strings.*' => ['string', 'max:'.self::MAX_STRING],
         ]);
 
-        $schoolId = (int) session('school_id');
+        $strings = array_values(array_unique(array_map('trim', $validated['strings'])));
+        $hashes = array_map(InterfaceTranslation::hashSource(...), $strings);
+        $savedEntries = InterfaceTranslation::query()
+            ->whereIn('source_hash', $hashes)
+            ->get(['source_hash', 'english', 'arabic']);
+        /** @var array<string, InterfaceTranslation> $savedTranslations */
+        $savedTranslations = [];
 
-        // A school without a provider keeps the English chrome rather than
-        // filling the page with machine noise.
-        if ($schoolId === 0 || ! $this->translations->autoTranslateEnabled($schoolId)) {
-            return response()->json(['translations' => [], 'pending' => [], 'configured' => false]);
+        foreach ($savedEntries as $entry) {
+            $savedTranslations[$entry->source_hash] = $entry;
+        }
+
+        $translations = [];
+
+        foreach ($strings as $english) {
+            $entry = $savedTranslations[InterfaceTranslation::hashSource($english)] ?? null;
+
+            if ($entry !== null) {
+                $translations[$english] = $entry->arabic;
+            }
+        }
+
+        $missing = array_values(array_diff($strings, array_keys($translations)));
+        $schoolId = (int) session('school_id');
+        $configured = $schoolId !== 0 && $this->translations->autoTranslateEnabled($schoolId);
+        $isSuperAdmin = $request->user()?->hasRole('super_admin') ?? false;
+
+        // Curated strings are global and available even when a school has no AI key.
+        if ($missing === [] || ! $configured) {
+            return response()->json([
+                'translations' => $translations,
+                'pending' => [],
+                'configured' => $configured,
+            ]);
         }
 
         $key = 'ui-copy:'.($request->user()?->id ?? $request->ip());
 
         if (RateLimiter::tooManyAttempts($key, self::ATTEMPTS)) {
             return response()->json([
-                'translations' => [],
-                'pending' => array_values(array_unique($validated['strings'])),
+                'translations' => $translations,
+                'pending' => $missing,
                 'message' => 'Too many translation requests in a row. The page will finish translating in a moment.',
             ], 429);
         }
@@ -85,12 +114,9 @@ class UiCopyController extends Controller
         $limit = (int) ini_get('max_execution_time');
         $mustNotFinishAfter = $limit > 0 ? $started + $limit - 2.0 : PHP_FLOAT_MAX;
 
-        $translations = [];
         $pending = [];
 
-        foreach (array_unique($validated['strings']) as $string) {
-            $english = trim((string) $string);
-
+        foreach ($missing as $english) {
             // Stop asking for more once the batch has spent its share of the
             // request; the screen repeats with whatever is left.
             if (microtime(true) - $started >= self::SECONDS || microtime(true) + 10.0 > $mustNotFinishAfter) {
@@ -101,13 +127,24 @@ class UiCopyController extends Controller
 
             $arabic = $this->translations->translateQuietly($english, 'en', 'ar', $schoolId);
 
-            if ($arabic === null || $arabic === '') {
+            if ($arabic === null || $arabic === '' || $arabic === $english) {
                 // Not a failure worth reporting: the string may be a proper noun
                 // the provider returns unchanged, and the English stays readable.
                 continue;
             }
 
             $translations[$english] = $arabic;
+
+            if ($isSuperAdmin) {
+                InterfaceTranslation::query()->firstOrCreate(
+                    ['source_hash' => InterfaceTranslation::hashSource($english)],
+                    [
+                        'english' => $english,
+                        'arabic' => $arabic,
+                        'updated_by' => $request->user()->id,
+                    ],
+                );
+            }
         }
 
         return response()->json([
@@ -115,5 +152,10 @@ class UiCopyController extends Controller
             'pending' => $pending,
             'configured' => true,
         ]);
+    }
+
+    public function version(): JsonResponse
+    {
+        return response()->json(['version' => InterfaceTranslation::catalogVersion()]);
     }
 }

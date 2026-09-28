@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Locale = 'en' | 'ar';
+type AutoTranslation = { source: string; translation: string };
+
+const AUTO_TRANSLATE_DELAY = 1000;
 
 type TranslatePairProps = {
     /** id of the English input */
@@ -49,7 +52,12 @@ function readInputValue(id: string): string {
     return element?.value?.trim() ?? '';
 }
 
-async function requestTranslation(text: string, from: Locale, to: Locale): Promise<string> {
+async function requestTranslation(
+    text: string,
+    from: Locale,
+    to: Locale,
+    signal?: AbortSignal,
+): Promise<string> {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
     const cookie = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
 
@@ -62,6 +70,7 @@ async function requestTranslation(text: string, from: Locale, to: Locale): Promi
             'X-CSRF-TOKEN': token || decodeURIComponent(cookie ?? ''),
         },
         credentials: 'same-origin',
+        signal,
         body: JSON.stringify({ text, from, to }),
     });
 
@@ -81,6 +90,7 @@ async function saveTranslation(
     sourceValue: string,
     column: string,
     value: string,
+    signal?: AbortSignal,
 ): Promise<string> {
     const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
     const cookie = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
@@ -93,6 +103,7 @@ async function saveTranslation(
             'X-CSRF-TOKEN': token || decodeURIComponent(cookie ?? ''),
         },
         credentials: 'same-origin',
+        signal,
         body: JSON.stringify({
             table,
             id,
@@ -172,8 +183,117 @@ export function TranslatePair({
     const [busy, setBusy] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState<string | null>(null);
+    const autoApplied = useRef(new Map<string, AutoTranslation>());
+    const persistRef = useRef(persist);
+    persistRef.current = persist;
 
     useEitherLanguageGuard(enId, arId);
+
+    useEffect(() => {
+        const timers = new Map<string, number>();
+        const controllers = new Map<string, AbortController>();
+
+        const translateAfterTypingStops = (event: Event): void => {
+            const field = event.target;
+            if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) return;
+
+            const from: Locale | null = field.id === enId ? 'en' : field.id === arId ? 'ar' : null;
+            if (!from) return;
+
+            const to: Locale = from === 'en' ? 'ar' : 'en';
+            const sourceId = from === 'en' ? enId : arId;
+            const targetId = to === 'en' ? enId : arId;
+            const key = `${from}-${to}`;
+            const source = readInputValue(sourceId);
+            const existingTimer = timers.get(key);
+
+            if (existingTimer !== undefined) window.clearTimeout(existingTimer);
+            controllers.get(key)?.abort();
+            controllers.delete(key);
+            timers.delete(key);
+
+            if (source.length < 2) return;
+
+            const previous = autoApplied.current.get(key);
+            const currentTarget = readInputValue(targetId);
+
+            // Keep a manually entered translation untouched.
+            if (currentTarget && currentTarget !== previous?.translation) return;
+
+            timers.set(key, window.setTimeout(() => {
+                timers.delete(key);
+                if (readInputValue(sourceId) !== source) return;
+
+                const targetBeforeRequest = readInputValue(targetId);
+                const latestAuto = autoApplied.current.get(key);
+                if (targetBeforeRequest && targetBeforeRequest !== latestAuto?.translation) return;
+
+                const controller = new AbortController();
+                controllers.set(key, controller);
+                setBusy(key);
+                setError(null);
+
+                void requestTranslation(source, from, to, controller.signal)
+                    .then(async (translation) => {
+                        if (controller.signal.aborted || readInputValue(sourceId) !== source) return;
+
+                        const targetNow = readInputValue(targetId);
+                        const autoValue = autoApplied.current.get(key)?.translation;
+                        if (targetNow && targetNow !== autoValue) return;
+
+                        let value = translation;
+                        const saveTarget = persistRef.current;
+
+                        if (saveTarget) {
+                            value = await saveTranslation(
+                                saveTarget.table,
+                                saveTarget.id,
+                                from === 'en' ? saveTarget.enColumn : saveTarget.arColumn,
+                                source,
+                                to === 'en' ? saveTarget.enColumn : saveTarget.arColumn,
+                                translation,
+                                controller.signal,
+                            );
+                        }
+
+                        if (controller.signal.aborted || readInputValue(sourceId) !== source) return;
+
+                        const finalTarget = readInputValue(targetId);
+                        if (finalTarget && finalTarget !== autoApplied.current.get(key)?.translation) return;
+
+                        autoApplied.current.set(key, { source, translation: value });
+                        setInputValue(targetId, value);
+                        setDone(key);
+                        window.setTimeout(() => setDone(null), 2500);
+                    })
+                    .catch((e: unknown) => {
+                        if (!controller.signal.aborted) {
+                            setError(e instanceof Error ? e.message : 'Translation failed.');
+                        }
+                    })
+                    .finally(() => {
+                        if (controllers.get(key) === controller) {
+                            controllers.delete(key);
+                            setBusy((current) => current === key ? null : current);
+                        }
+                    });
+            }, AUTO_TRANSLATE_DELAY));
+        };
+
+        const english = document.getElementById(enId);
+        const arabic = document.getElementById(arId);
+
+        english?.addEventListener('input', translateAfterTypingStops);
+        arabic?.addEventListener('input', translateAfterTypingStops);
+
+        return () => {
+            english?.removeEventListener('input', translateAfterTypingStops);
+            arabic?.removeEventListener('input', translateAfterTypingStops);
+            timers.forEach((timer) => window.clearTimeout(timer));
+            controllers.forEach((controller) => controller.abort());
+            controllers.clear();
+        };
+    }, [enId, arId]);
 
     const run = async (from: Locale, to: Locale) => {
         const sourceId = from === 'en' ? enId : arId;
@@ -207,6 +327,7 @@ export function TranslatePair({
             if (!setInputValue(targetId, value)) {
                 setError('Could not find the target field.');
             } else {
+                autoApplied.current.set(key, { source: text, translation: value });
                 setDone(key);
                 setTimeout(() => setDone(null), 2500);
             }
@@ -247,7 +368,7 @@ export function TranslatePair({
                     );
                 })}
                 <span className="text-xs text-muted-foreground">
-                    fill either language — the other is translated on save
+                    the empty language fills after you pause typing
                 </span>
             </div>
             {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}

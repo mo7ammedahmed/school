@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Domain\Localization\Enums\TranslationProvider;
 use App\Domain\Localization\Exceptions\TranslationFailed;
+use App\Domain\Localization\Models\InterfaceTranslation;
 use App\Domain\Localization\Services\AiTranslator;
 use App\Domain\Localization\Services\BilingualBackfill;
 use App\Domain\Localization\Services\TranslationSettings;
@@ -31,6 +32,7 @@ class TranslationSettingsController extends Controller
     public function index(): Response
     {
         $settings = TranslationSettings::for($this->schoolId());
+        $canManageInterfaceCopy = request()->user()?->hasRole('super_admin') ?? false;
 
         return inertia('settings/translations', [
             'settings' => $settings->masked(),
@@ -41,6 +43,12 @@ class TranslationSettingsController extends Controller
             ],
             'endpoint' => $settings->endpoint(),
             'envKeyConfigured' => $settings->keySource() === 'environment',
+            'canManageInterfaceCopy' => $canManageInterfaceCopy,
+            'interfaceTranslations' => $canManageInterfaceCopy
+                ? InterfaceTranslation::query()
+                    ->orderBy('english')
+                    ->paginate(25, ['id', 'english', 'arabic', 'updated_at'], 'copy_page')
+                : null,
         ]);
     }
 

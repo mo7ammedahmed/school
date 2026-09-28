@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Languages, PlugZap, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
+import { Languages, PlugZap, RefreshCw, Sparkles, Trash2, Wand2 } from 'lucide-react';
 
 type Provider = {
     value: string;
@@ -46,6 +46,11 @@ type Props = {
     locales: { value: string; label: string }[];
     endpoint: string;
     envKeyConfigured: boolean;
+    canManageInterfaceCopy: boolean;
+    interfaceTranslations: {
+        data: Array<{ id: number; english: string; arabic: string; updated_at: string }>;
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    } | null;
 };
 
 type BackfillTotals = {
@@ -166,6 +171,8 @@ export default function TranslationSettingsPage({
     locales,
     endpoint,
     envKeyConfigured,
+    canManageInterfaceCopy,
+    interfaceTranslations,
 }: Props) {
     const form = useForm({
         provider: settings.provider,
@@ -177,6 +184,7 @@ export default function TranslationSettingsPage({
         api_key: '',
         clear_api_key: false,
     });
+    const interfaceCopyForm = useForm({ english: '', arabic: '' });
 
     const [testing, setTesting] = useState(false);
     const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -238,6 +246,18 @@ export default function TranslationSettingsPage({
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         form.post('/settings/translations', { preserveScroll: true });
+    };
+
+    const submitInterfaceCopy = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        interfaceCopyForm.post('/settings/translations/interface-copy', {
+            preserveScroll: true,
+            onSuccess: () => interfaceCopyForm.reset(),
+        });
+    };
+
+    const removeInterfaceCopy = (id: number) => {
+        router.delete(`/settings/translations/interface-copy/${id}`, { preserveScroll: true });
     };
 
     const testConnection = async () => {
@@ -712,8 +732,8 @@ export default function TranslationSettingsPage({
                             <p>Academic years, semesters, grade levels, sections, subjects, rooms and period names.</p>
                             <p>Content page titles and the school name.</p>
                             <p>
-                                Every bilingual field also has a translate button, so you can translate one field
-                                without saving.
+                                Translations save immediately on existing records; new records save them with
+                                the form.
                             </p>
                             {envKeyConfigured && (
                                 <p className="pt-2 text-xs">
@@ -884,6 +904,101 @@ export default function TranslationSettingsPage({
                     </Card>
                 </div>
             </div>
+            {canManageInterfaceCopy && interfaceTranslations && (
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Shared Arabic interface translations</CardTitle>
+                        <CardDescription>
+                            These translations are shared across every school and user. They override automatic
+                            translations throughout the system.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                        <form onSubmit={submitInterfaceCopy} className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="interface-english">English interface text</Label>
+                                <Input
+                                    id="interface-english"
+                                    value={interfaceCopyForm.data.english}
+                                    onChange={(event) => interfaceCopyForm.setData('english', event.target.value)}
+                                    maxLength={300}
+                                    required
+                                />
+                                {interfaceCopyForm.errors.english && (
+                                    <p className="text-xs text-destructive">{interfaceCopyForm.errors.english}</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="interface-arabic">Arabic translation</Label>
+                                <textarea
+                                    id="interface-arabic"
+                                    dir="rtl"
+                                    className="input min-h-10 w-full"
+                                    value={interfaceCopyForm.data.arabic}
+                                    onChange={(event) => interfaceCopyForm.setData('arabic', event.target.value)}
+                                    maxLength={5000}
+                                    required
+                                />
+                                {interfaceCopyForm.errors.arabic && (
+                                    <p className="text-xs text-destructive">{interfaceCopyForm.errors.arabic}</p>
+                                )}
+                            </div>
+                            <div className="md:col-span-2">
+                                <Button type="submit" disabled={interfaceCopyForm.processing}>
+                                    {interfaceCopyForm.processing ? 'Saving…' : 'Save shared translation'}
+                                </Button>
+                            </div>
+                        </form>
+
+                        <div className="divide-y rounded-md border">
+                            {interfaceTranslations.data.map((entry) => (
+                                <div key={entry.id} className="grid gap-3 p-3 md:grid-cols-[1fr_1fr_auto] md:items-center">
+                                    <p className="break-words text-sm">{entry.english}</p>
+                                    <p dir="rtl" className="break-words text-sm text-muted-foreground">
+                                        {entry.arabic}
+                                    </p>
+                                    <div className="flex items-center gap-2 md:justify-end">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => interfaceCopyForm.setData({ english: entry.english, arabic: entry.arabic })}
+                                        >
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            aria-label={`Delete translation for ${entry.english}`}
+                                            onClick={() => removeInterfaceCopy(entry.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                            {interfaceTranslations.data.length === 0 && (
+                                <p className="p-4 text-sm text-muted-foreground">No shared translations yet.</p>
+                            )}
+                        </div>
+
+                        {interfaceTranslations.links.length > 3 && (
+                            <nav className="flex flex-wrap gap-2" aria-label="Shared translation pages">
+                                {interfaceTranslations.links.map((link) => (
+                                    <Button
+                                        key={link.label}
+                                        type="button"
+                                        variant={link.active ? 'default' : 'outline'}
+                                        disabled={!link.url}
+                                        onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true })}
+                                    >
+                                        {link.label.replace(/&amp;/g, '&')}
+                                    </Button>
+                                ))}
+                            </nav>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
         </AppShell>
     );
 }
