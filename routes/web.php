@@ -90,6 +90,7 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TranslateController;
+use App\Http\Controllers\SaveTranslatedFieldController;
 use App\Http\Controllers\UiCopyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
@@ -180,6 +181,10 @@ Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(func
 Route::middleware(['auth', 'school.context'])
     ->post('/translate', TranslateController::class)
     ->name('translate');
+
+Route::middleware(['auth', 'school.context'])
+    ->post('/translate/save', SaveTranslatedFieldController::class)
+    ->name('translate.save');
 
 // Translates the dashboard's own interface words, so choosing Arabic does not
 // leave English headings and buttons around Arabic content. Same rate limit

@@ -73,7 +73,7 @@ export default function SemestersEdit({ semester, academicYears }: Props) {
                                     name="name_en"
                                     defaultValue={semester.name_en ?? ''}
                                 />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'semesters', id: semester.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="academic_year_id">Academic Year</Label>

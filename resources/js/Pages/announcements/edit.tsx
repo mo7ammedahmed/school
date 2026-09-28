@@ -57,7 +57,7 @@ export default function AnnouncementsEdit({ announcement }: { announcement: Anno
                                 <Input id="title_ar" name="title_ar" dir="rtl" defaultValue={announcement.title_ar ?? ''} />
                             </div>
                             <div className="md:col-span-2">
-                                <TranslatePair enId="title" arId="title_ar" />
+                                <TranslatePair enId="title" arId="title_ar" persist={{ table: 'announcements', id: announcement.id, enColumn: 'title', arColumn: 'title_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="target_audience">Target Audience</Label>
@@ -93,7 +93,7 @@ export default function AnnouncementsEdit({ announcement }: { announcement: Anno
                                 <textarea id="body_ar" name="body_ar" dir="rtl" className="input min-h-[200px]" defaultValue={announcement.body_ar ?? ''} />
                             </div>
                             <div className="md:col-span-2">
-                                <TranslatePair enId="body" arId="body_ar" />
+                                <TranslatePair enId="body" arId="body_ar" persist={{ table: 'announcements', id: announcement.id, enColumn: 'body', arColumn: 'body_ar' }} />
                             </div>
                         </div>
 

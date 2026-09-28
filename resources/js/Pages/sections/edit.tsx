@@ -43,7 +43,7 @@ export default function SectionsEdit({ section, gradeLevels, academicYears }: { 
                             <div>
                                 <Label htmlFor="name_en">Section Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={section.name_en} />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'sections', id: section.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="grade_level_id">Grade Level</Label>

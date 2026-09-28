@@ -43,7 +43,7 @@ export default function AcademicYearsEdit({ academicYear }: { academicYear: { id
                             <div>
                                 <Label htmlFor="name_en">Academic Year Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={academicYear.name_en} />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'academic_years', id: academicYear.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="is_current">Current Year</Label>

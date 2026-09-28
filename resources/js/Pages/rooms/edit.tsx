@@ -43,7 +43,7 @@ export default function RoomsEdit({ room }: { room: { id: number; name: string; 
                             <div>
                                 <Label htmlFor="name_en">Room Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={room.name_en} />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'rooms', id: room.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="code">Room Code</Label>

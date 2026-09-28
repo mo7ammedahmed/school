@@ -45,7 +45,7 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
                             <div>
                                 <Label htmlFor="name_en">Subject Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={s.name_en ?? ''} />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'subjects', id: subject.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="code">Subject Code</Label>

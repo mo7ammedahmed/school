@@ -100,7 +100,7 @@ export default function SchoolSettings({ school }: { school: SchoolSettings }) {
                                     onChange={(event) => form.setData('name_en', event.target.value)}
                                     error={form.errors.name_en}
                                 />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'schools', id: school.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="name_ar">School name (Arabic)</Label>
@@ -123,7 +123,7 @@ export default function SchoolSettings({ school }: { school: SchoolSettings }) {
                                     onChange={(event) => form.setData('description_en', event.target.value)}
                                     error={form.errors.description_en}
                                 />
-                                <TranslatePair enId="description_en" arId="description_ar" />
+                                <TranslatePair enId="description_en" arId="description_ar" persist={{ table: 'schools', id: school.id, enColumn: 'description_en', arColumn: 'description_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="description_ar">Description (Arabic)</Label>

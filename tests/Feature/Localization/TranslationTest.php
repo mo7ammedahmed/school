@@ -52,6 +52,91 @@ class TranslationTest extends TestCase
             && str_contains($request['messages'][0]['content'], 'Arabic'));
     }
 
+    public function test_a_translated_field_can_be_saved_without_submitting_the_form(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
+        $gradeLevel = \App\Models\GradeLevel::create([
+            'school_id' => $school->id,
+            'name_en' => 'Grade One',
+            'name_ar' => null,
+            'level' => 1,
+        ]);
+
+        $this->postJson('/translate/save', [
+            'table' => 'grade_levels',
+            'id' => $gradeLevel->id,
+            'source_column' => 'name_en',
+            'source_value' => 'Updated Grade One',
+            'column' => 'name_ar',
+            'value' => 'الصف الأول',
+        ])->assertOk()->assertJson(['saved' => true]);
+
+        $this->assertDatabaseHas('grade_levels', [
+            'id' => $gradeLevel->id,
+            'name_en' => 'Updated Grade One',
+            'name_ar' => 'الصف الأول',
+        ]);
+    }
+
+    public function test_translated_field_save_rejects_non_bilingual_columns_and_other_schools(): void
+    {
+        $school = School::factory()->create();
+        $otherSchool = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
+        $gradeLevel = \App\Models\GradeLevel::create([
+            'school_id' => $otherSchool->id,
+            'name_en' => 'Grade One',
+            'name_ar' => null,
+            'level' => 1,
+        ]);
+
+        $this->postJson('/translate/save', [
+            'table' => 'grade_levels',
+            'id' => $gradeLevel->id,
+            'source_column' => 'name_en',
+            'source_value' => 'Grade One',
+            'column' => 'level',
+            'value' => '2',
+        ])->assertUnprocessable();
+
+        $this->postJson('/translate/save', [
+            'table' => 'grade_levels',
+            'id' => $gradeLevel->id,
+            'source_column' => 'name_en',
+            'source_value' => 'Grade One',
+            'column' => 'name_ar',
+            'value' => 'الصف الأول',
+        ])->assertNotFound();
+
+        $this->assertDatabaseHas('grade_levels', [
+            'id' => $gradeLevel->id,
+            'name_ar' => null,
+            'level' => 1,
+        ]);
+    }
+
+    public function test_a_school_translation_can_be_saved_by_a_school_settings_manager(): void
+    {
+        $school = School::factory()->create(['name_en' => 'Old School']);
+        $this->actingAsSchoolUser($school, ['manage-schools']);
+
+        $this->postJson('/translate/save', [
+            'table' => 'schools',
+            'id' => $school->id,
+            'source_column' => 'name_en',
+            'source_value' => 'Updated School',
+            'column' => 'name_ar',
+            'value' => 'مدرسة محدثة',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('schools', [
+            'id' => $school->id,
+            'name_en' => 'Updated School',
+            'name_ar' => 'مدرسة محدثة',
+        ]);
+    }
+
     public function test_the_translate_endpoint_requires_authentication(): void
     {
         $this->postJson('/translate', ['text' => 'Hello', 'from' => 'en', 'to' => 'ar'])

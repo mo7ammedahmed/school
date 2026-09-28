@@ -43,7 +43,7 @@ export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: numb
                             <div>
                                 <Label htmlFor="name_en">Grade Name (English)</Label>
                                 <Input id="name_en" name="name_en" defaultValue={gradeLevel.name_en} />
-                                <TranslatePair enId="name_en" arId="name_ar" />
+                                <TranslatePair enId="name_en" arId="name_ar" persist={{ table: 'grade_levels', id: gradeLevel.id, enColumn: 'name_en', arColumn: 'name_ar' }} />
                             </div>
                             <div>
                                 <Label htmlFor="level">Level</Label>

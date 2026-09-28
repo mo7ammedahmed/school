@@ -11,6 +11,7 @@ type TranslatePairProps = {
     arId: string;
     /** Render only one direction. Defaults to both. */
     directions?: Array<{ from: Locale; to: Locale }>;
+    persist?: { table: string; id: number; enColumn: string; arColumn: string };
     className?: string;
 };
 
@@ -38,7 +39,6 @@ function setInputValue(id: string, value: string): boolean {
     }
 
     element.dispatchEvent(new Event('input', { bubbles: true }));
-    element.dispatchEvent(new Event('change', { bubbles: true }));
 
     return true;
 }
@@ -72,6 +72,43 @@ async function requestTranslation(text: string, from: Locale, to: Locale): Promi
     }
 
     return String(payload.translation ?? '');
+}
+
+async function saveTranslation(
+    table: string,
+    id: number,
+    sourceColumn: string,
+    sourceValue: string,
+    column: string,
+    value: string,
+): Promise<string> {
+    const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
+    const cookie = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+    const response = await fetch('/translate/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': token || decodeURIComponent(cookie ?? ''),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            table,
+            id,
+            source_column: sourceColumn,
+            source_value: sourceValue,
+            column,
+            value,
+        }),
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(payload?.message ?? 'Could not save the translation.');
+    }
+
+    return String(payload.value ?? value);
 }
 
 /**
@@ -129,6 +166,7 @@ export function TranslatePair({
         { from: 'en', to: 'ar' },
         { from: 'ar', to: 'en' },
     ],
+    persist,
     className,
 }: TranslatePairProps) {
     const [busy, setBusy] = useState<string | null>(null);
@@ -155,8 +193,18 @@ export function TranslatePair({
 
         try {
             const translation = await requestTranslation(text, from, to);
+            const value = persist
+                ? await saveTranslation(
+                    persist.table,
+                    persist.id,
+                    from === 'en' ? persist.enColumn : persist.arColumn,
+                    text,
+                    to === 'en' ? persist.enColumn : persist.arColumn,
+                    translation,
+                )
+                : translation;
 
-            if (!setInputValue(targetId, translation)) {
+            if (!setInputValue(targetId, value)) {
                 setError('Could not find the target field.');
             } else {
                 setDone(key);
