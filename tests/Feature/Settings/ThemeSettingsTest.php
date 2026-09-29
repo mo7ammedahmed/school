@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Settings;
 
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ThemeSettingsTest extends TestCase
@@ -159,27 +156,4 @@ class ThemeSettingsTest extends TestCase
     /**
      * @param  list<string>  $permissions
      */
-    private function actingAsSchoolUser(School $school, array $permissions = []): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        if ($permissions !== []) {
-            $user->givePermissionTo($permissions);
-        }
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
-    }
 }

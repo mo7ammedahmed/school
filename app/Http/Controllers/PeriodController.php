@@ -88,15 +88,4 @@ class PeriodController extends Controller
             'is_break' => ['boolean'],
         ];
     }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        if ($schoolId === 0) {
-            abort(403, 'No active school context.');
-        }
-
-        return $schoolId;
-    }
 }

@@ -1,7 +1,7 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function SubmissionsCreate({ assignments, students }: { assignmen
                             </div>
                             <div className="md:col-span-2">
                                 <Label htmlFor="file">File</Label>
-                                <Input id="file" name="file" type="file" />
+                                <FileInput id="file" name="file" />
                             </div>
                         </div>
 

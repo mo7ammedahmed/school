@@ -55,7 +55,7 @@ class SemesterController extends Controller
 
     public function show(Semester $semester): Response
     {
-        $this->authorizeSemester($semester);
+        $this->ensureOwned($semester);
 
         $semester->load('academicYear');
 
@@ -64,7 +64,7 @@ class SemesterController extends Controller
 
     public function edit(Semester $semester): Response
     {
-        $this->authorizeSemester($semester);
+        $this->ensureOwned($semester);
 
         return inertia('semesters/edit', [
             'semester' => $semester,
@@ -74,7 +74,7 @@ class SemesterController extends Controller
 
     public function update(Request $request, Semester $semester): RedirectResponse
     {
-        $this->authorizeSemester($semester);
+        $this->ensureOwned($semester);
 
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
@@ -100,7 +100,7 @@ class SemesterController extends Controller
 
     public function destroy(Semester $semester): RedirectResponse
     {
-        $this->authorizeSemester($semester);
+        $this->ensureOwned($semester);
 
         $semester->delete();
 
@@ -118,15 +118,5 @@ class SemesterController extends Controller
     private function academicYearRule(): Exists
     {
         return Rule::exists('academic_years', 'id')->where('school_id', $this->schoolId());
-    }
-
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
-    private function authorizeSemester(Semester $semester): void
-    {
-        abort_unless((int) $semester->school_id === $this->schoolId(), 403);
     }
 }

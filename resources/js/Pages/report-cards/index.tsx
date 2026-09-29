@@ -6,21 +6,31 @@ import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
+import { useBilingual } from '@/lib/i18n/bilingual';
 
-export default function ReportCardsIndex({ reportCards }: { reportCards: { id: number; student: { first_name: string; last_name: string }; academic_year: { name: string }; grade: string; gpa: number; status: string }[] }) {
-    const columns: ColumnDef<any>[] = [
+type ReportCard = {
+    id: number;
+    student: { first_name: string | null; last_name: string | null };
+    academic_year: { name_en: string | null; name_ar: string | null };
+    gpa: number;
+    comments: string | null;
+    comments_ar: string | null;
+    published_at: string | null;
+};
+
+export default function ReportCardsIndex({ reportCards }: { reportCards: { data: ReportCard[] } }) {
+    const bilingual = useBilingual();
+
+    const columns: ColumnDef<ReportCard>[] = [
         {
-            accessorKey: 'student.first_name',
+            id: 'student',
             header: 'Student',
-            cell: ({ row }) => `${row.original.student.first_name} ${row.original.student.last_name}`,
+            cell: ({ row }) => `${row.original.student.first_name ?? ''} ${row.original.student.last_name ?? ''}`,
         },
         {
-            accessorKey: 'academic_year.name',
+            id: 'year',
             header: 'Academic Year',
-        },
-        {
-            accessorKey: 'grade',
-            header: 'Grade',
+            cell: ({ row }) => bilingual(row.original.academic_year.name_en, row.original.academic_year.name_ar),
         },
         {
             accessorKey: 'gpa',
@@ -28,13 +38,15 @@ export default function ReportCardsIndex({ reportCards }: { reportCards: { id: n
             cell: ({ row }) => Number(row.original.gpa).toFixed(2),
         },
         {
-            accessorKey: 'status',
+            id: 'comments',
+            header: 'Comments',
+            cell: ({ row }) => bilingual(row.original.comments, row.original.comments_ar),
+        },
+        {
+            id: 'status',
             header: 'Status',
-            cell: ({ row }) => {
-                const status = row.original.status;
-                const variant = status === 'published' ? 'default' : status === 'draft' ? 'secondary' : 'destructive';
-                return <Badge variant={variant}>{status}</Badge>;
-            },
+            cell: ({ row }) =>
+                row.original.published_at ? <Badge>Published</Badge> : <Badge variant="secondary">Draft</Badge>,
         },
         {
             id: 'actions',

@@ -173,8 +173,14 @@ class AdmissionsController extends Controller
             ]);
 
             // Enroll into the first section of the applied grade for the current year
+            // The application stores the grade's name as the guardian picked it,
+            // and `name` on this model is an accessor rather than a column — so
+            // matching on it found nothing and approval never placed the student
+            // in a section.
             $gradeLevel = GradeLevel::where('school_id', $schoolId)
-                ->where('name', $application->grade_applying)
+                ->where(fn ($query) => $query
+                    ->where('name_en', $application->grade_applying)
+                    ->orWhere('name_ar', $application->grade_applying))
                 ->first();
 
             $section = $gradeLevel

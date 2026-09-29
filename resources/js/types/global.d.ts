@@ -67,6 +67,11 @@ declare global {
             themeModes?: App.ThemeModes | null;
             navLabels?: Record<string, { en?: string | null; ar?: string | null }>;
             locale: string;
+            /**
+             * The dashboard's Arabic dictionary. Sent with the page until the
+             * browser holds its current version, and `null` afterwards.
+             */
+            uiCopy?: { version: string; translations: Record<string, string> } | null;
             flash: {
                 success?: string;
                 error?: string;

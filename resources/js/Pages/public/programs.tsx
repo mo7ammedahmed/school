@@ -10,7 +10,8 @@ interface Program {
     name: string;
     description: string;
     grade_level_id: number;
-    gradeLevel?: {
+    /** Relations arrive snake-cased, which is why the page read `undefined`. */
+    grade_level?: {
         id: number;
         name: string;
         level: number;
@@ -43,9 +44,9 @@ export default function Programs({ programs }: ProgramsProps) {
                                 <Card key={program.id} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
                                     <CardHeader>
                                         <CardTitle className="text-xl">{program.name}</CardTitle>
-                                        {program.gradeLevel && (
+                                        {program.grade_level && (
                                             <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                                                {program.gradeLevel.name}
+                                                {program.grade_level.name}
                                             </p>
                                         )}
                                     </CardHeader>

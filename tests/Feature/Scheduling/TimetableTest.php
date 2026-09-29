@@ -45,6 +45,10 @@ class TimetableTest extends TestCase
     {
         parent::setUp();
 
+        // Exists so a timetable permission check answers false rather than
+        // throwing; the helper that used to create it lives in TestCase now.
+        Permission::firstOrCreate(['name' => 'view-own-schedule', 'guard_name' => 'web']);
+
         $this->school = School::factory()->create();
         $this->academicYear = AcademicYear::factory()->create(['school_id' => $this->school->id]);
 
@@ -95,7 +99,7 @@ class TimetableTest extends TestCase
 
     public function test_the_grid_page_loads(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
 
         $this->get('/timetable/grid')->assertOk();
         $this->get("/timetable/grid?section_id={$this->section->id}")->assertOk();
@@ -103,7 +107,7 @@ class TimetableTest extends TestCase
 
     public function test_the_grid_falls_back_to_derived_rows_when_no_periods_exist(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry();
 
         $response = $this->get('/timetable/grid');
@@ -116,7 +120,7 @@ class TimetableTest extends TestCase
 
     public function test_the_grid_aligns_entries_to_bell_schedule_rows(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
 
         Period::create([
             'school_id' => $this->school->id,
@@ -141,7 +145,7 @@ class TimetableTest extends TestCase
 
     public function test_creating_an_entry_publishes_nothing_by_default(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
 
         $this->post('/timetable', [
             'subject_id' => $this->subject->id,
@@ -161,7 +165,7 @@ class TimetableTest extends TestCase
 
     public function test_an_overlapping_entry_is_rejected(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry(['start_time' => '09:00', 'end_time' => '10:00']);
 
         $this->post('/timetable', [
@@ -179,7 +183,7 @@ class TimetableTest extends TestCase
 
     public function test_a_back_to_back_entry_is_accepted(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry(['start_time' => '09:00', 'end_time' => '10:00']);
 
         $this->post('/timetable', [
@@ -197,7 +201,7 @@ class TimetableTest extends TestCase
 
     public function test_entries_cannot_reference_another_schools_resources(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
 
         $otherSchool = School::factory()->create();
         $otherSubject = Subject::create(['school_id' => $otherSchool->id, 'name_en' => 'Foreign']);
@@ -214,7 +218,7 @@ class TimetableTest extends TestCase
 
     public function test_an_entry_can_be_published_and_unpublished(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $entry = $this->entry();
 
         $this->post("/timetable/{$entry->id}/publish")->assertRedirect();
@@ -226,7 +230,7 @@ class TimetableTest extends TestCase
 
     public function test_it_refuses_to_mutate_another_schools_entry(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
 
         $otherSchool = School::factory()->create();
         $otherEntry = TimetableEntry::create([
@@ -245,7 +249,7 @@ class TimetableTest extends TestCase
 
     public function test_the_conflicts_page_loads(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry(['start_time' => '09:00', 'end_time' => '10:00']);
         $this->entry(['start_time' => '09:30', 'end_time' => '10:30']);
 
@@ -258,7 +262,7 @@ class TimetableTest extends TestCase
 
     public function test_the_pdf_export_returns_a_pdf(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry();
 
         $response = $this->get('/timetable/export/pdf');
@@ -269,7 +273,7 @@ class TimetableTest extends TestCase
 
     public function test_the_arabic_pdf_export_carries_joined_arabic_glyphs(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry();
 
         // The locale is decided per request (session, then profile), so the test
@@ -327,7 +331,7 @@ class TimetableTest extends TestCase
 
     public function test_the_ics_export_returns_a_calendar(): void
     {
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
         $this->entry();
 
         $response = $this->get('/timetable/export/ics');
@@ -378,24 +382,6 @@ class TimetableTest extends TestCase
 
         $this->assertTrue($ids->contains($published->id));
         $this->assertFalse($ids->contains($draft->id));
-    }
-
-    private function actingAsSchoolUser(): User
-    {
-        Permission::firstOrCreate(['name' => 'view-own-schedule', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $this->school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $this->school->id);
-
-        return $user;
     }
 
     /**

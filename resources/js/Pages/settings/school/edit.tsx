@@ -14,6 +14,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ColorField } from '@/components/ui/color-field';
@@ -201,9 +202,8 @@ export default function SchoolSettings({ school }: { school: SchoolSettings }) {
                         )}
                         <div>
                             <Label htmlFor="logo">Logo file</Label>
-                            <Input
+                            <FileInput
                                 id="logo"
-                                type="file"
                                 accept="image/png,image/jpeg,image/webp"
                                 onChange={(event) => form.setData('logo', event.target.files?.[0] ?? null)}
                                 error={form.errors.logo}

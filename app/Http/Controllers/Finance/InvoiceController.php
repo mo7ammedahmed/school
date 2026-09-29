@@ -31,7 +31,7 @@ class InvoiceController extends Controller
     {
         $query = Invoice::query()
             ->where('school_id', $this->schoolId())
-            ->with('student:id,first_name,last_name,student_number');
+            ->with('student:id,first_name,last_name,student_id_number');
 
         if ($request->filled('status')) {
             $query->where('status', (string) $request->string('status'));
@@ -116,7 +116,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): InertiaResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         $invoice->load(['student', 'lines', 'payments']);
 
@@ -143,7 +143,7 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice): InertiaResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
 
@@ -155,7 +155,7 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
 
@@ -194,7 +194,7 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): RedirectResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         abort_if((float) $invoice->amount_paid > 0, 403, 'Invoices with payments cannot be deleted.');
 
@@ -208,7 +208,7 @@ class InvoiceController extends Controller
      */
     public function issue(Invoice $invoice, IssueInvoice $issueInvoice): RedirectResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         abort_if($invoice->isPaid(), 403, 'This invoice is already settled.');
 
@@ -225,7 +225,7 @@ class InvoiceController extends Controller
      */
     public function send(Invoice $invoice): RedirectResponse
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         $kind = $invoice->sent_at === null
             ? InvoiceMail::KIND_ISSUED
@@ -247,7 +247,7 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice): Response
     {
-        $this->authorizeInvoice($invoice);
+        $this->ensureOwned($invoice);
 
         return InvoicePdf::download($invoice);
     }
@@ -293,7 +293,8 @@ class InvoiceController extends Controller
         return Student::query()
             ->where('school_id', $this->schoolId())
             ->orderBy('first_name')
-            ->get(['id', 'first_name', 'last_name', 'student_number']);
+            ->orderBy('last_name')
+            ->get(['id', 'first_name', 'last_name', 'student_id_number']);
     }
 
     private function studentExistsRule(): Exists
@@ -304,20 +305,6 @@ class InvoiceController extends Controller
     private function currency(): string
     {
         return GatewaySettings::for($this->schoolId())->currency();
-    }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
-
-        return $schoolId;
-    }
-
-    private function authorizeInvoice(Invoice $invoice): void
-    {
-        abort_unless((int) $invoice->school_id === $this->schoolId(), 403);
     }
 
     /**

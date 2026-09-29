@@ -11,11 +11,6 @@ use Inertia\Response;
 
 class TeacherController extends Controller
 {
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
     public function index(): Response
     {
         $teachers = TeacherProfile::where('school_id', $this->schoolId())

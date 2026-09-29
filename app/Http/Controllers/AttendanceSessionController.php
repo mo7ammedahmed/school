@@ -90,7 +90,7 @@ class AttendanceSessionController extends Controller
 
     public function show(AttendanceSession $session): Response
     {
-        $this->authorizeSchool($session);
+        $this->ensureOwned($session);
         $session->load(['offering.subject', 'section', 'teacher', 'semester', 'academicYear', 'records.student']);
 
         return inertia('attendance-sessions/show', ['session' => $session]);
@@ -98,7 +98,7 @@ class AttendanceSessionController extends Controller
 
     public function edit(AttendanceSession $session): Response
     {
-        $this->authorizeSchool($session);
+        $this->ensureOwned($session);
         $schoolId = session('school_id');
         $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
         $teachers = TeacherProfile::where('school_id', $schoolId)->orderBy('first_name')->get();
@@ -118,7 +118,7 @@ class AttendanceSessionController extends Controller
 
     public function update(Request $request, AttendanceSession $session): RedirectResponse
     {
-        $this->authorizeSchool($session);
+        $this->ensureOwned($session);
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
@@ -158,17 +158,10 @@ class AttendanceSessionController extends Controller
 
     public function destroy(AttendanceSession $session): RedirectResponse
     {
-        $this->authorizeSchool($session);
+        $this->ensureOwned($session);
         $session->delete();
 
         return redirect()->route('attendance-sessions.index')->with('success', 'Attendance session deleted successfully.');
-    }
-
-    private function authorizeSchool(AttendanceSession $session): void
-    {
-        if ((int) $session->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
     }
 
     private function resolveOffering(?int $offeringId, int $subjectId, int $teacherId, int $sectionId): Offering

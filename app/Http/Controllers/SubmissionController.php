@@ -65,7 +65,7 @@ class SubmissionController extends Controller
 
     public function show(Submission $submission): Response
     {
-        $this->authorizeSchool($submission);
+        $this->ensureOwned($submission);
         $submission->load(['assignment', 'student']);
 
         return inertia('submissions/show', ['submission' => $submission]);
@@ -73,7 +73,7 @@ class SubmissionController extends Controller
 
     public function edit(Submission $submission): Response
     {
-        $this->authorizeSchool($submission);
+        $this->ensureOwned($submission);
         $schoolId = session('school_id');
         $assignments = Assignment::where('school_id', $schoolId)->orderBy('title')->get();
         $students = Student::where('school_id', $schoolId)->orderBy('first_name')->get();
@@ -87,7 +87,7 @@ class SubmissionController extends Controller
 
     public function update(Request $request, Submission $submission): RedirectResponse
     {
-        $this->authorizeSchool($submission);
+        $this->ensureOwned($submission);
         $validated = $request->validate([
             'assignment_id' => 'required|exists:assignments,id',
             'student_id' => 'required|exists:students,id',
@@ -111,7 +111,7 @@ class SubmissionController extends Controller
 
     public function destroy(Submission $submission): RedirectResponse
     {
-        $this->authorizeSchool($submission);
+        $this->ensureOwned($submission);
         if ($submission->file_path && Storage::disk('public')->exists($submission->file_path)) {
             Storage::disk('public')->delete($submission->file_path);
         }
@@ -119,12 +119,5 @@ class SubmissionController extends Controller
         $submission->delete();
 
         return redirect()->route('submissions.index')->with('success', 'Submission deleted successfully.');
-    }
-
-    private function authorizeSchool(Submission $submission): void
-    {
-        if ((int) $submission->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
     }
 }

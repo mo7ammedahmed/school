@@ -19,19 +19,6 @@ class BilingualSchemaTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Tables that carry `*_ar` columns but have no Eloquent model yet, so the
-     * sweep cannot reach them.
-     *
-     * @var list<string>
-     */
-    private const array TABLES_WITHOUT_A_MODEL = [
-        'website_pages',
-        'website_sections',
-        'website_media',
-        'website_theme_presets',
-    ];
-
     public function test_every_configured_target_points_at_a_real_model_and_scope(): void
     {
         $targets = config('bilingual.targets');
@@ -60,7 +47,10 @@ class BilingualSchemaTest extends TestCase
                     method_exists($model, (string) $relation),
                     "Target \"{$label}\" scopes through the missing relation \"{$relation}\".",
                 );
-            } else {
+            } elseif (($target['scope'] ?? 'school_id') !== 'global') {
+                // `global` is the sweep's marker for a table that belongs to no
+                // school — theme presets are offered platform-wide and there is
+                // no column to filter on, so there is nothing to assert here.
                 $scope = $target['scope'] ?? 'school_id';
 
                 $this->assertTrue(
@@ -120,10 +110,6 @@ class BilingualSchemaTest extends TestCase
         foreach (Schema::getTableListing() as $listing) {
             // SQLite reports tables as "main.foo"; the registry uses "foo".
             $table = $this->bareTableName($listing);
-
-            if (in_array($table, self::TABLES_WITHOUT_A_MODEL, true)) {
-                continue;
-            }
 
             foreach (Schema::getColumns($listing) as $column) {
                 if (! str_ends_with($column['name'], '_ar')) {

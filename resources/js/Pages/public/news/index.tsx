@@ -9,11 +9,12 @@ import { useLocale } from '@/lib/i18n/locale-context';
 interface NewsArticle {
     id: number;
     title: string;
-    date: string;
+    /** The model appends `publish_date`; the column is `published_at`. */
+    publish_date: string | null;
     content: string;
     excerpt: string;
     category: string;
-    featured_image?: string;
+    featured_image_path?: string | null;
 }
 
 interface NewsIndexProps {
@@ -28,6 +29,16 @@ interface NewsIndexProps {
 
 export default function NewsIndex({ articles }: NewsIndexProps) {
     const { locale } = useLocale();
+    // `new Date(undefined)` is not a date: it printed "Invalid Date" on every
+    // card, because the pages read `date` and the payload carries `publish_date`.
+    const published = (date: string | null, loc: string) =>
+        date
+            ? new Date(date).toLocaleDateString(loc === 'ar' ? 'ar-SA' : 'en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+              })
+            : '';
 
     return (
         <PublicLayout>
@@ -46,21 +57,17 @@ export default function NewsIndex({ articles }: NewsIndexProps) {
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
                             {articles.data.map((article) => (
                                 <Card key={article.id} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
-                                    {article.featured_image && (
+                                    {article.featured_image_path && (
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <img
-                                                src={article.featured_image}
+                                                src={`/storage/${article.featured_image_path}`}
                                                 alt={article.title}
                                                 className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                             />
                                             <div className="absolute bottom-4 left-4">
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm text-gray-900">
                                                     <Calendar className="h-4 w-4" />
-                                                    {new Date(article.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                    })}
+                                                    {published(article.publish_date, locale)}
                                                 </span>
                                             </div>
                                         </div>
@@ -70,11 +77,7 @@ export default function NewsIndex({ articles }: NewsIndexProps) {
                                             <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                                                 {article.category}
                                             </span>
-                                            <span>{new Date(article.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })}</span>
+                                            <span>{published(article.publish_date, locale)}</span>
                                         </div>
                                         <CardTitle className="text-xl line-clamp-2">{article.title}</CardTitle>
                                     </CardHeader>

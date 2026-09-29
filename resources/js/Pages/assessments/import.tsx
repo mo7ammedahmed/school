@@ -4,6 +4,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -249,9 +250,8 @@ export default function AssessmentImport({ offerings, preview, defaults }: Impor
 
                             <div className="space-y-2">
                                 <Label htmlFor="document">Word document</Label>
-                                <Input
+                                <FileInput
                                     id="document"
-                                    type="file"
                                     accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                     onChange={onFile}
                                     required

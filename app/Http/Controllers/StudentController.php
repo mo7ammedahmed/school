@@ -12,11 +12,6 @@ use Inertia\Response;
 
 class StudentController extends Controller
 {
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
     public function index(): Response
     {
         $students = Student::where('school_id', $this->schoolId())

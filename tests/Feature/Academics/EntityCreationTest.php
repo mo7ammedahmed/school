@@ -7,10 +7,8 @@ namespace Tests\Feature\Academics;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Section;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
 use App\Models\Subject;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -188,21 +186,5 @@ class EntityCreationTest extends TestCase
             AcademicYear::factory()->create(['school_id' => $school->id]),
             GradeLevel::factory()->create(['school_id' => $school->id]),
         ];
-    }
-
-    private function actingAsSchoolUser(School $school): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

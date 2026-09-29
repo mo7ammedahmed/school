@@ -6,7 +6,6 @@ namespace Tests\Feature\Finance;
 
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Services\GatewaySettings;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\People\Models\Student;
@@ -222,21 +221,5 @@ class InvoiceDeliveryTest extends TestCase
             'balance_due' => 1150,
             'amount_paid' => 0,
         ]);
-    }
-
-    private function actingAsSchoolUser(School $school): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

@@ -3,11 +3,12 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function FinanceRefundsEdit({ refund }: { refund: { id: number; amount: number; reason: string; status: string } }) {
+export default function FinanceRefundsEdit({ refund }: { refund: { id: number; amount: number; reason: string | null; reason_ar: string | null; status: string } }) {
     return (
         <AppShell
             title="Edit Refund"
@@ -49,8 +50,15 @@ export default function FinanceRefundsEdit({ refund }: { refund: { id: number; a
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <Label htmlFor="reason">Reason</Label>
-                                <textarea id="reason" name="reason" className="input min-h-[100px]" required defaultValue={refund.reason} />
+                                <Label htmlFor="reason">Reason (English)</Label>
+                                <textarea id="reason" name="reason" className="input min-h-[100px]" defaultValue={refund.reason ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="reason_ar">Reason (Arabic)</Label>
+                                <textarea id="reason_ar" name="reason_ar" dir="rtl" className="input min-h-[100px]" defaultValue={refund.reason_ar ?? ''} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="reason" arId="reason_ar" />
                             </div>
                         </div>
 

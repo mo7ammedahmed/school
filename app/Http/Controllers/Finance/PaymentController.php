@@ -94,7 +94,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): InertiaResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         $payment->load('invoice.student');
 
@@ -105,7 +105,7 @@ class PaymentController extends Controller
 
     public function edit(Payment $payment): InertiaResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         return Inertia::render('finance/payments/edit', [
             'payment' => $payment,
@@ -116,7 +116,7 @@ class PaymentController extends Controller
 
     public function update(Request $request, Payment $payment): RedirectResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         $validated = $request->validate([
             'student_id' => ['required', 'integer', $this->studentRule()],
@@ -145,7 +145,7 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): RedirectResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         $payment->delete();
 
@@ -157,7 +157,7 @@ class PaymentController extends Controller
      */
     public function review(Payment $payment): InertiaResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         $payment->load('invoice');
 
@@ -174,7 +174,7 @@ class PaymentController extends Controller
      */
     public function confirm(Request $request, Payment $payment): RedirectResponse
     {
-        $this->authorizePayment($payment);
+        $this->ensureOwned($payment);
 
         $validated = $request->validate([
             'reference_number' => 'nullable|string|max:255',
@@ -226,7 +226,8 @@ class PaymentController extends Controller
         return Student::query()
             ->where('school_id', $this->schoolId())
             ->orderBy('first_name')
-            ->get(['id', 'first_name', 'last_name', 'student_number']);
+            ->orderBy('last_name')
+            ->get(['id', 'first_name', 'last_name', 'student_id_number']);
     }
 
     private function studentRule(): Exists
@@ -237,19 +238,5 @@ class PaymentController extends Controller
     private function invoiceRule(): Exists
     {
         return Rule::exists('invoices', 'id')->where('school_id', $this->schoolId());
-    }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
-
-        return $schoolId;
-    }
-
-    private function authorizePayment(Payment $payment): void
-    {
-        abort_unless((int) $payment->school_id === $this->schoolId(), 403);
     }
 }

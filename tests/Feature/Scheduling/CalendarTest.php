@@ -6,13 +6,10 @@ namespace Tests\Feature\Scheduling;
 
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Semester;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Scheduling\Models\CalendarDay;
 use App\Domain\Schools\Models\School;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class CalendarTest extends TestCase
@@ -288,27 +285,4 @@ class CalendarTest extends TestCase
     /**
      * @param  list<string>  $permissions
      */
-    private function actingAsSchoolUser(School $school, array $permissions = []): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        if ($permissions !== []) {
-            $user->givePermissionTo($permissions);
-        }
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
-    }
 }

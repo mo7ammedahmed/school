@@ -28,8 +28,12 @@ use App\Domain\Content\Models\Event;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\News;
 use App\Domain\Content\Models\StaffProfile;
+use App\Domain\Content\Models\WebsiteMedia;
 use App\Domain\Content\Models\WebsiteNavigationItem;
 use App\Domain\Content\Models\WebsiteNavigationMenu;
+use App\Domain\Content\Models\WebsitePage;
+use App\Domain\Content\Models\WebsiteSection;
+use App\Domain\Content\Models\WebsiteThemePreset;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Finance\Models\Discount;
@@ -80,9 +84,9 @@ return [
     | BilingualSchemaTest.php` fails if an entry names a column that does not
     | exist, so the list cannot drift from the schema.
     |
-    | Not listed: the website_pages, website_sections, website_media and
-    | website_theme_presets tables have `*_ar` columns but no model yet, so they
-    | are out of reach of the automatic sweep until one is added.
+    | `scope` => 'global' marks a table that belongs to no school — the website
+    | theme presets are offered platform-wide, so there is nothing to filter by
+    | and the sweep reads every row.
     |
     */
 
@@ -358,6 +362,52 @@ return [
             'model' => SchoolNavigationLabel::class,
             'scope' => 'school_id',
             'pairs' => [['en' => 'name_en', 'ar' => 'name_ar']],
+        ],
+
+        // ------------------------------------------------------------------
+        // Website builder
+        // ------------------------------------------------------------------
+
+        [
+            'label' => 'Website pages',
+            'model' => WebsitePage::class,
+            'scope' => 'school_id',
+            'pairs' => [
+                ['en' => 'title', 'ar' => 'title_ar'],
+                ['en' => 'description', 'ar' => 'description_ar'],
+            ],
+        ],
+
+        [
+            'label' => 'Website sections',
+            'model' => WebsiteSection::class,
+            'scope' => 'school_id',
+            'pairs' => [
+                ['en' => 'name', 'ar' => 'name_ar'],
+                ['en' => 'content', 'ar' => 'content_ar'],
+            ],
+        ],
+
+        [
+            'label' => 'Website media',
+            'model' => WebsiteMedia::class,
+            'scope' => 'school_id',
+            'pairs' => [
+                ['en' => 'name', 'ar' => 'name_ar'],
+                ['en' => 'alt_text', 'ar' => 'alt_text_ar'],
+                ['en' => 'caption', 'ar' => 'caption_ar'],
+            ],
+        ],
+
+        [
+            'label' => 'Website theme presets',
+            'model' => WebsiteThemePreset::class,
+            // Offered platform-wide: no school column to filter by.
+            'scope' => 'global',
+            'pairs' => [
+                ['en' => 'name', 'ar' => 'name_ar'],
+                ['en' => 'description', 'ar' => 'description_ar'],
+            ],
         ],
 
         // ------------------------------------------------------------------

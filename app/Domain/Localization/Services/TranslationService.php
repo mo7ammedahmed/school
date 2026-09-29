@@ -55,7 +55,29 @@ class TranslationService
             return $cached;
         }
 
-        $translated = $this->translator->translate($text, $from, $to, $settings);
+        $rateLimitKey = 'translation:rate-limit:'.hash('sha256', implode('|', [
+            $settings->provider()->value,
+            $settings->model(),
+            $settings->baseUrl(),
+            hash('sha256', (string) $settings->apiKey()),
+        ]));
+
+        if (Cache::get($rateLimitKey)) {
+            throw TranslationFailed::requestFailed(
+                'The translation provider rate limit was reached (HTTP 429). Wait before retrying or check your provider quota.',
+                429,
+            );
+        }
+
+        try {
+            $translated = $this->translator->translate($text, $from, $to, $settings);
+        } catch (TranslationFailed $failure) {
+            if ($failure->statusCode === 429) {
+                Cache::put($rateLimitKey, true, now()->addSeconds(60));
+            }
+
+            throw $failure;
+        }
 
         Cache::put($key, $translated, now()->addDays($this->cacheDays()));
 
@@ -77,8 +99,7 @@ class TranslationService
         string $to,
         School|int|null $school = null,
         ?int &$failureStatus = null,
-    ): ?string
-    {
+    ): ?string {
         try {
             $translated = $this->translate($text, $from, $to, $school);
 

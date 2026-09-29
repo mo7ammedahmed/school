@@ -31,7 +31,8 @@ const FOOTER_COLUMNS: { heading: CopyKey; links: { key: CopyKey; href: string }[
             { key: 'public.about', href: '/about' },
             { key: 'public.programs', href: '/programs' },
             { key: 'public.facilities', href: '/facilities' },
-            { key: 'public.teachers', href: '/teachers' },
+            // `/teachers` is the dashboard's teacher resource; see routes/web.php.
+            { key: 'public.teachers', href: '/faculty' },
         ],
     },
     {
@@ -234,7 +235,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                         menuOpen ? 'max-h-128 opacity-100' : 'max-h-0 border-b-0 opacity-0'
                     )}
                 >
-                    <nav className="space-y-1 px-4 py-4" aria-label="Mobile navigation">
+                    <nav className="space-y-1 px-4 py-4" aria-label={t(locale, 'a11y.mobileNavigation')}>
                         {NAV_LINKS.map((link) => (
                             <Link
                                 key={link.key}

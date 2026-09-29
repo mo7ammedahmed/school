@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Admissions\Models\AdmissionPeriod;
+use App\Domain\Schools\Services\SchoolResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class AdmissionsController
 {
+    public function __construct(private readonly SchoolResolver $schools) {}
+
     public function apply(): Response
     {
         return Inertia::render('apply');
@@ -130,14 +133,22 @@ class AdmissionsController
 
     public function index(): Response
     {
-        $periods = AdmissionPeriod::where('is_active', true)
-            ->where('school_id', session('school_id'))
-            ->orderBy('start_date')
-            ->get(['id', 'name', 'description', 'start_date', 'end_date', 'grade_levels']);
+        // `name` is an appended accessor on both models below, not a column: a
+        // select list asking for it filled every row with the literal "name".
+        // A period covers no particular grades — there is no column for it, and
+        // no admin field to set one — so the page no longer claims otherwise.
+        // A guest has no school in the session, so the site's own school comes
+        // from the resolver; `session('school_id')` was null and matched nothing.
+        $schoolId = $this->schools->current()?->id;
 
-        $gradeLevels = GradeLevel::where('school_id', session('school_id'))
+        $periods = AdmissionPeriod::where('is_active', true)
+            ->where('school_id', $schoolId)
+            ->orderBy('start_date')
+            ->get(['id', 'name', 'description', 'start_date', 'end_date']);
+
+        $gradeLevels = GradeLevel::where('school_id', $schoolId)
             ->orderBy('level')
-            ->get(['id', 'name', 'level']);
+            ->get(['id', 'name_en', 'name_ar', 'level']);
 
         return Inertia::render('public/admissions', [
             'periods' => $periods,

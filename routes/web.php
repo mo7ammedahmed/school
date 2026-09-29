@@ -61,6 +61,7 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\SaveTranslatedFieldController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\SemesterController;
@@ -69,6 +70,7 @@ use App\Http\Controllers\Settings\AppearanceSettingsController;
 use App\Http\Controllers\Settings\AttendanceSettingsController;
 use App\Http\Controllers\Settings\EmailSettingsController;
 use App\Http\Controllers\Settings\GradingSettingsController;
+use App\Http\Controllers\Settings\InterfaceTranslationController;
 use App\Http\Controllers\Settings\LocalizationSettingsController;
 use App\Http\Controllers\Settings\NavigationSettingsController;
 use App\Http\Controllers\Settings\NotificationSettingsController;
@@ -83,7 +85,6 @@ use App\Http\Controllers\Settings\SecuritySettingsController;
 use App\Http\Controllers\Settings\SmsSettingsController;
 use App\Http\Controllers\Settings\ThemeSettingsController;
 use App\Http\Controllers\Settings\TranslationSettingsController;
-use App\Http\Controllers\Settings\InterfaceTranslationController;
 use App\Http\Controllers\Student\PortalController as StudentPortalController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
@@ -91,7 +92,6 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TranslateController;
-use App\Http\Controllers\SaveTranslatedFieldController;
 use App\Http\Controllers\UiCopyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
@@ -107,8 +107,13 @@ Route::get('/programs', [ProgramsController::class, 'index'])->name('public.prog
 Route::get('/programs/{program}', [ProgramsController::class, 'show'])->name('public.programs.show');
 Route::get('/admissions', [PublicAdmissionsController::class, 'index'])->name('public.admissions');
 Route::get('/facilities', [FacilitiesController::class, 'index'])->name('public.facilities');
-Route::get('/teachers', [TeachersController::class, 'index'])->name('public.teachers');
-Route::get('/teachers/{teacher}', [TeachersController::class, 'show'])->name('public.teachers.show');
+// The teaching staff live at /faculty, not /teachers: the dashboard's teacher
+// resource claims /teachers, and a route registered later replaces an earlier one
+// with the same method and URI — so the public page was never reachable and the
+// site's own nav sent visitors to the login screen. The route names stay
+// `public.teachers` because that is what names the page in <head>.
+Route::get('/faculty', [TeachersController::class, 'index'])->name('public.teachers');
+Route::get('/faculty/{teacher}', [TeachersController::class, 'show'])->name('public.teachers.show');
 Route::get('/news', [PublicNewsController::class, 'index'])->name('news.index');
 Route::get('/news/{post}', [PublicNewsController::class, 'show'])->name('news.show');
 Route::get('/events', [PublicEventsController::class, 'index'])->name('events.index');
@@ -197,6 +202,12 @@ Route::middleware(['auth', 'school.context'])
 Route::middleware(['auth', 'school.context'])
     ->get('/ui/copy/version', [UiCopyController::class, 'version'])
     ->name('ui.copy.version');
+
+// The dictionary in one piece. Free to serve — it reads the catalog and never
+// calls the provider — so a page that arrived without it can still paint Arabic.
+Route::middleware(['auth', 'school.context'])
+    ->get('/ui/copy/catalog', [UiCopyController::class, 'catalog'])
+    ->name('ui.copy.catalog');
 
 Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(function () {
     // Dashboard
@@ -352,10 +363,17 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
 
     // Content management (admin)
+    //
+    // Named `content.*` on purpose. A resource takes its name from the last URI
+    // segment, so these three were registered as `pages.*`, `news.*` and
+    // `events.*` — which collided with the public site's `news.*` and
+    // `events.*` routes and left the controllers asking for `content.news.show`
+    // and `content.events.show`, routes that did not exist: creating, updating
+    // or deleting an article or an event saved the row and then answered 500.
     Route::middleware('permission:manage-content|manage-content-pages')->group(function () {
-        Route::resource('content/pages', ContentPageController::class)->except(['show']);
-        Route::resource('content/news', NewsController::class);
-        Route::resource('content/events', EventController::class);
+        Route::resource('content/pages', ContentPageController::class)->except(['show'])->names('content.pages');
+        Route::resource('content/news', NewsController::class)->names('content.news');
+        Route::resource('content/events', EventController::class)->names('content.events');
     });
 
     // Reports

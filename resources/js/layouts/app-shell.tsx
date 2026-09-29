@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useId, useLayoutEffect, useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { t, type CopyKey } from '@/lib/i18n/copy';
+import { roleLabel, t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { translateInterfaceCopy } from '@/lib/i18n/ui-copy';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
@@ -398,8 +398,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                             {auth.user?.name}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
-                            {userRoles[0]?.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') ||
-                                auth.user?.email}
+                            {roleLabel(locale, userRoles[0]) || auth.user?.email}
                         </p>
                     </div>
                     <Button
@@ -427,10 +426,13 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
     const canSettings = userRoles.some((r) => ['school_admin', 'super_admin'].includes(r));
     const [drawerOpen, setDrawerOpen] = useState(false);
 
-    // The screens themselves are written in English. Shared super-admin
-    // translations take precedence; the school's provider fills any remaining
-    // visible interface copy.
-    useLayoutEffect(() => translateInterfaceCopy(locale), [locale]);
+    // The screens themselves are written in English. The shared catalog is
+    // painted before the first frame — it arrives with the page — and the
+    // school's provider is asked afterwards, once, for anything still unseen.
+    const uiCopy = page.props.uiCopy ?? null;
+    const catalogVersion = uiCopy?.version ?? null;
+
+    useLayoutEffect(() => translateInterfaceCopy(locale, uiCopy), [locale, catalogVersion]);
 
     useEffect(() => {
         setDrawerOpen(false);
@@ -456,14 +458,14 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                     <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
                         <button
                             type="button"
-                            aria-label="Close menu"
+                            aria-label={t(locale, 'a11y.closeMenu')}
                             className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px]"
                             onClick={() => setDrawerOpen(false)}
                         />
                         <div className="absolute inset-y-0 start-0 w-[80vw] max-w-[24rem] bg-card shadow-[var(--shadow-panel)]">
                             <button
                                 type="button"
-                                aria-label="Close menu"
+                                aria-label={t(locale, 'a11y.closeMenu')}
                                 onClick={() => setDrawerOpen(false)}
                                 className="absolute end-3 top-4 flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                             >
@@ -550,7 +552,7 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                             {breadcrumbs && breadcrumbs.length > 0 && (
                                 <nav
                                     className="mb-5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
-                                    aria-label="Breadcrumb"
+                                    aria-label={t(locale, 'a11y.breadcrumb')}
                                 >
                                     {breadcrumbs.map((crumb, index) => (
                                         <span key={index} className="flex items-center gap-1.5">

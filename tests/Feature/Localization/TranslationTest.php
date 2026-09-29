@@ -6,17 +6,15 @@ namespace Tests\Feature\Localization;
 
 use App\Domain\Academics\Models\Subject;
 use App\Domain\Content\Models\Event;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Localization\Observers\FillsMissingTranslations;
 use App\Domain\Localization\Services\TranslationService;
 use App\Domain\Localization\Services\TranslationSettings;
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
 use App\Models\Announcement;
-use App\Models\User;
+use App\Models\GradeLevel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class TranslationTest extends TestCase
@@ -56,7 +54,7 @@ class TranslationTest extends TestCase
     {
         $school = School::factory()->create();
         $this->actingAsSchoolUser($school, ['manage-grade-levels']);
-        $gradeLevel = \App\Models\GradeLevel::create([
+        $gradeLevel = GradeLevel::create([
             'school_id' => $school->id,
             'name_en' => 'Grade One',
             'name_ar' => null,
@@ -84,7 +82,7 @@ class TranslationTest extends TestCase
         $school = School::factory()->create();
         $otherSchool = School::factory()->create();
         $this->actingAsSchoolUser($school, ['manage-grade-levels']);
-        $gradeLevel = \App\Models\GradeLevel::create([
+        $gradeLevel = GradeLevel::create([
             'school_id' => $otherSchool->id,
             'name_en' => 'Grade One',
             'name_ar' => null,
@@ -771,6 +769,10 @@ class TranslationTest extends TestCase
                 'The translation service could not be reached: The translation provider rate limit was reached (HTTP 429). Wait before trying again or check your provider quota.',
             );
 
+        $this->postJson('/settings/translations/backfill')
+            ->assertStatus(422)
+            ->assertJsonPath('totals.failed', 1);
+
         // A provider rate limit is not retried for the remaining values.
         Http::assertSentCount(1);
     }
@@ -1160,29 +1162,5 @@ class TranslationTest extends TestCase
                 'choices' => [['message' => ['content' => $translated]]],
             ]),
         ]);
-    }
-
-    private function actingAsSchoolUser(School $school, array $permissions = []): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        if ($permissions !== []) {
-            $user->givePermissionTo($permissions);
-        }
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

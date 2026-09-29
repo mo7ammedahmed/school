@@ -9,11 +9,12 @@ import { useLocale } from '@/lib/i18n/locale-context';
 interface NewsArticle {
     id: number;
     title: string;
-    date: string;
+    /** The model appends `publish_date`; the column is `published_at`. */
+    publish_date: string | null;
     content: string;
     excerpt: string;
     category: string;
-    featured_image?: string;
+    featured_image_path?: string | null;
 }
 
 interface NewsShowProps {
@@ -22,6 +23,15 @@ interface NewsShowProps {
 
 export default function NewsShow({ article }: NewsShowProps) {
     const { locale } = useLocale();
+    // `new Date(undefined)` is not a date: it printed "Invalid Date", because
+    // the page read `date` and the payload carries `publish_date`.
+    const published = article.publish_date
+        ? new Date(article.publish_date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : '';
 
     return (
         <PublicLayout>
@@ -36,21 +46,17 @@ export default function NewsShow({ article }: NewsShowProps) {
                         </Button>
 
                         <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 overflow-hidden">
-                            {article.featured_image && (
+                            {article.featured_image_path && (
                                 <div className="relative h-64 w-full overflow-hidden sm:h-80">
                                     <img
-                                        src={article.featured_image}
+                                        src={`/storage/${article.featured_image_path}`}
                                         alt={article.title}
                                         className="h-full w-full object-cover"
                                     />
                                     <div className="absolute bottom-4 left-4">
                                         <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm text-gray-900">
                                             <Calendar className="h-4 w-4" />
-                                            {new Date(article.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })}
+                                            {published}
                                         </span>
                                     </div>
                                 </div>
@@ -60,11 +66,7 @@ export default function NewsShow({ article }: NewsShowProps) {
                                     <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                                         {article.category}
                                     </span>
-                                    <span>{new Date(article.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                    })}</span>
+                                    <span>{published}</span>
                                 </div>
                                 <CardTitle className="text-3xl md:text-4xl">{article.title}</CardTitle>
                             </CardHeader>

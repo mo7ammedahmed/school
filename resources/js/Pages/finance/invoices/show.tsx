@@ -23,7 +23,7 @@ type Invoice = {
     currency: string;
     status: string;
     notes: string | null;
-    student?: { first_name: string; last_name: string; student_number?: string } | null;
+    student?: { first_name: string; last_name: string; name?: string; student_id_number?: string | null } | null;
     lines?: { id: number; description: string; quantity: number; amount: number }[];
     payments?: { id: number; amount: number; payment_method: string; status: string; payment_date: string }[];
 };
@@ -96,7 +96,7 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                 title={`Invoice ${invoice.invoice_number}`}
                 description={
                     invoice.student
-                        ? `${invoice.student.first_name} ${invoice.student.last_name}`
+                        ? (invoice.student.name ?? `${invoice.student.first_name} ${invoice.student.last_name}`)
                         : 'Invoice details'
                 }
                 actions={
@@ -149,7 +149,8 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                                 </Field>
                                 <Field label="Student">
                                     {invoice.student
-                                        ? `${invoice.student.first_name} ${invoice.student.last_name}`
+                                        ? (invoice.student.name ??
+                                          `${invoice.student.first_name} ${invoice.student.last_name}`)
                                         : '—'}
                                 </Field>
                                 <Field label="Issue date">{invoice.issue_date ?? '—'}</Field>

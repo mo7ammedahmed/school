@@ -9,13 +9,11 @@ use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\CalendarDay;
 use App\Domain\Scheduling\Models\Room;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -98,7 +96,7 @@ class TimetableCalendarTest extends TestCase
             'is_published' => true,
         ]);
 
-        $this->actingAsSchoolUser();
+        $this->actingAsSchoolUser($this->school);
     }
 
     public function test_lessons_are_projected_onto_each_matching_weekday(): void
@@ -201,21 +199,5 @@ class TimetableCalendarTest extends TestCase
         $nextSunday = $cells->firstWhere('date', '2026-09-20');
         $this->assertNull($nextSunday['closure']);
         $this->assertCount(1, $nextSunday['lessons']);
-    }
-
-    private function actingAsSchoolUser(): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $this->school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $this->school->id);
-
-        return $user;
     }
 }

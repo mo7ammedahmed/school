@@ -9,12 +9,13 @@ import { useLocale } from '@/lib/i18n/locale-context';
 interface Event {
     id: number;
     title: string;
-    date: string;
-    time: string;
+    /** Appended display names for `start_date`; `start_time` reads its clock. */
+    event_date: string | null;
+    start_time: string | null;
     location: string;
     description: string;
-    category: string;
-    featured_image?: string;
+    event_type: string | null;
+    featured_image_path?: string | null;
 }
 
 interface EventsShowProps {
@@ -23,6 +24,15 @@ interface EventsShowProps {
 
 export default function EventsShow({ event }: EventsShowProps) {
     const { locale } = useLocale();
+    // The page read `date`, `time` and `category`; the payload carries
+    // `event_date`, `start_time` and `event_type`.
+    const when = event.event_date
+        ? new Date(event.event_date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+          })
+        : '';
 
     return (
         <PublicLayout>
@@ -38,10 +48,10 @@ export default function EventsShow({ event }: EventsShowProps) {
 
                         <div className="grid gap-6 lg:grid-cols-3">
                             <Card className="lg:col-span-2 border-0 shadow-lg bg-gray-50 dark:bg-gray-800">
-                                {event.featured_image && (
+                                {event.featured_image_path && (
                                     <div className="relative h-64 w-full overflow-hidden rounded-t-lg">
                                         <img
-                                            src={event.featured_image}
+                                            src={`/storage/${event.featured_image_path}`}
                                             alt={event.title}
                                             className="h-full w-full object-cover"
                                         />
@@ -50,7 +60,7 @@ export default function EventsShow({ event }: EventsShowProps) {
                                 <CardHeader>
                                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                         <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                            {event.category}
+                                            {event.event_type}
                                         </span>
                                     </div>
                                     <CardTitle className="text-3xl md:text-4xl">{event.title}</CardTitle>
@@ -71,18 +81,14 @@ export default function EventsShow({ event }: EventsShowProps) {
                                         <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white">{t(locale, 'public.date')}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                            })}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{when}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
                                         <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white">{t(locale, 'public.time')}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">{event.time}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{event.start_time}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
@@ -96,7 +102,7 @@ export default function EventsShow({ event }: EventsShowProps) {
                                         <div className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30" />
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white">{t(locale, 'public.category')}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">{event.category}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">{event.event_type}</p>
                                         </div>
                                     </div>
                                 </CardContent>

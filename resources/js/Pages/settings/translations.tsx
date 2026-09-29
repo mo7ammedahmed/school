@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react';
-import { router, useForm } from '@inertiajs/react';
+import { useMemo, useState, type FormEvent } from 'react';
+import { useForm } from '@inertiajs/react';
+import { postJson, useTranslationSweep } from '@/lib/translation-sweep';
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Languages, PlugZap, RefreshCw, Sparkles, Trash2, Wand2 } from 'lucide-react';
+import { Languages, PlugZap, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
+import { InterfaceCopyPanel, type InterfaceTranslations } from '@/components/settings/interface-copy-panel';
 
 type Provider = {
     value: string;
@@ -47,123 +49,8 @@ type Props = {
     endpoint: string;
     envKeyConfigured: boolean;
     canManageInterfaceCopy: boolean;
-    interfaceTranslations: {
-        data: Array<{ id: number; english: string; arabic: string; updated_at: string }>;
-        links: Array<{ url: string | null; label: string; active: boolean }>;
-    } | null;
+    interfaceTranslations: InterfaceTranslations | null;
 };
-
-type BackfillTotals = {
-    scanned: number;
-    missing: number;
-    translated: number;
-    failed: number;
-    remaining: number;
-    en_to_ar: number;
-    ar_to_en: number;
-};
-
-type BackfillTarget = {
-    label: string;
-    scanned: number;
-    missing: number;
-    translated: number;
-    failed: number;
-    /** What the server says is still empty after the scan it just made. */
-    remaining: number;
-    en_to_ar: number;
-    ar_to_en: number;
-};
-
-/** One table's contribution to the run, summed over every batch. */
-type BackfillAdded = {
-    label: string;
-    intoArabic: number;
-    intoEnglish: number;
-};
-
-type BackfillReport = {
-    ok: boolean;
-    message: string;
-    error: string | null;
-    /** The last scan, so "left" is measured after the run rather than before it. */
-    targets: BackfillTarget[];
-    /** What the run actually added, per table, in both directions. */
-    added: BackfillAdded[];
-};
-
-const EMPTY_TOTALS: BackfillTotals = {
-    scanned: 0,
-    missing: 0,
-    translated: 0,
-    failed: 0,
-    remaining: 0,
-    en_to_ar: 0,
-    ar_to_en: 0,
-};
-
-/**
- * How many values one request translates.
- *
- * Every value is its own provider call, so a whole-school sweep in a single
- * request could run for many minutes and left the screen stuck on
- * "Translating…". The run is therefore walked in small batches, each one short
- * enough to finish comfortably, with the progress reported between them.
- */
-const BACKFILL_BATCH = 10;
-
-/** POST helper for the JSON actions on this screen. */
-async function postJson(
-    url: string,
-    body?: Record<string, unknown>,
-    signal?: AbortSignal,
-): Promise<{ ok: boolean; status: number; payload: Record<string, unknown> }> {
-    const token = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '';
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': token,
-        },
-        body: body ? JSON.stringify(body) : undefined,
-        credentials: 'same-origin',
-        signal,
-    });
-
-    const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-
-    return { ok: response.ok, status: response.status, payload };
-}
-
-/** Totals as the server reports them, with every key present. */
-function totalsFrom(payload: Record<string, unknown>): BackfillTotals {
-    return { ...EMPTY_TOTALS, ...((payload.totals ?? {}) as Partial<BackfillTotals>) };
-}
-
-function targetsFrom(payload: Record<string, unknown>): BackfillTarget[] {
-    return (Array.isArray(payload.targets) ? (payload.targets as BackfillTarget[]) : []).map((target) => ({
-        ...target,
-        // Older payloads have no `remaining`; the difference is the same number.
-        remaining: target.remaining ?? Math.max(0, target.missing - target.translated - target.failed),
-    }));
-}
-
-/** Adds one payload's per-table counts onto the running totals for the run. */
-function accumulate(
-    added: Map<string, BackfillAdded>,
-    targets: BackfillTarget[],
-): void {
-    for (const target of targets) {
-        const entry = added.get(target.label) ?? { label: target.label, intoArabic: 0, intoEnglish: 0 };
-
-        entry.intoArabic += target.en_to_ar;
-        entry.intoEnglish += target.ar_to_en;
-        added.set(target.label, entry);
-    }
-}
 
 export default function TranslationSettingsPage({
     settings,
@@ -184,20 +71,14 @@ export default function TranslationSettingsPage({
         api_key: '',
         clear_api_key: false,
     });
-    const interfaceCopyForm = useForm({ english: '', arabic: '' });
-
     const [testing, setTesting] = useState(false);
     const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
     const [loadingModels, setLoadingModels] = useState(false);
     const [liveModels, setLiveModels] = useState<string[] | null>(null);
     const [modelsError, setModelsError] = useState<string | null>(null);
-    const [backfilling, setBackfilling] = useState(false);
-    const [report, setReport] = useState<BackfillReport | null>(null);
-    const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-    const abortBackfill = useRef<AbortController | null>(null);
-    // A ref, not state: the guard has to be correct on the very first click,
-    // before React has re-rendered the button into its "stop" shape.
-    const running = useRef(false);
+    // The batched sweep and its report live in a hook: the run's clock, its
+    // abort handling and the wording of its report are not layout.
+    const { backfilling, report, progress, run: runBackfill } = useTranslationSweep();
 
     const activeProvider = providers.find((p) => p.value === form.data.provider) ?? providers[0];
     const keyState = settings.providers_with_keys?.[form.data.provider] ?? {
@@ -248,18 +129,6 @@ export default function TranslationSettingsPage({
         form.post('/settings/translations', { preserveScroll: true });
     };
 
-    const submitInterfaceCopy = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        interfaceCopyForm.post('/settings/translations/interface-copy', {
-            preserveScroll: true,
-            onSuccess: () => interfaceCopyForm.reset(),
-        });
-    };
-
-    const removeInterfaceCopy = (id: number) => {
-        router.delete(`/settings/translations/interface-copy/${id}`, { preserveScroll: true });
-    };
-
     const testConnection = async () => {
         setTesting(true);
         setTestResult(null);
@@ -296,149 +165,6 @@ export default function TranslationSettingsPage({
             setModelsError('Could not reach the server.');
         } finally {
             setLoadingModels(false);
-        }
-    };
-
-    const stopBackfill = () => {
-        abortBackfill.current?.abort();
-    };
-
-    /**
-     * Walks every bilingual table and fills whichever side is empty — Arabic
-     * from English and English from Arabic — in batches, reporting progress as
-     * it goes so a long sweep never looks frozen.
-     */
-    const runBackfill = async () => {
-        // While a sweep is in flight the button becomes "stop" rather than
-        // starting a second run that would fight the first over the same rows.
-        if (running.current) {
-            stopBackfill();
-            return;
-        }
-
-        running.current = true;
-
-        const controller = new AbortController();
-        abortBackfill.current = controller;
-
-        setBackfilling(true);
-        setReport(null);
-        setProgress(null);
-
-        const url = '/settings/translations/backfill';
-        let translated = 0;
-        let failed = 0;
-        let enToAr = 0;
-        let arToEn = 0;
-        let backlog = 0;
-        let targets: BackfillTarget[] = [];
-        let serverError: string | null = null;
-        // Every request re-scans from the top, so the per-table numbers in a
-        // single response only describe that batch. Summing them over the run is
-        // what lets the report say what the run added, per table and direction.
-        const added = new Map<string, BackfillAdded>();
-        const addedList = (): BackfillAdded[] =>
-            [...added.values()].filter((entry) => entry.intoArabic + entry.intoEnglish > 0);
-
-        try {
-            // A scan costs nothing: it counts what is missing without calling
-            // the provider, so progress can be measured against a real total.
-            const scan = await postJson(url, { limit: 0 }, controller.signal);
-
-            if (!scan.ok) {
-                setReport({
-                    ok: false,
-                    message: String(scan.payload.message ?? 'Could not scan for missing translations.'),
-                    error: typeof scan.payload.error === 'string' ? scan.payload.error : null,
-                    targets: [],
-                    added: [],
-                });
-                return;
-            }
-
-            backlog = totalsFrom(scan.payload).missing;
-            targets = targetsFrom(scan.payload);
-            setProgress({ done: 0, total: backlog });
-
-            // Each batch keeps going while it is making progress; a batch that
-            // translates nothing means the provider is refusing, so stop rather
-            // than loop forever on the same value. The ceiling is generous
-            // because the server also stops on its own clock, which can return
-            // fewer values than were asked for.
-            const attempts = backlog + 20;
-
-            for (let round = 0; round < attempts; round++) {
-                if (backlog - translated - failed <= 0) break;
-
-                const step = await postJson(url, { limit: BACKFILL_BATCH }, controller.signal);
-                const totals = totalsFrom(step.payload);
-
-                if (!step.ok) {
-                    serverError = String(step.payload.error ?? step.payload.message ?? 'The last batch failed.');
-                    targets = targetsFrom(step.payload);
-                    failed += totals.failed;
-                    break;
-                }
-
-                translated += totals.translated;
-                failed += totals.failed;
-                enToAr += totals.en_to_ar;
-                arToEn += totals.ar_to_en;
-                targets = targetsFrom(step.payload);
-                accumulate(added, targets);
-                serverError = typeof step.payload.error === 'string' ? step.payload.error : null;
-
-                setProgress({ done: translated, total: backlog });
-
-                if (step.payload.done === true) break;
-
-                // Nothing translated and something failed: the provider is
-                // unhappy, so hand the decision back to the operator.
-                if (totals.translated === 0) {
-                    serverError ??= 'The translation service did not answer for the values it tried. Check the key, model and provider.';
-                    break;
-                }
-            }
-
-            const remaining = Math.max(0, backlog - translated - failed);
-            const directions: string[] = [];
-            if (enToAr > 0) directions.push(`${enToAr} into Arabic`);
-            if (arToEn > 0) directions.push(`${arToEn} into English`);
-            const directionText = directions.length > 0 ? ` (${directions.join(', ')})` : '';
-
-            setProgress({ done: translated, total: backlog });
-
-            setReport({
-                ok: serverError === null && remaining === 0,
-                message:
-                    backlog === 0
-                        ? 'Nothing was missing — every record already has both Arabic and English.'
-                        : serverError !== null
-                          ? `Translated ${translated} of ${backlog}${directionText} before stopping.`
-                          : remaining === 0
-                            ? `Done — translated ${translated} of ${backlog} missing values${directionText}.`
-                            : `Translated ${translated} of ${backlog}${directionText}. ${remaining} left — press again to continue.`,
-                error: serverError,
-                targets,
-                added: addedList(),
-            });
-        } catch (error) {
-            const aborted = error instanceof DOMException && error.name === 'AbortError';
-            const remaining = Math.max(0, backlog - translated - failed);
-
-            setReport({
-                ok: false,
-                message: aborted
-                    ? `Stopped. Translated ${translated} of ${backlog}; ${remaining} left.`
-                    : 'Could not reach the server. Nothing else was changed.',
-                error: aborted ? null : 'The request to the translation service did not complete.',
-                targets,
-                added: addedList(),
-            });
-        } finally {
-            running.current = false;
-            abortBackfill.current = null;
-            setBackfilling(false);
         }
     };
 
@@ -905,99 +631,9 @@ export default function TranslationSettingsPage({
                 </div>
             </div>
             {canManageInterfaceCopy && interfaceTranslations && (
-                <Card className="mt-6">
-                    <CardHeader>
-                        <CardTitle>Shared Arabic interface translations</CardTitle>
-                        <CardDescription>
-                            These translations are shared across every school and user. They override automatic
-                            translations throughout the system.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                        <form onSubmit={submitInterfaceCopy} className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="interface-english">English interface text</Label>
-                                <Input
-                                    id="interface-english"
-                                    value={interfaceCopyForm.data.english}
-                                    onChange={(event) => interfaceCopyForm.setData('english', event.target.value)}
-                                    maxLength={300}
-                                    required
-                                />
-                                {interfaceCopyForm.errors.english && (
-                                    <p className="text-xs text-destructive">{interfaceCopyForm.errors.english}</p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="interface-arabic">Arabic translation</Label>
-                                <textarea
-                                    id="interface-arabic"
-                                    dir="rtl"
-                                    className="input min-h-10 w-full"
-                                    value={interfaceCopyForm.data.arabic}
-                                    onChange={(event) => interfaceCopyForm.setData('arabic', event.target.value)}
-                                    maxLength={5000}
-                                    required
-                                />
-                                {interfaceCopyForm.errors.arabic && (
-                                    <p className="text-xs text-destructive">{interfaceCopyForm.errors.arabic}</p>
-                                )}
-                            </div>
-                            <div className="md:col-span-2">
-                                <Button type="submit" disabled={interfaceCopyForm.processing}>
-                                    {interfaceCopyForm.processing ? 'Saving…' : 'Save shared translation'}
-                                </Button>
-                            </div>
-                        </form>
-
-                        <div className="divide-y rounded-md border">
-                            {interfaceTranslations.data.map((entry) => (
-                                <div key={entry.id} className="grid gap-3 p-3 md:grid-cols-[1fr_1fr_auto] md:items-center">
-                                    <p className="break-words text-sm">{entry.english}</p>
-                                    <p dir="rtl" className="break-words text-sm text-muted-foreground">
-                                        {entry.arabic}
-                                    </p>
-                                    <div className="flex items-center gap-2 md:justify-end">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => interfaceCopyForm.setData({ english: entry.english, arabic: entry.arabic })}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            aria-label={`Delete translation for ${entry.english}`}
-                                            onClick={() => removeInterfaceCopy(entry.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                            {interfaceTranslations.data.length === 0 && (
-                                <p className="p-4 text-sm text-muted-foreground">No shared translations yet.</p>
-                            )}
-                        </div>
-
-                        {interfaceTranslations.links.length > 3 && (
-                            <nav className="flex flex-wrap gap-2" aria-label="Shared translation pages">
-                                {interfaceTranslations.links.map((link) => (
-                                    <Button
-                                        key={link.label}
-                                        type="button"
-                                        variant={link.active ? 'default' : 'outline'}
-                                        disabled={!link.url}
-                                        onClick={() => link.url && router.get(link.url, {}, { preserveScroll: true })}
-                                    >
-                                        {link.label.replace(/&amp;/g, '&')}
-                                    </Button>
-                                ))}
-                            </nav>
-                        )}
-                    </CardContent>
-                </Card>
+                <div className="mt-6">
+                    <InterfaceCopyPanel translations={interfaceTranslations} />
+                </div>
             )}
         </AppShell>
     );

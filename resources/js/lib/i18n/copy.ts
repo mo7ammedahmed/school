@@ -139,6 +139,39 @@ const en = {
     'settings.appearance.website.other': 'Other tokens',
     'settings.appearance.website.advanced': 'Typography, radius & shadows',
     'settings.appearance.website.advancedHelp': 'Font stacks, corner radii and shadows. Values are plain CSS.',
+    'settings.appearance.derived.open': 'View the {count} derived colours',
+    'settings.appearance.derived.customise': 'Pin a colour by hand',
+    'settings.appearance.derived.customiseHelp': 'Every colour above is generated from your five. Open this only to pin one to an exact value.',
+    'settings.appearance.derived.pinned': 'Pinned by hand',
+    'settings.appearance.preset.font': 'Fonts',
+    'settings.appearance.preset.font.outfit': 'Outfit & Fraunces',
+    'settings.appearance.preset.font.editorial': 'Arabic first',
+    'settings.appearance.preset.font.system': 'System fonts',
+    'settings.appearance.preset.radius': 'Corners',
+    'settings.appearance.preset.radius.sharp': 'Squared',
+    'settings.appearance.preset.radius.balanced': 'Rounded',
+    'settings.appearance.preset.radius.round': 'Very round',
+    'settings.appearance.preset.shadow': 'Elevation',
+    'settings.appearance.preset.shadow.flat': 'Flat',
+    'settings.appearance.preset.shadow.soft': 'Soft',
+    'settings.appearance.preset.shadow.deep': 'Deep',
+    'settings.appearance.preset.custom': 'Set by hand',
+    'settings.appearance.preset.customHelp': 'These values do not match any of the choices, because one of them was edited below.',
+    'settings.appearance.color.fontSans': 'Body font',
+    'settings.appearance.color.fontSerif': 'Serif font',
+    'settings.appearance.color.fontArabic': 'Arabic font',
+    'settings.appearance.color.fontDisplay': 'Display font',
+    'settings.appearance.color.fontMono': 'Monospace font',
+    'settings.appearance.color.radiusSm': 'Small radius',
+    'settings.appearance.color.radiusMd': 'Medium radius',
+    'settings.appearance.color.radiusLg': 'Large radius',
+    'settings.appearance.color.radiusXl': 'Extra-large radius',
+    'settings.appearance.color.radius2xl': 'Double-extra radius',
+    'settings.appearance.color.shadowSm': 'Small shadow',
+    'settings.appearance.color.shadowMd': 'Medium shadow',
+    'settings.appearance.color.shadowLg': 'Large shadow',
+    'settings.appearance.color.shadowPanel': 'Panel shadow',
+    'settings.appearance.color.shadowLift': 'Lifted shadow',
     'settings.appearance.group.brand': 'Brand',
     'settings.appearance.group.surfaces': 'Page surfaces',
     'settings.appearance.group.text': 'Text',
@@ -369,7 +402,7 @@ const en = {
     'public.documents.guardianId': 'Guardian ID and proof of address',
     'public.documents.medicalRecords': 'Medical records',
     'public.period.dates': 'Dates: {start} - {end}',
-    'public.period.grades': 'Grades: {grades}',
+    'public.level': 'Level {level}',
 
     // Facilities page
     'public.facilitiesDescription': 'Explore our state-of-the-art campus facilities.',
@@ -456,7 +489,53 @@ const en = {
     'public.faq.general.tour.q': 'How can I schedule a campus tour?',
     'public.faq.general.tour.a': 'You can schedule a campus tour by contacting our admissions office directly or through the contact form on our website. Tours are available on weekdays during school hours.',
 
+    // Invoices
+    'finance.invoices.title': 'Invoices',
+    'finance.invoices.information': 'Invoice Information',
+    'finance.invoices.create.title': 'Create Invoice',
+    'finance.invoices.create.description': 'Add a new invoice',
+    'finance.invoices.create.submit': 'Create Invoice',
+    'finance.invoices.edit.title': 'Edit Invoice',
+    'finance.invoices.edit.submit': 'Update Invoice',
+    'finance.invoices.student': 'Student',
+    'finance.invoices.selectStudent': 'Select a student',
+    'finance.invoices.number': 'Invoice Number',
+    'finance.invoices.status': 'Status',
+    'finance.invoices.issueDate': 'Issue Date',
+    'finance.invoices.dueDate': 'Due Date',
+    'finance.invoices.subtotal': 'Subtotal',
+    'finance.invoices.taxRate': 'Tax Rate (%)',
+    'finance.invoices.discountAmount': 'Discount Amount',
+    'finance.invoices.notes': 'Notes',
+    'finance.invoices.back': 'Back',
+    'finance.invoices.cancel': 'Cancel',
+    'finance.invoices.status.draft': 'Draft',
+    'finance.invoices.status.issued': 'Issued',
+    'finance.invoices.status.paid': 'Paid',
+    'finance.invoices.status.overdue': 'Overdue',
+    'finance.invoices.status.void': 'Void',
+
+    // Accessible names — never on screen, but read out loud, so they are copy
+    // like any other and belong in the dictionary rather than in markup.
+    'a11y.breadcrumb': 'Breadcrumb',
+    'a11y.closeMenu': 'Close menu',
+    'a11y.mobileNavigation': 'Mobile navigation',
+    'a11y.pagination': 'Pagination',
+    'a11y.loading': 'Loading',
+
+    // Roles, as they are shown beside a name rather than as data.
+    'role.school_admin': 'School admin',
+    'role.super_admin': 'Super admin',
+    'role.principal': 'Principal',
+    'role.registrar': 'Registrar',
+    'role.teacher': 'Teacher',
+    'role.accountant': 'Accountant',
+    'role.guardian': 'Guardian',
+    'role.student': 'Student',
+
     // Authentication & common actions
+    'common.chooseFile': 'Choose a file',
+    'common.noFileChosen': 'No file chosen yet',
     'common.submit': 'Submit',
     'common.save': 'Save',
     'common.cancel': 'Cancel',
@@ -591,6 +670,39 @@ const ar: Record<keyof typeof en, string> = {
     'settings.appearance.website.other': 'رموز أخرى',
     'settings.appearance.website.advanced': 'الخطوط والزوايا والظلال',
     'settings.appearance.website.advancedHelp': 'مجموعات الخطوط وأنصاف أقطار الزوايا والظلال. القيم بصيغة CSS مباشرة.',
+    'settings.appearance.derived.open': 'عرض الألوان المشتقّة ({count})',
+    'settings.appearance.derived.customise': 'تثبيت لون يدويًا',
+    'settings.appearance.derived.customiseHelp': 'كل لون بالأعلى مُشتقّ من الألوان الخمسة. افتح هذا فقط لتثبيت لون واحد على قيمة محددة.',
+    'settings.appearance.derived.pinned': 'مثبّت يدويًا',
+    'settings.appearance.preset.font': 'الخطوط',
+    'settings.appearance.preset.font.outfit': 'Outfit و Fraunces',
+    'settings.appearance.preset.font.editorial': 'العربية أولًا',
+    'settings.appearance.preset.font.system': 'خطوط النظام',
+    'settings.appearance.preset.radius': 'الزوايا',
+    'settings.appearance.preset.radius.sharp': 'زوايا قائمة',
+    'settings.appearance.preset.radius.balanced': 'زوايا دائرية',
+    'settings.appearance.preset.radius.round': 'دائرية جدًا',
+    'settings.appearance.preset.shadow': 'الظلال',
+    'settings.appearance.preset.shadow.flat': 'مسطّحة',
+    'settings.appearance.preset.shadow.soft': 'ناعمة',
+    'settings.appearance.preset.shadow.deep': 'عميقة',
+    'settings.appearance.preset.custom': 'محدّد يدويًا',
+    'settings.appearance.preset.customHelp': 'هذه القيم لا تطابق أي خيار لأن أحدها عُدّل يدويًا بالأسفل.',
+    'settings.appearance.color.fontSans': 'خط النص الأساسي',
+    'settings.appearance.color.fontSerif': 'الخط المطبوع',
+    'settings.appearance.color.fontArabic': 'الخط العربي',
+    'settings.appearance.color.fontDisplay': 'خط العناوين',
+    'settings.appearance.color.fontMono': 'الخط أحادي المسافة',
+    'settings.appearance.color.radiusSm': 'استدارة صغيرة',
+    'settings.appearance.color.radiusMd': 'استدارة متوسطة',
+    'settings.appearance.color.radiusLg': 'استدارة كبيرة',
+    'settings.appearance.color.radiusXl': 'استدارة كبيرة جدًا',
+    'settings.appearance.color.radius2xl': 'استدارة فائقة',
+    'settings.appearance.color.shadowSm': 'ظل خفيف',
+    'settings.appearance.color.shadowMd': 'ظل متوسط',
+    'settings.appearance.color.shadowLg': 'ظل كبير',
+    'settings.appearance.color.shadowPanel': 'ظل اللوحة',
+    'settings.appearance.color.shadowLift': 'ظل مرتفع',
     'settings.appearance.group.brand': 'الهوية',
     'settings.appearance.group.surfaces': 'أسطح الصفحة',
     'settings.appearance.group.text': 'النصوص',
@@ -813,7 +925,7 @@ const ar: Record<keyof typeof en, string> = {
     'public.documents.guardianId': 'هوية ولي الأمر وإثبات العنوان',
     'public.documents.medicalRecords': 'السجلات الطبية',
     'public.period.dates': 'التواريخ: {start} - {end}',
-    'public.period.grades': 'الصفوف: {grades}',
+    'public.level': 'المستوى {level}',
 
     'public.facilitiesDescription': 'استكشف مرافق حرمنا الجامعي الحديثة.',
     'public.campusHighlights': 'مزايا الحرم الجامعي',
@@ -894,6 +1006,48 @@ const ar: Record<keyof typeof en, string> = {
     'public.faq.general.tour.q': 'كيف يمكنني حجز جولة في الحرم الجامعي؟',
     'public.faq.general.tour.a': 'يمكنك حجز جولة في الحرم الجامعي بالتواصل مع مكتب القبول مباشرة أو عبر نموذج التواصل على موقعنا. الجولات متاحة في أيام الأسبوع خلال ساعات الدوام.',
 
+    'finance.invoices.title': 'الفواتير',
+    'finance.invoices.information': 'بيانات الفاتورة',
+    'finance.invoices.create.title': 'إنشاء فاتورة',
+    'finance.invoices.create.description': 'إضافة فاتورة جديدة',
+    'finance.invoices.create.submit': 'إنشاء الفاتورة',
+    'finance.invoices.edit.title': 'تعديل فاتورة',
+    'finance.invoices.edit.submit': 'حفظ التعديلات',
+    'finance.invoices.student': 'الطالب',
+    'finance.invoices.selectStudent': 'اختر الطالب',
+    'finance.invoices.number': 'رقم الفاتورة',
+    'finance.invoices.status': 'الحالة',
+    'finance.invoices.issueDate': 'تاريخ الإصدار',
+    'finance.invoices.dueDate': 'تاريخ الاستحقاق',
+    'finance.invoices.subtotal': 'المجموع الفرعي',
+    'finance.invoices.taxRate': 'نسبة الضريبة (٪)',
+    'finance.invoices.discountAmount': 'مبلغ الخصم',
+    'finance.invoices.notes': 'ملاحظات',
+    'finance.invoices.back': 'رجوع',
+    'finance.invoices.cancel': 'إلغاء',
+    'finance.invoices.status.draft': 'مسودة',
+    'finance.invoices.status.issued': 'صادرة',
+    'finance.invoices.status.paid': 'مدفوعة',
+    'finance.invoices.status.overdue': 'متأخرة',
+    'finance.invoices.status.void': 'ملغاة',
+
+    'a11y.breadcrumb': 'مسار التنقل',
+    'a11y.closeMenu': 'إغلاق القائمة',
+    'a11y.mobileNavigation': 'تنقل الجوال',
+    'a11y.pagination': 'ترقيم الصفحات',
+    'a11y.loading': 'جارٍ التحميل',
+
+    'role.school_admin': 'مدير المدرسة',
+    'role.super_admin': 'مدير عام',
+    'role.principal': 'مدير أكاديمي',
+    'role.registrar': 'مسؤول القبول والتسجيل',
+    'role.teacher': 'معلم',
+    'role.accountant': 'محاسب',
+    'role.guardian': 'ولي أمر',
+    'role.student': 'طالب',
+
+    'common.chooseFile': 'اختر ملفًا',
+    'common.noFileChosen': 'لم يتم اختيار ملف بعد',
     'common.submit': 'إرسال',
     'common.save': 'حفظ',
     'common.cancel': 'إلغاء',
@@ -917,6 +1071,43 @@ function interpolate(template: string, params?: CopyParams): string {
 /** Read the localised string for the active locale, interpolating any {params}. */
 export function t(locale: Locale, key: CopyKey, params?: CopyParams): string {
     return interpolate(locale === 'ar' ? ar[key] : en[key], params);
+}
+
+/**
+ * This dictionary as plain English-to-Arabic pairs.
+ *
+ * The dashboard's chrome is often word for word the same as the public pages',
+ * which means a good hundred of its labels are already translated here by hand.
+ * The interface sweep reads these first, so those words cost nothing and are
+ * reviewed rather than machine-made — a provider is only ever asked about what
+ * nobody has written down yet.
+ */
+export function handWrittenArabic(): Record<string, string> {
+    const pairs: Record<string, string> = {};
+
+    for (const key of Object.keys(en) as CopyKey[]) {
+        const arabic = ar[key];
+
+        if (arabic && arabic !== en[key]) pairs[en[key]] = arabic;
+    }
+
+    return pairs;
+}
+
+/**
+ * A role as it reads next to somebody's name.
+ *
+ * Roles arrive as machine names (`school_admin`), and the screens used to print
+ * them with the underscores taken out — English, on an Arabic page. They are
+ * chrome, so they belong in this dictionary; an unknown role still degrades to
+ * the readable form rather than disappearing.
+ */
+export function roleLabel(locale: Locale, role: string | null | undefined): string {
+    if (!role) return '';
+
+    const key = `role.${role}` as CopyKey;
+
+    return key in en ? t(locale, key) : role.replace(/_/g, ' ');
 }
 
 /**

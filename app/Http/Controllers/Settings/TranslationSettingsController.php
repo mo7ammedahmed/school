@@ -195,13 +195,4 @@ class TranslationSettingsController extends Controller
 
         return response()->json(['models' => $models]);
     }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
-
-        return $schoolId;
-    }
 }

@@ -16,6 +16,8 @@ import {
     ArrowUpRight,
     BookOpen,
 } from 'lucide-react';
+import { roleLabel, t } from '@/lib/i18n/copy';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 interface DashboardStats {
     total_students: number;
@@ -33,6 +35,7 @@ const canTeach = (roles: string[]) => roles.some((r) => [...ADMINS, 'teacher'].i
 
 export default function Dashboard({ stats }: { stats: DashboardStats }) {
     const { auth } = usePage<App.PageProps>().props;
+    const { locale } = useLocale();
     const roles = auth.user?.roles || [];
     const grid = useRef<HTMLDivElement>(null);
 
@@ -91,7 +94,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
         },
     ].filter((tile) => tile.visible);
 
-    const roleLabel = auth.user?.roles?.[0]?.split('_').join(' ') ?? '';
+    const userRole = roleLabel(locale, auth.user?.roles?.[0]);
     const primaryTile = tiles.length > 0 ? tiles[0] : null;
     const quickLinks = [
         {
@@ -130,7 +133,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                     <div>
                         <p className="mb-1.5 flex items-center gap-2 text-xs text-muted-foreground">
                             <Badge variant="neutral" className="normal-case tracking-normal">
-                                {roleLabel || 'School admin'}
+                                {userRole || t(locale, 'role.school_admin')}
                             </Badge>
                         </p>
                         <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground md:text-[2.25rem]">

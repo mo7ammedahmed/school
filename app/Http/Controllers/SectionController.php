@@ -54,7 +54,7 @@ class SectionController extends Controller
 
     public function show(Section $section): Response
     {
-        $this->authorizeSection($section);
+        $this->ensureOwned($section);
 
         $section->load('gradeLevel', 'academicYear');
 
@@ -63,7 +63,7 @@ class SectionController extends Controller
 
     public function edit(Section $section): Response
     {
-        $this->authorizeSection($section);
+        $this->ensureOwned($section);
 
         return inertia('sections/edit', [
             'section' => $section,
@@ -74,7 +74,7 @@ class SectionController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
-        $this->authorizeSection($section);
+        $this->ensureOwned($section);
 
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
@@ -91,7 +91,7 @@ class SectionController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
-        $this->authorizeSection($section);
+        $this->ensureOwned($section);
 
         $section->delete();
 
@@ -122,15 +122,5 @@ class SectionController extends Controller
     private function academicYearRule(): Exists
     {
         return Rule::exists('academic_years', 'id')->where('school_id', $this->schoolId());
-    }
-
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
-    private function authorizeSection(Section $section): void
-    {
-        abort_unless((int) $section->school_id === $this->schoolId(), 403);
     }
 }

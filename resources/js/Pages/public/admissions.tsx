@@ -9,10 +9,9 @@ import { useLocale } from '@/lib/i18n/locale-context';
 interface AdmissionPeriod {
     id: number;
     name: string;
-    description: string;
+    description: string | null;
     start_date: string;
     end_date: string;
-    grade_levels: string;
 }
 
 interface AdmissionsProps {
@@ -97,7 +96,6 @@ export default function Admissions({ periods }: AdmissionsProps) {
                                                 <p className="text-gray-600 dark:text-gray-300 mb-4">{period.description}</p>
                                                 <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
                                                     <span>{t(locale, 'public.period.dates', { start: period.start_date, end: period.end_date })}</span>
-                                                    <span>{t(locale, 'public.period.grades', { grades: period.grade_levels })}</span>
                                                 </div>
                                             </div>
                                         ))}

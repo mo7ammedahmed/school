@@ -69,7 +69,7 @@ class MaterialController extends Controller
 
     public function show(Material $material): Response
     {
-        $this->authorizeSchool($material);
+        $this->ensureOwned($material);
         $material->load(['offering.subject', 'offering.section']);
 
         return inertia('materials/show', ['material' => $material]);
@@ -77,7 +77,7 @@ class MaterialController extends Controller
 
     public function edit(Material $material): Response
     {
-        $this->authorizeSchool($material);
+        $this->ensureOwned($material);
         $schoolId = session('school_id');
         $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
@@ -91,7 +91,7 @@ class MaterialController extends Controller
 
     public function update(Request $request, Material $material): RedirectResponse
     {
-        $this->authorizeSchool($material);
+        $this->ensureOwned($material);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
@@ -126,7 +126,7 @@ class MaterialController extends Controller
 
     public function destroy(Material $material): RedirectResponse
     {
-        $this->authorizeSchool($material);
+        $this->ensureOwned($material);
         if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
             Storage::disk('public')->delete($material->file_path);
         }
@@ -134,13 +134,6 @@ class MaterialController extends Controller
         $material->delete();
 
         return redirect()->route('materials.index')->with('success', 'Material deleted successfully.');
-    }
-
-    private function authorizeSchool(Material $material): void
-    {
-        if ((int) $material->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
     }
 
     private function resolveOfferingId(int $subjectId, int $sectionId): int

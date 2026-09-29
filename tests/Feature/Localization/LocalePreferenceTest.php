@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Localization;
 
 use App\Domain\Academics\Models\AcademicYear;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
 use App\Http\Controllers\LocaleController;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,7 +17,7 @@ class LocalePreferenceTest extends TestCase
     public function test_choosing_a_locale_persists_it_on_the_server(): void
     {
         $school = School::factory()->create();
-        $user = $this->actingAsSchoolUser($school);
+        $user = $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
 
         $this->postJson('/locale', ['locale' => 'ar'])
             ->assertOk()
@@ -35,7 +33,7 @@ class LocalePreferenceTest extends TestCase
     public function test_an_unsupported_locale_is_rejected(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
 
         $this->postJson('/locale', ['locale' => 'fr'])->assertStatus(422);
         $this->assertNull(session('locale'));
@@ -44,7 +42,7 @@ class LocalePreferenceTest extends TestCase
     public function test_the_server_renders_the_arabic_column_once_arabic_is_selected(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
 
         AcademicYear::factory()->create([
             'school_id' => $school->id,
@@ -66,7 +64,7 @@ class LocalePreferenceTest extends TestCase
     public function test_the_shared_locale_prop_follows_the_session(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
 
         $this->get('/academic-years')
             ->assertInertia(fn ($page) => $page->where('locale', 'en'));
@@ -80,28 +78,12 @@ class LocalePreferenceTest extends TestCase
     public function test_the_resolved_browser_locale_matches_the_shared_prop_and_html_language(): void
     {
         $school = School::factory()->create(['locale' => 'en']);
-        $user = $this->actingAsSchoolUser($school);
+        $user = $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
         $user->forceFill(['locale' => null])->save();
 
         $this->withHeaders(['Accept-Language' => 'ar'])
             ->get('/academic-years')
             ->assertSee('<html lang="ar" dir="rtl">', false)
             ->assertInertia(fn ($page) => $page->where('locale', 'ar'));
-    }
-
-    private function actingAsSchoolUser(School $school): User
-    {
-        $user = User::factory()->create(['locale' => 'en']);
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

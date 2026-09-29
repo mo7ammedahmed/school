@@ -21,6 +21,9 @@ use Illuminate\Support\Carbon;
     'title',
     'title_ar',
     'slug',
+    // The admin form, the admin screens and both public news screens carry this;
+    // without the column the value was validated and then dropped on save.
+    'category',
     'excerpt',
     'excerpt_ar',
     'content',
@@ -30,15 +33,18 @@ use Illuminate\Support\Carbon;
     'is_published',
     'published_at',
 ])]
-#[Appends(['category', 'publish_date'])]
+// `publish_date` is a display name for `published_at`; `category` is a real
+// column now, so it comes back on its own without being appended.
+#[Appends(['publish_date'])]
 class News extends Model
 {
     use SoftDeletes;
 
-    protected function category(): Attribute
-    {
-        return Attribute::make(get: fn () => 'updates');
-    }
+    // There used to be a `category()` accessor here that returned the literal
+    // string `updates` for every row. It is why the missing column went unnoticed
+    // for so long: the admin list, the admin detail screen and both public news
+    // screens all printed "Updates" for every article, which looked like data.
+    // The column exists now, so the real value is what comes back.
 
     protected function publishDate(): Attribute
     {

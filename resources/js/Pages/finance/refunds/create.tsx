@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TranslatePair } from '@/components/ui/translate-pair';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
@@ -57,8 +58,15 @@ export default function FinanceRefundsCreate({ invoices }: { invoices: { id: num
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <Label htmlFor="reason">Reason</Label>
-                                <textarea id="reason" name="reason" className="input min-h-[100px]" required />
+                                <Label htmlFor="reason">Reason (English)</Label>
+                                <textarea id="reason" name="reason" className="input min-h-[100px]" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label htmlFor="reason_ar">Reason (Arabic)</Label>
+                                <textarea id="reason_ar" name="reason_ar" dir="rtl" className="input min-h-[100px]" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <TranslatePair enId="reason" arId="reason_ar" />
                             </div>
                         </div>
 

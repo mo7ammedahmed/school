@@ -41,13 +41,4 @@ class SmsSettingsController extends Controller
 
         return back()->with('success', 'SMS settings saved.');
     }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
-
-        return $schoolId;
-    }
 }

@@ -48,21 +48,21 @@ class GradeLevelController extends Controller
 
     public function show(GradeLevel $gradeLevel): Response
     {
-        $this->authorizeGradeLevel($gradeLevel);
+        $this->ensureOwned($gradeLevel);
 
         return inertia('grade-levels/show', ['gradeLevel' => $gradeLevel]);
     }
 
     public function edit(GradeLevel $gradeLevel): Response
     {
-        $this->authorizeGradeLevel($gradeLevel);
+        $this->ensureOwned($gradeLevel);
 
         return inertia('grade-levels/edit', ['gradeLevel' => $gradeLevel]);
     }
 
     public function update(Request $request, GradeLevel $gradeLevel): RedirectResponse
     {
-        $this->authorizeGradeLevel($gradeLevel);
+        $this->ensureOwned($gradeLevel);
 
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
@@ -83,20 +83,10 @@ class GradeLevelController extends Controller
 
     public function destroy(GradeLevel $gradeLevel): RedirectResponse
     {
-        $this->authorizeGradeLevel($gradeLevel);
+        $this->ensureOwned($gradeLevel);
 
         $gradeLevel->delete();
 
         return redirect()->route('grade-levels.index')->with('success', 'Grade level deleted successfully.');
-    }
-
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
-    private function authorizeGradeLevel(GradeLevel $gradeLevel): void
-    {
-        abort_unless((int) $gradeLevel->school_id === $this->schoolId(), 403);
     }
 }

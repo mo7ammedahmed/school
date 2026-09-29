@@ -8,7 +8,6 @@ use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\WebhookEvent;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\People\Models\Student;
@@ -272,21 +271,5 @@ class PaymentSettlementTest extends TestCase
                 'school_id' => $payment->school_id,
             ],
         ];
-    }
-
-    private function actingAsSchoolUser(School $school): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

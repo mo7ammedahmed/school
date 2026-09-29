@@ -9,12 +9,13 @@ import { useLocale } from '@/lib/i18n/locale-context';
 interface Event {
     id: number;
     title: string;
-    date: string;
-    time: string;
+    /** Appended display names for `start_date`; `start_time` reads its clock. */
+    event_date: string | null;
+    start_time: string | null;
     location: string;
     description: string;
-    category: string;
-    featured_image?: string;
+    event_type: string | null;
+    featured_image_path?: string | null;
 }
 
 interface EventsIndexProps {
@@ -29,6 +30,17 @@ interface EventsIndexProps {
 
 export default function EventsIndex({ events }: EventsIndexProps) {
     const { locale } = useLocale();
+    // The cards read `date`, `time` and `category`; the payload carries
+    // `event_date`, `start_time` and `event_type`. `new Date(undefined)` was
+    // rendering "Invalid Date" on every card.
+    const when = (date: string | null) =>
+        date
+            ? new Date(date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+              })
+            : '';
 
     return (
         <PublicLayout>
@@ -47,10 +59,10 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
                             {events.data.map((event) => (
                                 <Card key={event.id} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
-                                    {event.featured_image && (
+                                    {event.featured_image_path && (
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <img
-                                                src={event.featured_image}
+                                                src={`/storage/${event.featured_image_path}`}
                                                 alt={event.title}
                                                 className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                             />
@@ -59,7 +71,7 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                     <CardHeader>
                                         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                             <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                                {event.category}
+                                                {event.event_type}
                                             </span>
                                         </div>
                                         <CardTitle className="text-xl line-clamp-2">{event.title}</CardTitle>
@@ -68,15 +80,11 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                         <div className="space-y-2 mb-4">
                                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                 <Calendar className="h-4 w-4" />
-                                                <span>{new Date(event.date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                })}</span>
+                                                <span>{when(event.event_date)}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                 <Clock className="h-4 w-4" />
-                                                <span>{event.time}</span>
+                                                <span>{event.start_time}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                 <MapPin className="h-4 w-4" />

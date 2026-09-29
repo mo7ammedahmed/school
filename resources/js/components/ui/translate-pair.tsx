@@ -131,6 +131,12 @@ async function saveTranslation(
  * required on its own — the pair only needs one value, so the guard reports an
  * error on the English field (the one the operator is most likely to fill last)
  * when both are blank.
+ *
+ * It sets that message and nothing else. It used to force `required = false` on
+ * both fields on every keystroke, which is not this component's business: those
+ * attributes belong to whoever wrote the form, and a guard that clears them can
+ * hide a genuinely required field. `BilingualFormsTest` is what keeps the pair
+ * from being marked English-required in the first place.
  */
 function useEitherLanguageGuard(enId: string, arId: string): void {
     useEffect(() => {
@@ -142,24 +148,29 @@ function useEitherLanguageGuard(enId: string, arId: string): void {
         const EN_MESSAGE = 'Fill in one language — the other one is translated for you.';
 
         const revalidate = (): void => {
-            // Re-asserted on every keystroke because a re-render or a plain
-            // `required` attribute in the JSX would bring the hard rule back.
-            english.required = false;
-            arabic.required = false;
             english.setCustomValidity(
                 english.value.trim() === '' && arabic.value.trim() === '' ? EN_MESSAGE : '',
             );
-            arabic.setCustomValidity('');
         };
 
         revalidate();
 
+        // `change` as well as `input`: a value filled by the browser's autofill
+        // or dropped in by paste does not always raise a key event.
         english.addEventListener('input', revalidate);
         arabic.addEventListener('input', revalidate);
+        english.addEventListener('change', revalidate);
+        arabic.addEventListener('change', revalidate);
 
         return () => {
             english.removeEventListener('input', revalidate);
             arabic.removeEventListener('input', revalidate);
+            english.removeEventListener('change', revalidate);
+            arabic.removeEventListener('change', revalidate);
+
+            // Leave the field as we found it: the message is ours, and a node
+            // that outlives this component must not keep reporting our error.
+            english.setCustomValidity('');
         };
     }, [enId, arId]);
 }

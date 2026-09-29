@@ -15,6 +15,7 @@ use App\Domain\Learning\Models\Submission;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Database\Factories\StudentFactory;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -46,6 +47,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'medical_notes_ar',
     'metadata',
 ])]
+#[Appends(['name'])]
 #[UseFactory(StudentFactory::class)]
 class Student extends Model
 {
@@ -78,6 +80,20 @@ class Student extends Model
     protected function guardian(): Attribute
     {
         return Attribute::get(fn (): ?Guardian => $this->guardians->sortByDesc('pivot.is_primary')->first());
+    }
+
+    /**
+     * The name a student is shown by, in every list and picker.
+     *
+     * A person is stored as two fields, but every screen — enrolment, invoices,
+     * payments, attendance, exam results — renders one `name`. Without it those
+     * pickers listed sixty blank rows, because the pages read a property that
+     * simply did not exist and nothing failed: a missing attribute is `null`,
+     * and `null` renders as an empty option.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::get(fn (): string => trim($this->first_name.' '.($this->last_name ?? '')));
     }
 
     public function enrollments(): HasMany

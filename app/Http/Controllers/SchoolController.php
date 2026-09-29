@@ -200,7 +200,10 @@ class SchoolController extends Controller
             'primary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'is_branch' => ['nullable', 'boolean'],
+            // `is_branch` used to be validated here. There is no column, no model
+            // attribute and no control anywhere that sets it, so it only ever
+            // produced a payload key that nothing read: a school's place in the
+            // hierarchy is `organization_id`.
         ];
     }
 

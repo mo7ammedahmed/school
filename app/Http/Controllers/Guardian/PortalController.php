@@ -129,6 +129,13 @@ class PortalController extends Controller
         ]);
     }
 
+    /**
+     * A guardian may only open their own children's records.
+     *
+     * Deliberately not the school check the other controllers use: being inside
+     * the right school is not enough to read a specific child here, the guardian
+     * relationship is what grants access.
+     */
     private function authorizeChild(Request $request, Student $child): void
     {
         $guardian = Guardian::where('user_id', $request->user()->id)

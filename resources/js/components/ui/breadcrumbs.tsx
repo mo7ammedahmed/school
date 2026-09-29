@@ -1,5 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n/copy';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 interface BreadcrumbItem {
     label: string;
@@ -12,9 +14,11 @@ interface BreadcrumbsProps {
 }
 
 export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+    const { locale } = useLocale();
+
     return (
         <nav
-            aria-label="Breadcrumb"
+            aria-label={t(locale, 'a11y.breadcrumb')}
             className={cn('flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground', className)}
         >
             {items.map((item, index) => (

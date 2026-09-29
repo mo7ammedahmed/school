@@ -10,9 +10,10 @@ interface Teacher {
     id: number;
     first_name: string;
     last_name: string;
-    position: string;
-    bio: string;
-    subjects?: string[];
+    /** The profile calls this `specialization`; `position` was never a column. */
+    specialization: string | null;
+    bio: string | null;
+    subjects?: { id: number; name: string }[];
 }
 
 interface TeachersProps {
@@ -46,14 +47,14 @@ export default function Teachers({ teachers }: TeachersProps) {
                                             </div>
                                             <div>
                                                 <CardTitle className="text-lg">{teacher.first_name} {teacher.last_name}</CardTitle>
-                                                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{teacher.position}</p>
+                                                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{teacher.specialization}</p>
                                             </div>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex flex-1 flex-col justify-between gap-4">
                                         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{teacher.bio}</p>
                                         <Button asChild variant="outline" className="w-full">
-                                            <Link href={`/teachers/${teacher.id}`}>{t(locale, 'public.viewProfile')}</Link>
+                                            <Link href={`/faculty/${teacher.id}`}>{t(locale, 'public.viewProfile')}</Link>
                                         </Button>
                                     </CardContent>
                                 </Card>

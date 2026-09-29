@@ -309,7 +309,7 @@ class TimetableController extends Controller
 
     public function show(TimetableEntry $timetable): InertiaResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         $timetable->load(['offering.subject', 'section', 'teacher', 'room', 'period']);
 
@@ -318,7 +318,7 @@ class TimetableController extends Controller
 
     public function edit(TimetableEntry $timetable): InertiaResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         return inertia('timetable/edit', [
             'schedule' => $timetable->load(['offering.subject', 'section', 'teacher', 'room']),
@@ -328,7 +328,7 @@ class TimetableController extends Controller
 
     public function update(Request $request, TimetableEntry $timetable): RedirectResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         $schoolId = $this->schoolId();
         $validated = $request->validate($this->rules($schoolId));
@@ -361,7 +361,7 @@ class TimetableController extends Controller
 
     public function destroy(TimetableEntry $timetable): RedirectResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         $timetable->delete();
 
@@ -370,7 +370,7 @@ class TimetableController extends Controller
 
     public function publish(TimetableEntry $timetable): RedirectResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         $timetable->update(['is_published' => true]);
 
@@ -379,7 +379,7 @@ class TimetableController extends Controller
 
     public function unpublish(TimetableEntry $timetable): RedirectResponse
     {
-        $this->authorizeSchool($timetable);
+        $this->ensureOwned($timetable);
 
         $timetable->update(['is_published' => false]);
 
@@ -785,24 +785,6 @@ class TimetableController extends Controller
         throw ValidationException::withMessages([
             'start_time' => "This clashes with an existing entry for the same {$who} ({$first['label']}, {$first['time']}).",
         ]);
-    }
-
-    private function authorizeSchool(TimetableEntry $entry): void
-    {
-        if ((int) $entry->school_id !== $this->schoolId()) {
-            abort(403);
-        }
-    }
-
-    private function schoolId(): int
-    {
-        $schoolId = (int) session('school_id');
-
-        if ($schoolId === 0) {
-            abort(403, 'No active school context.');
-        }
-
-        return $schoolId;
     }
 
     /**

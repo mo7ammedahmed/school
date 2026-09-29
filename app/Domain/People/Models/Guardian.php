@@ -29,6 +29,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'national_id_number',
     'passport_number',
     'address',
+    // The guardian screens collect and print this; without the column the
+    // value was validated and then silently dropped.
+    'emergency_contact',
     'occupation',
     'employer',
     'metadata',

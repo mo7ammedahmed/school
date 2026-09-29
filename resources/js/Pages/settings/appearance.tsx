@@ -14,10 +14,12 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { TOKEN_PRESET_GROUPS, activePresetId, type Preset } from '@/lib/theme-presets';
 import { t, tk, type CopyKey, type Locale } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import {
@@ -518,8 +520,21 @@ export default function AppearanceSettings({
         });
     };
 
-    /** A colour the operator edited by hand, which stops following the seeds. */
+    /**
+     * A token the operator edited by hand.
+     *
+     * Colours stop following the seeds, so they are kept as overrides. The
+     * colour-free tokens — fonts, radii, shadows — live in `advanced`, which is
+     * layered on last, so an edit has to be written there or it is silently
+     * shadowed by the value it was meant to replace.
+     */
     const setWebsiteToken = (key: string, value: string) => {
+        if (key in advanced) {
+            setAdvanced((prev) => ({ ...prev, [key]: value }));
+
+            return;
+        }
+
         setOverrides((prev) => ({ ...prev, [key]: value }));
     };
 
@@ -531,6 +546,15 @@ export default function AppearanceSettings({
 
             return next;
         });
+    };
+
+    /**
+     * Applies a named choice — a font pairing, a corner style, an elevation — as
+     * one write, so the family of tokens stays consistent instead of drifting
+     * one field at a time.
+     */
+    const applyPreset = (preset: Preset) => {
+        setAdvanced((prev) => ({ ...prev, ...preset.tokens }));
     };
 
     /**
@@ -567,6 +591,12 @@ export default function AppearanceSettings({
 
     const activePalette = palettes[activePaletteMode];
     const accentContrast = getContrastingColor(tokenBaseColor(activePalette.accent));
+
+    /** How many colours the seeds produced, for the disclosure's summary. */
+    const derivedTokenCount = useMemo(
+        () => WEBSITE_COLOR_GROUPS.reduce((total, group) => total + group.tokens.length, 0),
+        [],
+    );
 
     /** The palette tokens as CSS variables, for the dashboard preview. */
     const dashboardPreviewStyle: CSSProperties = {
@@ -616,13 +646,12 @@ export default function AppearanceSettings({
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="min-w-0 space-y-2">
                                 <Label htmlFor="logo">{t(locale, 'settings.appearance.brand.logo')}</Label>
-                                <Input
+                                <FileInput
                                     id="logo"
-                                    type="file"
                                     accept="image/png,image/jpeg,image/webp,image/svg+xml"
                                     onChange={handleLogoChange}
+                                    hint={t(locale, 'settings.appearance.brand.logoHelp')}
                                 />
-                                <p className="text-xs text-muted-foreground">{t(locale, 'settings.appearance.brand.logoHelp')}</p>
                                 {errors.logo && <p className="text-sm text-destructive">{errors.logo}</p>}
                                 {logoPreview && (
                                     <img
@@ -634,13 +663,12 @@ export default function AppearanceSettings({
                             </div>
                             <div className="min-w-0 space-y-2">
                                 <Label htmlFor="favicon">{t(locale, 'settings.appearance.brand.favicon')}</Label>
-                                <Input
+                                <FileInput
                                     id="favicon"
-                                    type="file"
                                     accept="image/png,image/x-icon,image/webp,image/svg+xml"
                                     onChange={handleFaviconChange}
+                                    hint={t(locale, 'settings.appearance.brand.faviconHelp')}
                                 />
-                                <p className="text-xs text-muted-foreground">{t(locale, 'settings.appearance.brand.faviconHelp')}</p>
                                 {errors.favicon && <p className="text-sm text-destructive">{errors.favicon}</p>}
                             </div>
                         </div>
@@ -1006,7 +1034,14 @@ export default function AppearanceSettings({
                             </div>
                         </section>
 
-                        {/* Everything else, derived and read-only until asked for. */}
+                        {/*
+                            Everything else is generated, so it is shown as a
+                            strip of what the five colours produced rather than
+                            as fifty fields. Seeing the result matters; editing
+                            each one does not, and it was the reason this screen
+                            read as a wall of values. Pinning one by hand is
+                            still here, one disclosure down.
+                        */}
                         <section className="space-y-6">
                             <div className="space-y-1">
                                 <h3 className="text-sm font-semibold text-foreground">
@@ -1017,68 +1052,128 @@ export default function AppearanceSettings({
                                 </p>
                             </div>
 
-                            {WEBSITE_COLOR_GROUPS.map((group) => (
-                                <div key={group.id} className="space-y-2">
-                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        {t(locale, group.labelKey)}
-                                    </h4>
-                                    <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                                        {group.tokens.map((key) => {
-                                            const overridden = key in overrides;
+                            {/*
+                                Behind a summary, because the five colours above
+                                and the preview below are the whole decision: the
+                                fifty-odd names here are a reference, and they
+                                were the wall of values this screen used to be.
+                            */}
+                            <details className="rounded-lg border border-border/60 p-3">
+                                <summary className="cursor-pointer text-sm font-medium text-foreground">
+                                    {t(locale, 'settings.appearance.derived.open', {
+                                        count: derivedTokenCount,
+                                    })}
+                                </summary>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    {t(locale, 'settings.appearance.derived.customiseHelp')}
+                                </p>
 
-                                            return (
-                                                <li
-                                                    key={key}
-                                                    className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5"
-                                                >
-                                                    <span className="flex min-w-0 items-center gap-2">
+                                <div className="mt-4 space-y-5">
+                                    {WEBSITE_COLOR_GROUPS.map((group) => (
+                                        <div key={group.id} className="space-y-2">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                {t(locale, group.labelKey)}
+                                            </h4>
+                                            <ul className="flex flex-wrap gap-1.5">
+                                                {group.tokens.map((key) => (
+                                                    <li
+                                                        key={key}
+                                                        className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 py-1 pe-2.5 ps-1.5"
+                                                        title={`${labelFor(locale, key)} — ${websiteTokens[key]}`}
+                                                    >
                                                         <span
                                                             aria-hidden="true"
-                                                            className="size-4 shrink-0 rounded-sm border border-border"
+                                                            className="size-3.5 shrink-0 rounded-full border border-border/70"
                                                             style={{ background: websiteTokens[key] }}
                                                         />
-                                                        <span className="truncate text-xs">
+                                                        <span className="text-[11px] text-muted-foreground">
                                                             {labelFor(locale, key)}
                                                         </span>
-                                                    </span>
-
-                                                    {overridden ? (
-                                                        <span className="flex shrink-0 items-center gap-1.5">
-                                                            <input
-                                                                type="color"
-                                                                aria-label={labelFor(locale, key)}
-                                                                value={websiteTokens[key]}
-                                                                onChange={(event) =>
-                                                                    setWebsiteToken(key, event.target.value)
-                                                                }
-                                                                className="h-6 w-8 cursor-pointer rounded border border-border bg-transparent"
+                                                        {key in overrides && (
+                                                            <span
+                                                                aria-label={t(locale, 'settings.appearance.derived.pinned')}
+                                                                title={t(locale, 'settings.appearance.derived.pinned')}
+                                                                className="ms-0.5 size-1.5 shrink-0 rounded-full bg-primary"
                                                             />
-                                                            <code className="text-[11px] tabular-nums text-muted-foreground">
-                                                                {websiteTokens[key]}
-                                                            </code>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => clearWebsiteToken(key)}
-                                                                className="text-[11px] text-primary underline"
-                                                            >
-                                                                {t(locale, 'settings.appearance.derived.revert')}
-                                                            </button>
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setWebsiteToken(key, websiteTokens[key])}
-                                                            className="shrink-0 text-[11px] text-muted-foreground underline hover:text-foreground"
-                                                        >
-                                                            {t(locale, 'settings.appearance.derived.override')}
-                                                        </button>
-                                                    )}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+
+                                <div className="mt-4 border-t border-border/60 pt-4">
+                                    <p className="mb-3 text-xs font-medium text-foreground">
+                                        {t(locale, 'settings.appearance.derived.customise')}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-5">
+                                    {WEBSITE_COLOR_GROUPS.map((group) => (
+                                        <div key={group.id} className="space-y-2">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                {t(locale, group.labelKey)}
+                                            </h4>
+                                            <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                                                {group.tokens.map((key) => {
+                                                    const overridden = key in overrides;
+
+                                                    return (
+                                                        <li
+                                                            key={key}
+                                                            className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5"
+                                                        >
+                                                            <span className="flex min-w-0 items-center gap-2">
+                                                                <span
+                                                                    aria-hidden="true"
+                                                                    className="size-4 shrink-0 rounded-sm border border-border"
+                                                                    style={{ background: websiteTokens[key] }}
+                                                                />
+                                                                <span className="truncate text-xs">
+                                                                    {labelFor(locale, key)}
+                                                                </span>
+                                                            </span>
+
+                                                            {overridden ? (
+                                                                <span className="flex shrink-0 items-center gap-1.5">
+                                                                    <input
+                                                                        type="color"
+                                                                        aria-label={labelFor(locale, key)}
+                                                                        value={websiteTokens[key]}
+                                                                        onChange={(event) =>
+                                                                            setWebsiteToken(key, event.target.value)
+                                                                        }
+                                                                        className="h-6 w-8 cursor-pointer rounded border border-border bg-transparent"
+                                                                    />
+                                                                    <code className="text-[11px] tabular-nums text-muted-foreground">
+                                                                        {websiteTokens[key]}
+                                                                    </code>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => clearWebsiteToken(key)}
+                                                                        className="text-[11px] text-primary underline"
+                                                                    >
+                                                                        {t(locale, 'settings.appearance.derived.revert')}
+                                                                    </button>
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setWebsiteToken(key, websiteTokens[key])}
+                                                                    className="shrink-0 text-[11px] text-muted-foreground underline hover:text-foreground"
+                                                                >
+                                                                    {t(locale, 'settings.appearance.derived.override')}
+                                                                </button>
+                                                            )}
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    ))}
+                                </div>
+                            </details>
                         </section>
 
                         {advancedTokens.length > 0 && (
@@ -1089,12 +1184,54 @@ export default function AppearanceSettings({
                                 <p className="mt-2 text-xs text-muted-foreground">
                                     {t(locale, 'settings.appearance.website.advancedHelp')}
                                 </p>
-                                <div className="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
+                                {/* A named choice per family, so nobody has to write a font stack. */}
+                                <div className="mt-4 space-y-4">
+                                    {TOKEN_PRESET_GROUPS.map((group) => (
+                                        <div key={group.id} className="space-y-2">
+                                            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                {t(locale, group.labelKey)}
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {activePresetId(group.presets, websiteTokens) === null && (
+                                                    <span
+                                                        title={t(locale, 'settings.appearance.preset.customHelp')}
+                                                        className="rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground"
+                                                    >
+                                                        {t(locale, 'settings.appearance.preset.custom')}
+                                                    </span>
+                                                )}
+                                                {group.presets.map((preset) => {
+                                                    const active = activePresetId(group.presets, websiteTokens) === preset.id;
+
+                                                    return (
+                                                        <button
+                                                            key={preset.id}
+                                                            type="button"
+                                                            aria-pressed={active}
+                                                            onClick={() => applyPreset(preset)}
+                                                            className={cn(
+                                                                'rounded-full border px-3 py-1 text-xs transition-colors',
+                                                                active
+                                                                    ? 'border-primary bg-primary text-primary-foreground'
+                                                                    : 'border-border text-muted-foreground hover:border-primary/60 hover:text-foreground',
+                                                            )}
+                                                        >
+                                                            {t(locale, preset.labelKey)}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                                     {advancedTokens.map((key) => (
                                         <TextField
                                             key={key}
                                             id={`advanced-${key}`}
-                                            label={humaniseTokenKey(key)}
+                                            label={labelFor(locale, key)}
                                             value={websiteTokens[key] ?? ''}
                                             onChange={(next) => setWebsiteToken(key, next)}
                                         />

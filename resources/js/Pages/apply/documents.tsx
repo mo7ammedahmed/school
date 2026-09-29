@@ -2,7 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useForm } from '@inertiajs/react';
@@ -49,9 +49,8 @@ export default function ApplyDocuments() {
                         <div className="space-y-4">
                             <div>
                                 <Label htmlFor="birth_certificate">Birth Certificate</Label>
-                                <Input
+                                <FileInput
                                     id="birth_certificate"
-                                    type="file"
                                     onChange={(e) => handleFileChange(e, 'birth_certificate')}
                                     required
                                 />
@@ -60,9 +59,8 @@ export default function ApplyDocuments() {
 
                             <div>
                                 <Label htmlFor="previous_school_records">Previous School Records</Label>
-                                <Input
+                                <FileInput
                                     id="previous_school_records"
-                                    type="file"
                                     onChange={(e) => handleFileChange(e, 'previous_school_records')}
                                     required
                                 />
@@ -71,9 +69,8 @@ export default function ApplyDocuments() {
 
                             <div>
                                 <Label htmlFor="passport_photos">Passport Photos</Label>
-                                <Input
+                                <FileInput
                                     id="passport_photos"
-                                    type="file"
                                     onChange={(e) => handleFileChange(e, 'passport_photos')}
                                     required
                                 />
@@ -82,9 +79,8 @@ export default function ApplyDocuments() {
 
                             <div>
                                 <Label htmlFor="medical_records">Medical Records</Label>
-                                <Input
+                                <FileInput
                                     id="medical_records"
-                                    type="file"
                                     onChange={(e) => handleFileChange(e, 'medical_records')}
                                     required
                                 />

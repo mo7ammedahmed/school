@@ -35,8 +35,7 @@ class SaveTranslatedFieldController extends Controller
         ]);
 
         $target = $targets->get($validated['table']);
-        $matchingPair = collect($target['pairs'])->first(static fn (array $pair): bool =>
-            ($pair['en'] === $validated['source_column'] && $pair['ar'] === $validated['column'])
+        $matchingPair = collect($target['pairs'])->first(static fn (array $pair): bool => ($pair['en'] === $validated['source_column'] && $pair['ar'] === $validated['column'])
             || ($pair['ar'] === $validated['source_column'] && $pair['en'] === $validated['column'])
         );
 

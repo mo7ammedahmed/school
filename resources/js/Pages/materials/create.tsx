@@ -2,6 +2,7 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
@@ -58,7 +59,7 @@ export default function MaterialsCreate({ subjects, sections }: { subjects: { id
                             </div>
                             <div>
                                 <Label htmlFor="file">File</Label>
-                                <Input id="file" name="file" type="file" required />
+                                <FileInput id="file" name="file" required />
                             </div>
                             <div>
                                 <Label htmlFor="description">Description</Label>

@@ -11,11 +11,6 @@ use Inertia\Response;
 
 class GuardianController extends Controller
 {
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
     public function index(): Response
     {
         $guardians = Guardian::where('school_id', $this->schoolId())

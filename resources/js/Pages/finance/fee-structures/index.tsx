@@ -5,20 +5,35 @@ import { DataTable } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
+import { useBilingual } from '@/lib/i18n/bilingual';
 
-export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStructures: { id: number; name: string; fee_type: { name: string }; grade_level: { name: string }; amount: number }[] }) {
-    const columns: ColumnDef<any>[] = [
+type FeeStructure = {
+    id: number;
+    amount: number;
+    description: string | null;
+    description_ar: string | null;
+    fee_type: { name: string | null; name_ar: string | null } | null;
+    grade_level: { name_en: string | null; name_ar: string | null } | null;
+};
+
+export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStructures: { data: FeeStructure[] } }) {
+    const bilingual = useBilingual();
+
+    const columns: ColumnDef<FeeStructure>[] = [
         {
-            accessorKey: 'name',
-            header: 'Name',
+            id: 'description',
+            header: 'Description',
+            cell: ({ row }) => bilingual(row.original.description, row.original.description_ar),
         },
         {
-            accessorKey: 'fee_type.name',
+            id: 'feeType',
             header: 'Fee Type',
+            cell: ({ row }) => bilingual(row.original.fee_type?.name, row.original.fee_type?.name_ar),
         },
         {
-            accessorKey: 'grade_level.name',
+            id: 'gradeLevel',
             header: 'Grade Level',
+            cell: ({ row }) => bilingual(row.original.grade_level?.name_en, row.original.grade_level?.name_ar, 'Every grade'),
         },
         {
             accessorKey: 'amount',

@@ -37,9 +37,12 @@ class NewsController extends Controller
         $published = (int) $validated['is_published'] === 1;
 
         $article = News::create([
-            'school_id' => session('school_id'),
+            'school_id' => $this->schoolId(),
             'title' => $validated['title'],
             'slug' => Str::slug($validated['title']).'-'.Str::lower(Str::random(4)),
+            // The form makes this a required choice and every news screen prints
+            // it; the payload simply never carried it across.
+            'category' => $validated['category'] ?? 'general',
             'excerpt' => Str::limit(strip_tags($validated['content']), 160),
             'content' => $validated['content'],
             'seo_metadata' => [],
@@ -52,21 +55,21 @@ class NewsController extends Controller
 
     public function show(News $news): Response
     {
-        $this->authorizeSchool($news);
+        $this->ensureOwned($news);
 
         return inertia('news/show', ['article' => $news]);
     }
 
     public function edit(News $news): Response
     {
-        $this->authorizeSchool($news);
+        $this->ensureOwned($news);
 
         return inertia('news/edit', ['article' => $news]);
     }
 
     public function update(Request $request, News $news): RedirectResponse
     {
-        $this->authorizeSchool($news);
+        $this->ensureOwned($news);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -79,6 +82,7 @@ class NewsController extends Controller
 
         $news->update([
             'title' => $validated['title'],
+            'category' => $validated['category'] ?? $news->category ?? 'general',
             'excerpt' => Str::limit(strip_tags($validated['content']), 160),
             'content' => $validated['content'],
             'is_published' => $published,
@@ -90,16 +94,9 @@ class NewsController extends Controller
 
     public function destroy(News $news): RedirectResponse
     {
-        $this->authorizeSchool($news);
+        $this->ensureOwned($news);
         $news->delete();
 
         return redirect()->route('content.news.index')->with('success', 'Article deleted successfully.');
-    }
-
-    private function authorizeSchool(News $news): void
-    {
-        if ((int) $news->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
     }
 }

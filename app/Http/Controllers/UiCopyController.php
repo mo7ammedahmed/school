@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Domain\Localization\Models\InterfaceTranslation;
+use App\Domain\Localization\Services\InterfaceCatalog;
 use App\Domain\Localization\Services\TranslationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -43,7 +45,10 @@ class UiCopyController extends Controller
      */
     private const int MAX_STRING = 400;
 
-    public function __construct(private readonly TranslationService $translations) {}
+    public function __construct(
+        private readonly TranslationService $translations,
+        private readonly InterfaceCatalog $catalog,
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -173,6 +178,23 @@ class UiCopyController extends Controller
             'pending' => $pending,
             'configured' => true,
         ]);
+    }
+
+    /**
+     * The whole dictionary, so a page never has to buy it word by word.
+     *
+     * This is what the browser falls back to when the payload that normally
+     * rides along with the page is missing — a cleared cache, or a screen that
+     * rendered without it. It answers from the catalog alone: no provider is
+     * called, so it is as cheap as the page it is paired with.
+     */
+    public function catalog(Request $request): JsonResponse
+    {
+        $payload = $this->catalog->payload();
+
+        Cookie::queue(InterfaceCatalog::COOKIE, $payload['version'], 60 * 24 * 365);
+
+        return response()->json($payload);
     }
 
     public function version(): JsonResponse

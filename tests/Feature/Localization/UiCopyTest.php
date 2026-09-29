@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Localization;
 
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Localization\Services\TranslationSettings;
 use App\Domain\Schools\Models\School;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -307,29 +304,5 @@ class UiCopyTest extends TestCase
                 'choices' => [['message' => ['content' => $translated]]],
             ]),
         ]);
-    }
-
-    private function actingAsSchoolUser(School $school, array $permissions = []): User
-    {
-        $user = User::factory()->create();
-
-        UserMembership::factory()->create([
-            'user_id' => $user->id,
-            'school_id' => $school->id,
-            'is_active' => true,
-        ]);
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
-
-        if ($permissions !== []) {
-            $user->givePermissionTo($permissions);
-        }
-
-        $this->actingAs($user);
-        $this->app['session']->put('school_id', $school->id);
-
-        return $user;
     }
 }

@@ -55,7 +55,7 @@ class AssessmentController extends Controller
 
     public function show(Assessment $assessment): Response
     {
-        $this->authorizeSchool($assessment);
+        $this->ensureOwned($assessment);
 
         $assessment->load(['offering.subject', 'offering.section', 'gradingCategory']);
 
@@ -69,7 +69,7 @@ class AssessmentController extends Controller
 
     public function edit(Assessment $assessment): Response
     {
-        $this->authorizeSchool($assessment);
+        $this->ensureOwned($assessment);
 
         return inertia('assessments/edit', [
             'assessment' => [
@@ -86,7 +86,7 @@ class AssessmentController extends Controller
 
     public function update(Request $request, Assessment $assessment): RedirectResponse
     {
-        $this->authorizeSchool($assessment);
+        $this->ensureOwned($assessment);
 
         $validated = $request->validate($this->rules($this->schoolId()));
 
@@ -102,7 +102,7 @@ class AssessmentController extends Controller
 
     public function destroy(Assessment $assessment): RedirectResponse
     {
-        $this->authorizeSchool($assessment);
+        $this->ensureOwned($assessment);
 
         $assessment->delete();
 
@@ -116,7 +116,7 @@ class AssessmentController extends Controller
      */
     public function scores(Assessment $assessment): Response
     {
-        $this->authorizeSchool($assessment);
+        $this->ensureOwned($assessment);
 
         $assessment->load('offering.subject', 'offering.section');
 
@@ -218,17 +218,5 @@ class AssessmentController extends Controller
         return (int) Offering::where('school_id', $this->schoolId())
             ->where('id', $offeringId)
             ->value('academic_year_id');
-    }
-
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
-    private function authorizeSchool(Assessment $assessment): void
-    {
-        if ((int) $assessment->school_id !== $this->schoolId()) {
-            abort(403);
-        }
     }
 }

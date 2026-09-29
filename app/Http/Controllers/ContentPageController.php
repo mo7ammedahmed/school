@@ -34,12 +34,12 @@ class ContentPageController extends Controller
             'school_id' => session('school_id'),
         ]);
 
-        return redirect()->route('pages.edit', $page)->with('success', 'Page created successfully.');
+        return redirect()->route('content.pages.edit', $page)->with('success', 'Page created successfully.');
     }
 
     public function edit(ContentPage $page): Response
     {
-        $this->authorizeSchool($page);
+        $this->ensureOwned($page);
 
         return inertia('content/pages/edit', [
             'page' => $page,
@@ -49,18 +49,18 @@ class ContentPageController extends Controller
 
     public function update(Request $request, ContentPage $page): RedirectResponse
     {
-        $this->authorizeSchool($page);
+        $this->ensureOwned($page);
         $page->update($this->validated($request, $page));
 
-        return redirect()->route('pages.edit', $page)->with('success', 'Page updated successfully.');
+        return redirect()->route('content.pages.edit', $page)->with('success', 'Page updated successfully.');
     }
 
     public function destroy(ContentPage $page): RedirectResponse
     {
-        $this->authorizeSchool($page);
+        $this->ensureOwned($page);
         $page->delete();
 
-        return redirect()->route('pages.index')->with('success', 'Page archived.');
+        return redirect()->route('content.pages.index')->with('success', 'Page archived.');
     }
 
     private function validated(Request $request, ?ContentPage $page = null): array
@@ -96,11 +96,6 @@ class ContentPageController extends Controller
             : null;
 
         return $validated + ['seo_metadata' => []];
-    }
-
-    private function authorizeSchool(ContentPage $page): void
-    {
-        abort_unless((int) $page->school_id === (int) session('school_id'), 403);
     }
 
     private function sectionTypes(): array

@@ -13,9 +13,12 @@ class EventsController
 {
     public function index(): Response
     {
+        // `event_date` is an appended display name for `start_date`. As a query
+        // column it does not exist, so the list filtered and sorted on a string
+        // literal and returned nothing.
         $events = Event::where('is_published', true)
-            ->where('event_date', '>=', now())
-            ->orderBy('event_date')
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date')
             ->paginate(10)
             ->withQueryString();
 
@@ -26,9 +29,9 @@ class EventsController
 
     public function show(int $id): Response
     {
-        $event = Event::where('is_published', true)
-            ->where('event_date', '>=', now())
-            ->findOrFail($id);
+        // A published event keeps its page after the date passes; only the
+        // listing is limited to what is upcoming.
+        $event = Event::where('is_published', true)->findOrFail($id);
 
         app(SiteMetadata::class)->applyPage($event->title, $event->description ?? null, indexable: true);
 

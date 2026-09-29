@@ -10,12 +10,14 @@ interface Teacher {
     id: number;
     first_name: string;
     last_name: string;
-    position: string;
-    bio: string;
-    email: string;
-    phone: string;
-    education: string;
-    subjects: string[];
+    /** `position` and `education` were never columns; these are. */
+    specialization: string | null;
+    qualification: string | null;
+    bio: string | null;
+    email: string | null;
+    phone: string | null;
+    /** Objects, not strings: the page rendered them as React children. */
+    subjects: { id: number; name: string }[];
 }
 
 interface TeachersShowProps {
@@ -31,7 +33,7 @@ export default function TeachersShow({ teacher }: TeachersShowProps) {
                 <section className="py-12 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <Button asChild variant="outline" className="mb-8">
-                            <Link href="/teachers">
+                            <Link href="/faculty">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 {t(locale, 'public.backToTeachers')}
                             </Link>
@@ -45,7 +47,7 @@ export default function TeachersShow({ teacher }: TeachersShowProps) {
                                             <User className="h-16 w-16" />
                                         </div>
                                         <CardTitle className="mt-4 text-2xl">{teacher.first_name} {teacher.last_name}</CardTitle>
-                                        <p className="text-emerald-600 dark:text-emerald-400 font-medium">{teacher.position}</p>
+                                        <p className="text-emerald-600 dark:text-emerald-400 font-medium">{teacher.specialization}</p>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -80,19 +82,19 @@ export default function TeachersShow({ teacher }: TeachersShowProps) {
 
                                     <div>
                                         <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">{t(locale, 'public.education')}</h3>
-                                        <p className="text-gray-600 dark:text-gray-300">{teacher.education}</p>
+                                        <p className="text-gray-600 dark:text-gray-300">{teacher.qualification}</p>
                                     </div>
 
                                     <div>
                                         <h3 className="mb-3 font-semibold text-gray-900 dark:text-white">{t(locale, 'public.subjectsTaught')}</h3>
                                         <div className="flex flex-wrap gap-2">
-                                            {teacher.subjects.map((subject: string) => (
+                                            {teacher.subjects.map((subject) => (
                                                 <span
-                                                    key={subject}
+                                                    key={subject.id}
                                                     className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 text-sm text-emerald-600 dark:text-emerald-400"
                                                 >
                                                     <BookOpen className="h-3.5 w-3.5" />
-                                                    {subject}
+                                                    {subject.name}
                                                 </span>
                                             ))}
                                         </div>

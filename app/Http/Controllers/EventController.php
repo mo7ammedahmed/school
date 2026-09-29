@@ -57,21 +57,21 @@ class EventController extends Controller
 
     public function show(Event $event): Response
     {
-        $this->authorizeSchool($event);
+        $this->ensureOwned($event);
 
         return inertia('events/show', ['event' => $event]);
     }
 
     public function edit(Event $event): Response
     {
-        $this->authorizeSchool($event);
+        $this->ensureOwned($event);
 
         return inertia('events/edit', ['event' => $event]);
     }
 
     public function update(Request $request, Event $event): RedirectResponse
     {
-        $this->authorizeSchool($event);
+        $this->ensureOwned($event);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'event_date' => 'required|date',
@@ -100,16 +100,9 @@ class EventController extends Controller
 
     public function destroy(Event $event): RedirectResponse
     {
-        $this->authorizeSchool($event);
+        $this->ensureOwned($event);
         $event->delete();
 
         return redirect()->route('content.events.index')->with('success', 'Event deleted successfully.');
-    }
-
-    private function authorizeSchool(Event $event): void
-    {
-        if ((int) $event->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
     }
 }

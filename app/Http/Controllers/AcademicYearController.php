@@ -13,11 +13,6 @@ use Inertia\Response;
 
 class AcademicYearController extends Controller
 {
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
-    }
-
     public function index(): Response
     {
         $academicYears = AcademicYear::where('school_id', $this->schoolId())
@@ -88,7 +83,6 @@ class AcademicYearController extends Controller
             'end_date' => 'required|date|after:start_date',
             'is_current' => 'required|boolean',
         ]);
-
 
         DB::transaction(function () use ($academicYear, $validated) {
             if ($validated['is_current']) {

@@ -26,8 +26,10 @@ class NewsController
 
     public function show(int $id): Response
     {
+        // `publish_date` is the model's display name for `published_at`, not a
+        // column: filtering on it matched nothing at all, so every article 404ed.
         $article = News::where('is_published', true)
-            ->where('publish_date', '<=', now())
+            ->where('published_at', '<=', now())
             ->findOrFail($id);
 
         // The article's own name is the page's name; the middleware handles the

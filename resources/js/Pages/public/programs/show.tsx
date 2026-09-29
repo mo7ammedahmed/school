@@ -11,7 +11,8 @@ interface Program {
     name: string;
     description: string;
     grade_level_id: number;
-    gradeLevel?: {
+    /** Relations arrive snake-cased, which is why the page read `undefined`. */
+    grade_level?: {
         id: number;
         name: string;
         level: number;
@@ -40,9 +41,9 @@ export default function ProgramsShow({ program }: ProgramsShowProps) {
                         <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 overflow-hidden">
                             <CardHeader>
                                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                    {program.gradeLevel && (
+                                    {program.grade_level && (
                                         <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                            {program.gradeLevel.name}
+                                            {program.grade_level.name}
                                         </span>
                                     )}
                                 </div>
@@ -63,7 +64,7 @@ export default function ProgramsShow({ program }: ProgramsShowProps) {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">{t(locale, 'public.programType')}</p>
-                                            <p className="font-medium text-gray-900 dark:text-white">{program.gradeLevel?.name || t(locale, 'public.unknown')}</p>
+                                            <p className="font-medium text-gray-900 dark:text-white">{program.grade_level?.name || t(locale, 'public.unknown')}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-700 rounded-lg">
@@ -72,7 +73,11 @@ export default function ProgramsShow({ program }: ProgramsShowProps) {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">{t(locale, 'public.gradeLevel')}</p>
-                                            <p className="font-medium text-gray-900 dark:text-white">{program.gradeLevel?.level ? `Level ${program.gradeLevel.level}` : t(locale, 'public.unknown')}</p>
+                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                {program.grade_level?.level
+                                                    ? t(locale, 'public.level', { level: program.grade_level.level })
+                                                    : t(locale, 'public.unknown')}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

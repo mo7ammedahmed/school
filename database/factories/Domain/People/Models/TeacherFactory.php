@@ -24,8 +24,9 @@ class TeacherFactory extends Factory
             'hire_date' => fake()->date('Y-m-d', '-5 years'),
             'qualification' => fake()->randomElement(['B.Ed', 'M.Ed', 'PhD']),
             'specialization' => fake()->randomElement(['Mathematics', 'Science', 'English', 'History']),
-            'address' => fake()->optional()->address(),
-            'status' => 'active',
+            // Neither `address` nor `status` is a column on `teacher_profiles`:
+            // both were dropped on the way in, so the factory claimed to set
+            // fields that never existed.
         ];
     }
 }

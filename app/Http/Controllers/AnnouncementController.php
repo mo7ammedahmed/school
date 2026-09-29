@@ -39,21 +39,21 @@ class AnnouncementController extends Controller
 
     public function show(Announcement $announcement): Response
     {
-        $this->ensureOwned($announcement);
+        $this->ensureOwned($announcement, 404);
 
         return inertia('announcements/show', ['announcement' => $announcement]);
     }
 
     public function edit(Announcement $announcement): Response
     {
-        $this->ensureOwned($announcement);
+        $this->ensureOwned($announcement, 404);
 
         return inertia('announcements/edit', ['announcement' => $announcement]);
     }
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->ensureOwned($announcement);
+        $this->ensureOwned($announcement, 404);
 
         $announcement->update($this->validated($request));
 
@@ -62,7 +62,7 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement): RedirectResponse
     {
-        $this->ensureOwned($announcement);
+        $this->ensureOwned($announcement, 404);
 
         $announcement->delete();
 
@@ -103,15 +103,5 @@ class AnnouncementController extends Controller
     private function forSchool(): Builder
     {
         return Announcement::where('school_id', $this->schoolId());
-    }
-
-    private function ensureOwned(Announcement $announcement): void
-    {
-        abort_if($announcement->school_id !== $this->schoolId(), 404);
-    }
-
-    private function schoolId(): int
-    {
-        return (int) session('school_id');
     }
 }

@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Domain\Localization\Services\InterfaceCatalog;
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Services\SchoolResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
 
-    public function __construct(private readonly SchoolResolver $schools) {}
+    public function __construct(
+        private readonly SchoolResolver $schools,
+        private readonly InterfaceCatalog $interfaceCatalog,
+    ) {}
 
     public function version(Request $request): ?string
     {
@@ -80,6 +85,9 @@ class HandleInertiaRequests extends Middleware
                 ])
                 ->all() : [],
             'locale' => app()->getLocale(),
+            // The dashboard's Arabic dictionary, sent once per version rather
+            // than re-requested six strings at a time while the page loads.
+            'uiCopy' => fn (): ?array => $this->interfaceCopy($request),
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
@@ -88,6 +96,25 @@ class HandleInertiaRequests extends Middleware
             ],
             'csrf_token' => $request->session()->token(),
         ]);
+    }
+
+    /**
+     * The interface dictionary, when this request still needs it.
+     *
+     * The version is remembered in a cookie so later navigations send nothing at
+     * all; the browser then repaints from what it already stored.
+     */
+    private function interfaceCopy(Request $request): ?array
+    {
+        if (! $this->interfaceCatalog->shouldShare($request)) {
+            return null;
+        }
+
+        $payload = $this->interfaceCatalog->payload();
+
+        Cookie::queue(InterfaceCatalog::COOKIE, $payload['version'], 60 * 24 * 365);
+
+        return $payload;
     }
 
     /**
