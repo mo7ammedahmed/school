@@ -1,0 +1,356 @@
+# =============================================================================
+# Aether School OS - local development stack
+#
+#   docker compose build
+#   docker compose up -d
+#   open http://localhost:8080        (nginx)
+#   open http://localhost:8025        (Mailpit UI, all mail the app sends)
+#
+# On a machine without Docker installed none of this has been executed. Every
+# file behind this stack is UNTESTED.
+# =============================================================================
+
+name: school
+
+# -----------------------------------------------------------------------------
+# Shared environment
+# -----------------------------------------------------------------------------
+# Every PHP process gets the same block. Using an anchor rather than repeating
+# the list six times means app, queue and scheduler cannot drift apart, which
+# is the usual cause of "the worker cannot see the config the web server sees".
+#
+# The four variables below are read from DOCKER_-prefixed (or PUBLIC_URL)
+# substitutions, not from APP_NAME / APP_ENV / APP_DEBUG / APP_URL directly.
+#
+# This is not stylistic. Docker Compose automatically loads a `.env` file from
+# the project directory for every ${VAR} substitution in this file, and this
+# repository already has one for its non-Docker workflow - with
+# APP_URL=http://localhost and APP_ENV=local in it. Writing ${APP_URL:-...}
+# would therefore silently resolve to http://localhost, not to the port nginx
+# is actually published on, and nothing in the stack would report an error:
+# every generated URL and every public disk URL would point somewhere that does
+# not answer, and MAIL_EHLO_DOMAIN would announce "localhost" to the relay.
+# APP_KEY is the deliberate exception - this project has no config/hashing.php,
+# and the existing .env is the natural place for the generated key.
+#
+# APP_URL is http://localhost:8080 because that is the host-reachable URL. It
+# is not decoration:
+#   * config/filesystems.php:44 builds the public disk URL from APP_URL, so
+#     every uploaded document, material, submission and logo URL depends on it.
+#   * config/mail.php derives MAIL_EHLO_DOMAIN from the APP_URL host when
+#     MAIL_EHLO_DOMAIN is unset, so SMTP sessions announce localhost. Setting
+#     it to something unreachable inside compose (for example
+#     http://app:9000) yields mail the receiving server may reject and links in
+#     that mail that open nothing.
+#   * Every generated URL in the app comes from here.
+x-app-env: &app-env
+  APP_NAME: ${DOCKER_APP_NAME:-Aether School OS}
+  APP_ENV: ${DOCKER_APP_ENV:-local}
+  APP_DEBUG: ${DOCKER_APP_DEBUG:-true}
+  APP_URL: ${PUBLIC_URL:-http://localhost:8080}
+  APP_KEY: ${APP_KEY:-}
+
+  APP_LOCALE: en
+  APP_FALLBACK_LOCALE: en
+  APP_FAKER_LOCALE: en_US
+
+  LOG_CHANNEL: stack
+  LOG_STACK: single
+  LOG_LEVEL: ${LOG_LEVEL:-debug}
+
+  # Sessions, cache and the queue stay on the database driver, which is what
+  # .env.example and config/*.php default to and what the existing migrations
+  # were written against. Switching them to redis is a deliberate change with
+  # its own consequences (queue retry_after, cache prefix, atomic locks), not
+  # something to do by accident while wiring up a container. Redis is fully
+  # configured below so flipping CACHE_STORE / SESSION_DRIVER /
+  # QUEUE_CONNECTION to `redis` is a one-line edit.
+  SESSION_DRIVER: database
+  SESSION_LIFETIME: 120
+  CACHE_STORE: database
+  QUEUE_CONNECTION: database
+  FILESYSTEM_DISK: local
+
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: 3306
+  DB_DATABASE: ${MYSQL_DATABASE:-school}
+  DB_USERNAME: ${MYSQL_USER:-school}
+  DB_PASSWORD: ${MYSQL_PASSWORD:-secret}
+  DB_CHARSET: utf8mb4
+
+  # predis/predis is a pure-PHP client and is what composer.json pulls in, so
+  # the phpredis extension is neither required nor present. config/database.php
+  # switches the driver on this exact string.
+  REDIS_CLIENT: predis
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+
+  # Mailpit stands in for a real relay. MAIL_PORT 1025 is Mailpit's SMTP port
+  # (the app's .env.example default of 2525 is Mailpit's *older* default and is
+  # not what this image listens on).
+  MAIL_MAILER: smtp
+  MAIL_SCHEME: null
+  MAIL_HOST: mailpit
+  MAIL_PORT: 1025
+  MAIL_USERNAME: null
+  MAIL_PASSWORD: null
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@localhost}
+  MAIL_FROM_NAME: "${DOCKER_APP_NAME:-Aether School OS}"
+
+  # BCRYPT_ROUNDS and BROADCAST_CONNECTION are deliberately absent. Both are in
+  # .env.example, but this project has no config/hashing.php and no
+  # config/broadcasting.php, so nothing ever reads them here. Carrying them in
+  # the compose file would be two variables that look load-bearing and are not.
+
+# -----------------------------------------------------------------------------
+# Secrets
+# -----------------------------------------------------------------------------
+# There is deliberately NO `env_file:` line here.
+#
+# Every variable above carries a default, so `docker compose up` works on a
+# fresh clone with no setup step and no secret in the repository. If you would
+# rather keep values out of this file, create `.env.docker` from `.env.example`
+# and add it to the `app`, `queue` and `scheduler` services:
+#
+#     env_file:
+#       - path: .env.docker
+#         required: false
+#
+# The long syntax with `required:` is Compose Specification v2.24 (January 2024)
+# and later, and `required: false` means an absent file is not an error - the
+# defaults above still apply.
+#
+# `/.env.docker` is now in .gitignore. It is not created here and it must not be
+# committed.
+#
+# To override any of these without editing this file, export it in the shell
+# before `docker compose up`, or put it in the `.env` file Compose already
+# reads - but under the DOCKER_APP_NAME / DOCKER_APP_ENV / DOCKER_APP_DEBUG /
+# PUBLIC_URL / MYSQL_* names, not the bare APP_* names. The bare APP_* names in
+# this repository's existing `.env` belong to the non-Docker workflow and must
+# not leak into the container's URLs.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # app - php-fpm, the only service that serves the application
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: school/app:local
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+    volumes:
+      # -------------------------------------------------------------------------
+      # THE bind-mount trap, and how this avoids it
+      # -------------------------------------------------------------------------
+      # Mounting the working tree over /var/www/html replaces the ENTIRE
+      # directory that the image built - including vendor/ and public/build.
+      # Without the two anonymous volumes below, the container comes up with an
+      # empty vendor/ (no autoloader, every page 500s) and no compiled assets
+      # (every page renders with no CSS and no JS), while `ls` on the host looks
+      # perfectly normal. Anonymous volumes are initialised from the image's own
+      # contents on first use, so they restore vendor/ and public/build exactly
+      # as the build stage produced them while leaving app/ live-editable.
+      #
+      # Known consequence: public/ is the host's directory, so files written
+      # into it by the container (public/storage) appear on the host. That is
+      # why the entrypoint uses `storage:link --relative` - an absolute symlink
+      # would leave a dangling /var/www/html/... target on the Windows or macOS
+      # host. public/storage is already gitignored.
+      #
+      # Known consequence: opcache.validate_timestamps=0 in docker/php/99-app.ini
+      # means PHP source edits inside this mount are NOT picked up. Restart the
+      # app container (`docker compose restart app`) after changing PHP, or drop
+      # that one line for a local override.
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/public/build
+      # storage/ stays writable and, more importantly, persists outside the
+      # image. Without it every `docker compose down` discards uploaded
+      # documents, admission scans and generated files.
+      #
+      # Host permissions: the image runs as uid 33 (www-data), so this directory
+      # must be writable by uid 33 on Linux. On Docker Desktop (Windows/macOS)
+      # the VM's file sharing maps ownership transparently and this is a no-op.
+      - ./storage:/var/www/html/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(is_readable('/var/www/html/vendor/autoload.php') ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # nginx - the only published HTTP port
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    # Hits the public `/` route (routes/web.php:104, HomeController) rather than
+    # the platform health route, which sits behind `auth` and
+    # `can:access-platform` and would answer a redirect. This is the first check
+    # in the stack that proves nginx, php-fpm and the database are all actually
+    # serving - the app container's own healthcheck only proves two files are
+    # readable.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # mysql
+  # ---------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-school}
+      MYSQL_USER: ${MYSQL_USER:-school}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret}
+    volumes:
+      # A named volume, not a bind mount: MySQL's data directory must not be
+      # owned by the host user, and `docker compose down` must not delete the
+      # school year. Remove it deliberately with
+      # `docker compose down -v` when you actually want a clean database.
+      - mysql-data:/var/lib/mysql
+    # Not published. Exposing 3306 collides with a local MySQL and publishes a
+    # database on every interface. Uncomment to attach a GUI client, and bind
+    # it to loopback rather than 0.0.0.0:
+    # ports:
+    #   - "127.0.0.1:3306:3306"
+    healthcheck:
+      # CMD-SHELL, not CMD: the exec form cannot expand $$MYSQL_ROOT_PASSWORD,
+      # so the argument would reach mysqladmin literally and the check would
+      # pass or fail for the wrong reason.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      # The image runs a temporary server while it initialises the data
+      # directory. Without this window that server answers ping and dependent
+      # services start against a database that is about to be shut down.
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # redis
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel notice
+    volumes:
+      - redis-data:/data
+    # Not published for the same reason as MySQL. Uncomment and bind to
+    # loopback if you need to inspect it.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # queue and scheduler
+  # ---------------------------------------------------------------------------
+  # BOTH OF THESE ARE CURRENTLY IDLE, AND THAT IS CORRECT.
+  #
+  # There is not one class in app/ implementing ShouldQueue, and not one
+  # Schedule:: definition anywhere in the project. Nothing is dispatched and
+  # nothing is scheduled, so this worker will sit on an empty `jobs` table and
+  # `schedule:work` will wake once a minute, find no due events, and sleep.
+  #
+  # They are defined now anyway so that the first `ShouldQueue` job or the first
+  # scheduled command does not have to be accompanied by a compose change, and
+  # so the connection settings are proven to work. Do not read their presence
+  # as evidence that background work is running.
+  #
+  # Neither is given the source bind mount. They run from the image, which means
+  # code changes need `docker compose build`, not a restart.
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: school/app:local
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=90"]
+    environment:
+      <<: *app-env
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: school/app:local
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      <<: *app-env
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # mailpit
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+    ports:
+      # 8025 is the web UI. Published on every interface so it can be opened
+      # from the host browser.
+      - "8025:8025"
+      # 1025 is SMTP, for anything outside compose that needs to send into this
+      # stack. Bound to loopback so it is not exposed to the local network.
+      - "127.0.0.1:1025:1025"
+    volumes:
+      - mailpit-data:/data
+
+volumes:
+  mysql-data:
+  redis-data:
+  mailpit-data:

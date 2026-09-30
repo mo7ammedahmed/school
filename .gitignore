@@ -3,6 +3,11 @@
 .env
 .env.backup
 .env.production
+# Optional per-developer environment overrides for docker-compose.yml
+# (APP_KEY, MYSQL_PASSWORD, ...). Copied from .env.example, never committed.
+# The file is deliberately absent from the repository; docker-compose.yml carries
+# inline defaults so the stack starts without it.
+.env.docker
 .phpactor.json
 .phpunit.result.cache
 /.fleet

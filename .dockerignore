@@ -1,0 +1,105 @@
+# =============================================================================
+# Docker build context exclusions.
+#
+# Purpose is twofold: keep the context small, and keep secrets and local state
+# out of image layers. `.env*` is the important one - every variable this
+# application uses arrives as an environment variable at run time, so nothing
+# here should ever need a .env file baked in.
+#
+# Nothing here duplicates a path that would be built anyway. Do not add
+# /public/build, /node_modules, /public/hot or /public/storage to this file
+# expecting it to exclude them from the image: .dockerignore and .gitignore are
+# different mechanisms, and only this file affects the build context.
+# =============================================================================
+
+# --- Version control and CI ------------------------------------------------
+.git
+.gitignore
+.gitattributes
+.github
+
+# --- Dependency trees ------------------------------------------------------
+# Rebuilt inside the image by npm ci / composer install. Copying the host's
+# vendor/ would shadow the image's --no-dev install and could bring Windows
+# path separators or host-specific binaries with it.
+node_modules
+vendor
+
+# --- Build output ----------------------------------------------------------
+# Rebuilt by the assets stage. Copying a stale host build in would ship whatever
+# was last compiled locally rather than what this commit produces.
+public/build
+public/hot
+
+# --- Secrets and local environment -----------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- Local state and logs --------------------------------------------------
+storage/logs/*
+!storage/logs/.gitignore
+storage/framework/cache/data/*
+!storage/framework/cache/data/.gitignore
+storage/framework/sessions/*
+!storage/framework/sessions/.gitignore
+storage/framework/views/*
+!storage/framework/views/.gitignore
+storage/framework/testing/*
+!storage/framework/testing/.gitignore
+storage/app/private/*
+!storage/app/private/.gitignore
+storage/app/public/*
+!storage/app/public/.gitignore
+storage/app/tmp/*
+!storage/app/tmp/.gitignore
+storage/pail
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# --- Caches and tool state -------------------------------------------------
+.phpunit.result.cache
+.phpunit.cache
+.phpactor.json
+.rector.php
+# Kept out because `composer format` runs rector and pint from composer.json;
+# the config is documentation, not runtime behaviour. If you want a rector/pint
+# gate inside the image, delete this line and install the dev dependencies.
+.idea
+.vscode
+.zed
+
+# --- Tests -----------------------------------------------------------------
+# CONSEQUENCE, STATED PLAINLY: the runtime image cannot run the test suite.
+#
+# Two independent reasons, either of which alone is sufficient:
+#   1. tests/ is not in the image, and phpunit.xml points at tests/Unit and
+#      tests/Feature, which phpunit errors on when the directory is missing.
+#   2. composer install runs with --no-dev, so vendor/bin/phpunit does not
+#      exist even if the tests were copied in. PHPUnit's own platform
+#      requirements (ext-xmlwriter, ext-xml via php-code-coverage) are dev-only
+#      and are deliberately not installed either.
+#
+# This directly contradicts a "the test suite runs inside the container" line in
+# Phase 1's definition of done. The honest options, in the order I would take
+# them:
+#   a) Accept that the container is a runtime target only, and keep the suite
+#      where it already runs and already gates merges: .github/workflows/ci.yml.
+#   b) Add a fourth `test` stage to the Dockerfile that installs with dev
+#      dependencies, keeps tests/, adds pdo_sqlite and the phpunit platform
+#      extensions, and runs `vendor/bin/phpunit` as its CMD. phpunit.xml
+#      already forces DB_CONNECTION=sqlite with DB_DATABASE=:memory:, so that
+#      stage needs no MySQL.
+#   c) Compose a second file (docker-compose.test.yml) that overrides the image
+#      and the volumes.
+#
+# Neither b nor c is written here because neither has been executed and a
+# green test container that was never run is worse than a documented gap.
+tests
+
+# --- Documentation and agent/tooling output --------------------------------
+docs
+*.md
+.kilo
+.freebuff
+graphify-out
