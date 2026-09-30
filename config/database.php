@@ -147,7 +147,19 @@ return [
 
     'redis' => [
 
-        'client' => env('REDIS_CLIENT', 'phpredis'),
+        /*
+        |--------------------------------------------------------------------------
+        | Default Redis Client
+        |--------------------------------------------------------------------------
+        |
+        | This application installs predis/predis and not the Redis extension, so
+        | the extension-backed client cannot work here: the fallback is the client
+        | whose driver this project actually ships, and it matches REDIS_CLIENT in
+        | the environment file.
+        |
+        */
+
+        'client' => env('REDIS_CLIENT', 'predis'),
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
