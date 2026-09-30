@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ApplySiteMetadata::class,
         ]);
 
+        // A payment gateway cannot hold a CSRF token. A delivery is
+        // authenticated by the school's own webhook secret instead; the path is
+        // rate limited in routes/web.php.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
         $middleware->alias([
             'school.context' => EnsureSchoolContext::class,
             'role' => RoleMiddleware::class,

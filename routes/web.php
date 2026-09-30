@@ -549,9 +549,14 @@ Route::prefix('pay')->name('public.invoices.')->middleware('signed')->group(func
     Route::post('/{invoice}/offline', [PublicInvoicePaymentController::class, 'offline'])->name('offline');
 });
 
-// Webhook routes (no auth middleware)
+// Webhook routes (no auth middleware). CSRF-exempt in bootstrap/app.php — a
+// gateway cannot hold a token — and rate limited, because the endpoint is open
+// to the internet and its only authentication is the per-school secret the
+// controller verifies before anything settles.
 Route::prefix('webhooks')->name('webhooks.')->group(function () {
-    Route::post('/payments/{gateway}', [WebhookController::class, 'handle'])->name('payments.handle');
+    Route::post('/payments/{gateway}', [WebhookController::class, 'handle'])
+        ->middleware('throttle:60,1')
+        ->name('payments.handle');
 });
 
 // Platform/Super Admin routes
