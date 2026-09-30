@@ -92,8 +92,9 @@ class UserManagementTest extends TestCase
         $this->assertTrue($member->fresh()->hasRole('admin'));
         $this->assertFalse($member->fresh()->hasRole('teacher'));
 
-        // Keep the compiler honest about the unused role in this scenario.
-        $this->assertNotNull($teacher);
+        // The scenario's starting role is what the edit replaced, so assert on
+        // the role itself rather than on the variable being non-null.
+        $this->assertSame('teacher', $teacher->name);
     }
 
     public function test_a_user_cannot_delete_themselves(): void

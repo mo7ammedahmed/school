@@ -115,7 +115,9 @@ class OperationsSeeder extends Seeder
             ['school_id' => $school->id, 'name' => 'Al Noor Standard Scale'],
             [
                 'description' => 'Standard percentage-based grading scale',
-                'scale' => json_encode([
+                // The model casts `scale` to an array; encoding it here as well
+                // stored a JSON string inside a JSON column.
+                'scale' => [
                     ['grade' => 'A+', 'min' => 95, 'max' => 100],
                     ['grade' => 'A', 'min' => 90, 'max' => 94.99],
                     ['grade' => 'B+', 'min' => 85, 'max' => 89.99],
@@ -124,7 +126,7 @@ class OperationsSeeder extends Seeder
                     ['grade' => 'C', 'min' => 70, 'max' => 74.99],
                     ['grade' => 'D', 'min' => 60, 'max' => 69.99],
                     ['grade' => 'F', 'min' => 0, 'max' => 59.99],
-                ]),
+                ],
                 'is_default' => true,
             ]
         );

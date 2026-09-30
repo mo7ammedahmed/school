@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Content\Models;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -38,7 +39,7 @@ use Illuminate\Support\Carbon;
 #[Appends(['publish_date'])]
 class News extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     // There used to be a `category()` accessor here that returned the literal
     // string `updates` for every row. It is why the missing column went unnoticed

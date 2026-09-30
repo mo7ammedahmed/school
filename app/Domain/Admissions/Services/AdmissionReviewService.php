@@ -102,7 +102,7 @@ class AdmissionReviewService
     {
         DB::transaction(function () use ($application, $notes, $currentUser) {
             $currentNotes = $application->internal_notes ?? '';
-            $newNotes = trim($currentNotes."\n\n[$notes]") ?? '';
+            $newNotes = trim($currentNotes."\n\n[$notes]");
 
             $application->update([
                 'internal_notes' => $newNotes,

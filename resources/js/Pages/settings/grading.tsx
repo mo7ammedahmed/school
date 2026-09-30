@@ -214,7 +214,7 @@ export default function GradingSettings({ school, gradingScales, gradingCategori
             />
 
             <div className="mt-4">
-                <FormFeedback />
+                <FormFeedback showErrors={false} />
             </div>
 
             <div className="mt-4 space-y-6">
@@ -379,7 +379,6 @@ export default function GradingSettings({ school, gradingScales, gradingCategori
                                     }
                                 />
 
-                                <FormFeedback showSuccess={false} />
 
                                 <div className="flex flex-wrap gap-3">
                                     <Button type="submit">
@@ -552,7 +551,6 @@ export default function GradingSettings({ school, gradingScales, gradingCategori
                                     />
                                 </div>
 
-                                <FormFeedback showSuccess={false} />
 
                                 <div className="flex flex-wrap gap-3">
                                     <Button type="submit">
@@ -677,7 +675,6 @@ export default function GradingSettings({ school, gradingScales, gradingCategori
                                 >
                                     Reset changes
                                 </Button>
-                                <FormFeedback showSuccess={false} />
                             </div>
                         </form>
                     </CardContent>

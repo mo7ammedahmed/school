@@ -11,8 +11,6 @@ import { Link } from '@inertiajs/react';
 import { t } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-const STATUSES = ['draft', 'issued', 'paid', 'overdue', 'void'] as const;
-
 export default function FinanceInvoicesCreate({ students }: { students: { id: number; name: string }[] }) {
     const { locale } = useLocale();
 
@@ -60,16 +58,6 @@ export default function FinanceInvoicesCreate({ students }: { students: { id: nu
                             <div className="min-w-0">
                                 <Label htmlFor="invoice_number">{t(locale, 'finance.invoices.number')}</Label>
                                 <Input id="invoice_number" name="invoice_number" required />
-                            </div>
-                            <div className="min-w-0">
-                                <Label htmlFor="status">{t(locale, 'finance.invoices.status')}</Label>
-                                <Select id="status" name="status" required defaultValue="draft">
-                                    {STATUSES.map((status) => (
-                                        <option key={status} value={status}>
-                                            {t(locale, `finance.invoices.status.${status}`)}
-                                        </option>
-                                    ))}
-                                </Select>
                             </div>
                             <div className="min-w-0">
                                 <Label htmlFor="issue_date">{t(locale, 'finance.invoices.issueDate')}</Label>

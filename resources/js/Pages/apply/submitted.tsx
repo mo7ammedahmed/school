@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Home } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function ApplySubmitted() {
+export default function ApplySubmitted({ reference }: { reference?: string | null }) {
     return (
         <AppShell
             title="Application Submitted"
@@ -37,7 +37,8 @@ export default function ApplySubmitted() {
                         </p>
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <p className="text-sm text-blue-800">
-                                <strong>Application Reference:</strong> #APP-2024-001234
+                                <strong>Application Reference:</strong>{' '}
+                                {reference ?? 'not available — please contact the school office'}
                             </p>
                             <p className="text-sm text-blue-800 mt-1">
                                 <strong>Next Steps:</strong> Please keep your reference number for future correspondence.

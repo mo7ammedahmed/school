@@ -86,14 +86,18 @@ class AdmissionsController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $application = AdmissionApplication::where('school_id', $request->session()->get('school_id'))
-            ->where('status', 'submitted')
-            ->orWhere(function ($q) use ($request, $id) {
-                $q->where('school_id', $request->session()->get('school_id'))
-                    ->where('id', $id)
-                    ->where('status', 'under_review');
-            })
-            ->findOrFail($id);
+        // One scoped query for both decidable statuses.
+        //
+        // This used to be `where(school)->where('status', 'submitted')` followed by
+        // an `orWhere()` carrying the id and the other status, and then
+        // `findOrFail($id)`. `and` binds tighter than `or`, so the recorded id
+        // applied only to the second branch: with any other submitted application
+        // in the school, the first branch matched and the decision was written to
+        // *that* applicant instead of the one on screen.
+        $application = AdmissionApplication::where('school_id', $this->schoolId())
+            ->whereKey($id)
+            ->whereIn('status', ['submitted', 'under_review'])
+            ->firstOrFail();
 
         $application->update([
             'status' => $validated['decision'],
@@ -117,9 +121,10 @@ class AdmissionsController extends Controller
      */
     public function applicationConvert(Request $request, int $id): RedirectResponse
     {
-        $application = AdmissionApplication::where('school_id', $request->session()->get('school_id'))
+        $application = AdmissionApplication::where('school_id', $this->schoolId())
+            ->whereKey($id)
             ->where('status', 'approved')
-            ->findOrFail($id);
+            ->firstOrFail();
 
         $schoolId = $application->school_id;
 
@@ -218,7 +223,7 @@ class AdmissionsController extends Controller
                 'action' => 'admission_converted',
                 'entity_type' => AdmissionApplication::class,
                 'entity_id' => $application->id,
-                'new_values' => json_encode(['student_id' => $student->id]),
+                'new_values' => ['student_id' => $student->id],
             ]);
 
             return $student;

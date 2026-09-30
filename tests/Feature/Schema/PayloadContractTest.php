@@ -92,6 +92,9 @@ class PayloadContractTest extends TestCase
     private const array NOT_A_COLUMN = [
         // File uploads: the value is a file, and the stored value is its path.
         'file', 'document', 'logo', 'favicon', 'photo', 'featured_image', 'attachment', 'import',
+        // The public application's four documents: each is stored inside the
+        // `documents` JSON column as {type, name, path}, keyed by this name.
+        'birth_certificate', 'previous_school_records', 'passport_photos', 'medical_records',
         // Settings are stored one row per key in `school_settings`, so the key is
         // data rather than a column. Validation is the only place they appear.
         'appearance', 'theme_config', 'light', 'dark', 'mode', 'grading_system', 'pass_mark',

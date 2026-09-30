@@ -28,7 +28,7 @@ class AppearanceSettingsController extends Controller
     public function index(): Response
     {
         $school = $this->activeSchool();
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         return Inertia::render('settings/appearance', [
             'appearance' => [
@@ -52,7 +52,7 @@ class AppearanceSettingsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $school = $this->activeSchool();
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         $validated = $request->validate([
             'theme' => 'nullable|in:light,dark,system',

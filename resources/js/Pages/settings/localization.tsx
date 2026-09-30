@@ -89,7 +89,7 @@ export default function SettingsLocalization({ settings = {} }: { settings?: Loc
                                 <Button type="button" variant="outline" asChild>
                                     <a href="/settings/school">Cancel</a>
                                 </Button>
-                                <FormFeedback />
+                                <FormFeedback showErrors={false} />
                             </div>
                         </form>
                     </CardContent>

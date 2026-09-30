@@ -9,11 +9,14 @@ use App\Domain\Content\Services\SiteMetadata;
 use Inertia\Response;
 use Laravel\Head\Facades\Head;
 
-class PageController
+class PageController extends PublicController
 {
     public function show(string $slug): Response
     {
-        $page = ContentPage::published()
+        // A slug is only unique inside a school: without this scope the page
+        // that answered `/pages/{slug}` was whichever school's row came first.
+        $page = ContentPage::forSchool($this->schoolId())
+            ->published()
             ->where('slug', $slug)
             ->with(['school' => function ($query) {
                 $query->select([

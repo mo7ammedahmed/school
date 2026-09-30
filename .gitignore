@@ -18,6 +18,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+# Index caches written by the PHP language server, not project state.
+/storage/framework/lsp-*.php
 /vendor
 Homestead.json
 Homestead.yaml

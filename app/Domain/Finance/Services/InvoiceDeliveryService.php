@@ -127,7 +127,7 @@ class InvoiceDeliveryService
     }
 
     /**
-     * @param  Collection<int, int>  $userIds
+     * @param  Collection<int, int<0, max>>  $userIds
      */
     private function notifyInApp(Invoice $invoice, string $kind, Collection $userIds): bool
     {

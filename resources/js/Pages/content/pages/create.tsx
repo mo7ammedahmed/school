@@ -47,7 +47,20 @@ export default function PageCreate({ sectionTypes, page }: { sectionTypes: Secti
     return (
         <AppShell title="New Website Page" breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Website Pages', href: '/content/pages' }, { label: 'New page' }]}>
             <PageHeader title="New Website Page" description="Compose a public page from controlled content sections." />
-            <form onSubmit={(event) => { event.preventDefault(); page ? put(`/content/pages/${page.id}`) : post('/content/pages'); }} className="mt-6 space-y-6">
+            <form
+                onSubmit={(event) => {
+                    event.preventDefault();
+
+                    if (page) {
+                        put(`/content/pages/${page.id}`);
+
+                        return;
+                    }
+
+                    post('/content/pages');
+                }}
+                className="mt-6 space-y-6"
+            >
                 <Card><CardHeader><CardTitle>Page details</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-2">
                     {(['title', 'title_ar', 'slug', 'seo_title', 'seo_description', 'canonical_url'] as const).map((field) => (
                         <div key={field} className={field === 'seo_description' ? 'md:col-span-2' : ''}>

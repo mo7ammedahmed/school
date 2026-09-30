@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, router } from '@inertiajs/react';
 import { ArrowLeft, Check, Copy, Download, ExternalLink, Mail, MessageSquare, Bell, Send } from 'lucide-react';
+import { useLocale } from '@/lib/i18n/locale-context';
+import { invoiceStatusLabel, invoiceStatusVariant } from '@/lib/finance/invoice-status';
 
 type Invoice = {
     id: number;
@@ -50,18 +52,11 @@ type Props = {
     delivery: Delivery;
 };
 
-const statusVariant = (status: string) => {
-    if (status === 'paid') return 'success' as const;
-    if (status === 'issued') return 'info' as const;
-    if (status === 'partially_paid') return 'warning' as const;
-    if (status === 'void') return 'destructive' as const;
-    return 'secondary' as const;
-};
-
 const money = (amount: number, currency: string) =>
     `${Number(amount ?? 0).toFixed(2)} ${currency}`;
 
 export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delivery }: Props) {
+    const { locale } = useLocale();
     const [copied, setCopied] = useState(false);
 
     const settled = invoice.status === 'paid';
@@ -143,8 +138,8 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                         <CardContent>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Field label="Status">
-                                    <Badge variant={statusVariant(invoice.status)}>
-                                        {invoice.status.replace('_', ' ')}
+                                    <Badge variant={invoiceStatusVariant(invoice.status)}>
+                                        {invoiceStatusLabel(locale, invoice.status)}
                                     </Badge>
                                 </Field>
                                 <Field label="Student">

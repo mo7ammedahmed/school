@@ -22,7 +22,8 @@ class StudentFactory extends Factory
             'date_of_birth' => fake()->date('Y-m-d', '-5 years'),
             'gender' => fake()->randomElement(['male', 'female']),
             'nationality' => fake()->optional()->country(),
-            'national_id_number' => fake()->optional()->ssn(),
+            // `ssn()` is not a Faker method outside the en_US person provider.
+            'national_id_number' => fake()->optional()->numerify('1##########'),
             'passport_number' => fake()->optional()->bothify('?########'),
             'address' => fake()->optional()->address(),
             'phone' => fake()->optional()->phoneNumber(),

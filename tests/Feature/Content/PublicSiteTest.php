@@ -35,6 +35,20 @@ class PublicSiteTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Frozen time keeps the fixtures and the assertions on the same instant.
+     *
+     * Each test builds a row from `now()->subDay()` and asserts against a second
+     * call to the same expression; without this, a minute or a midnight rolling
+     * over in between makes the test fail on nothing but the clock.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->freezeTime();
+    }
+
     public function test_the_news_list_shows_published_articles_and_hides_scheduled_ones(): void
     {
         $school = School::factory()->create();

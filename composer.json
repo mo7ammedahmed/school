@@ -63,6 +63,9 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "analyse": [
+            "@php -d memory_limit=1G vendor/bin/phpstan analyse --no-progress"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

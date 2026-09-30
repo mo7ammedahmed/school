@@ -115,7 +115,7 @@ export default function UsersEdit({ user, roles }: { user: EditableUser; roles: 
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/settings/users">Cancel</Link>
                             </Button>
-                            <FormFeedback />
+                            <FormFeedback showErrors={false} />
                         </div>
                     </form>
                 </CardContent>

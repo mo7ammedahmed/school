@@ -7,15 +7,24 @@ namespace App\Models;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * `currentMembership` and `currentSchool` are appended accessors, not columns.
+ *
+ * @property-read UserMembership|null $currentMembership
+ * @property-read School|null $currentSchool
+ */
 #[Fillable([
     'name',
     'email',
@@ -29,10 +38,10 @@ use Spatie\Permission\Traits\HasRoles;
     'sms_notifications',
 ])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasRoles, MustVerifyEmail, Notifiable;
 
     protected function casts(): array
     {
@@ -48,7 +57,10 @@ class User extends Authenticatable
         ];
     }
 
-    public function memberships()
+    /**
+     * @return HasMany<UserMembership, $this>
+     */
+    public function memberships(): HasMany
     {
         return $this->hasMany(UserMembership::class);
     }

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Check, X, AlertCircle, FileText, Users } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 
 interface ApplicationEvent {
   id: number;
@@ -30,6 +30,7 @@ interface Application {
   student_date_of_birth?: string;
   student_gender?: string;
   student_nationality?: string;
+  student_address?: string;
   grade_applying?: string;
   guardian_first_name: string;
   guardian_last_name: string;
@@ -37,9 +38,13 @@ interface Application {
   guardian_phone?: string;
   guardian_relationship?: string;
   guardian_national_id?: string;
+  guardian_occupation?: string;
+  guardian_address?: string;
   previous_school_name?: string;
+  previous_school_address?: string;
   previous_school_last_grade?: string;
   previous_school_year_completed?: string;
+  reason_for_leaving?: string;
   documents: { name: string; path: string; type?: string }[];
   review_notes?: string;
   internal_notes?: string;
@@ -79,6 +84,16 @@ const priorityVariant: Record<string, string> = {
 export default function AdmissionsReviewShow({ application }: { application: Application }) {
   const canDecide = application.status === 'submitted' || application.status === 'under_review';
 
+  const decideForm = useForm<{ decision: 'approved' | 'rejected'; notes: string }>({
+    decision: 'approved',
+    notes: '',
+  });
+
+  const decide = (decision: 'approved' | 'rejected') => {
+    decideForm.transform(() => ({ decision, notes: decideForm.data.notes }));
+    decideForm.post(`/admissions/applications/${application.id}/decide`);
+  };
+
   return (
     <AppShell
       title={`Application ${application.reference}`}
@@ -101,10 +116,20 @@ export default function AdmissionsReviewShow({ application }: { application: App
             </Button>
             {canDecide && (
               <>
-                <Button variant="destructive" form="decision-form" type="submit" name="decision" value="rejected">
+                <Button
+                  variant="destructive"
+                  type="button"
+                  disabled={decideForm.processing}
+                  onClick={() => decide('rejected')}
+                >
                   <X className="mr-2 h-4 w-4" />Reject
                 </Button>
-                <Button variant="default" form="decision-form" type="submit" name="decision" value="approved">
+                <Button
+                  variant="default"
+                  type="button"
+                  disabled={decideForm.processing}
+                  onClick={() => decide('approved')}
+                >
                   <Check className="mr-2 h-4 w-4" />Approve
                 </Button>
               </>
@@ -259,6 +284,10 @@ export default function AdmissionsReviewShow({ application }: { application: App
               <Label>Nationality</Label>
               <p className="font-medium">{application.student_nationality ?? '—'}</p>
             </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <p className="font-medium">{application.student_address ?? '—'}</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -291,6 +320,14 @@ export default function AdmissionsReviewShow({ application }: { application: App
               <Label>National ID</Label>
               <p className="font-medium">{application.guardian_national_id ?? '—'}</p>
             </div>
+            <div className="space-y-2">
+              <Label>Occupation</Label>
+              <p className="font-medium">{application.guardian_occupation ?? '—'}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <p className="font-medium">{application.guardian_address ?? '—'}</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -308,12 +345,20 @@ export default function AdmissionsReviewShow({ application }: { application: App
               <p className="font-medium">{application.previous_school_name ?? '—'}</p>
             </div>
             <div className="space-y-2">
+              <Label>School Address</Label>
+              <p className="font-medium">{application.previous_school_address ?? '—'}</p>
+            </div>
+            <div className="space-y-2">
               <Label>Last Grade Completed</Label>
               <p className="font-medium">{application.previous_school_last_grade ?? '—'}</p>
             </div>
             <div className="space-y-2">
               <Label>Year Completed</Label>
               <p className="font-medium">{application.previous_school_year_completed ?? '—'}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Reason for Leaving</Label>
+              <p className="font-medium">{application.reason_for_leaving ?? '—'}</p>
             </div>
           </CardContent>
         </Card>
@@ -396,43 +441,46 @@ export default function AdmissionsReviewShow({ application }: { application: App
       <Separator className="my-6" />
 
       {canDecide && (
-        <form id="decision-form" method="POST" action={`/admissions/applications/${application.id}/decide`} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Review Decision</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {application.review_notes && (
-                <div>
-                  <Label>Previous Review Notes</Label>
-                  <p className="whitespace-pre-wrap text-sm">{application.review_notes}</p>
-                </div>
-              )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Review Decision</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {application.review_notes && (
               <div>
-                <Label>Decision</Label>
-                <div className="flex items-center gap-6 mt-2">
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="decision" value="approved" defaultChecked />
-                    <span>Approve</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="radio" name="decision" value="rejected" />
-                    <span>Reject</span>
-                  </label>
-                </div>
+                <Label>Previous Review Notes</Label>
+                <p className="whitespace-pre-wrap text-sm">{application.review_notes}</p>
               </div>
-              <div>
-                <Label htmlFor="review_notes">Review Notes (Optional)</Label>
-                <Textarea
-                  id="review_notes"
-                  name="notes"
-                  rows={4}
-                  placeholder="Add notes for your decision..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </form>
+            )}
+            <div>
+              <Label>Review Notes (Optional)</Label>
+              <Textarea
+                id="review_notes"
+                rows={4}
+                value={decideForm.data.notes}
+                onChange={(event) => decideForm.setData('notes', event.target.value)}
+                placeholder="Add notes for your decision..."
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                type="button"
+                disabled={decideForm.processing}
+                onClick={() => decide('rejected')}
+              >
+                <X className="mr-2 h-4 w-4" />Reject
+              </Button>
+              <Button
+                type="button"
+                disabled={decideForm.processing}
+                onClick={() => decide('approved')}
+              >
+                <Check className="mr-2 h-4 w-4" />Approve
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Separator className="my-6" />

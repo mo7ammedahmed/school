@@ -8,16 +8,26 @@ use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Semester;
+use App\Domain\Academics\Models\Subject;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `subject` is an appended accessor that walks to the offering's subject.
+ *
+ * @property-read Subject|null $subject
+ * @property-read Offering|null $offering
+ * @property-read Section|null $section
+ * @property-read Collection<int, AttendanceRecord> $records
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',

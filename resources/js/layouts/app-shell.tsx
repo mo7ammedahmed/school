@@ -5,6 +5,7 @@ import { roleLabel, t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { translateInterfaceCopy } from '@/lib/i18n/ui-copy';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
 import {
@@ -572,6 +573,15 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
                                     ))}
                                 </nav>
                             )}
+                            {/*
+                                Failure is reported once, here, for every page in
+                                the app. It used to be per-page and only a dozen
+                                settings screens had it, so a form that failed
+                                validation anywhere else looked exactly like one
+                                that saved nothing.
+                            */}
+                            <FormFeedback showSuccess={false} className="mb-5" />
+
                             {children}
                         </div>
                     </main>

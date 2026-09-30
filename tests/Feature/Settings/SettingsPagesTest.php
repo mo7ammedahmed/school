@@ -245,7 +245,10 @@ class SettingsPagesTest extends TestCase
         $scale = GradingScale::where('school_id', $school->id)->firstOrFail();
         $this->assertSame('Secondary', $scale->name);
         $this->assertTrue((bool) $scale->is_default);
-        $this->assertCount(2, json_decode((string) $scale->scale, true));
+        // `scale` is an array cast: the bands come back decoded, not as a JSON
+        // string the reader has to decode a second time.
+        $this->assertCount(2, $scale->scale);
+        $this->assertSame('A', $scale->scale[0]['grade']);
 
         $this->post('/settings/grading/scales', [
             'name' => 'Primary',

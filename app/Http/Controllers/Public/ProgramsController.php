@@ -4,30 +4,27 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
-use App\Domain\Schools\Services\SchoolResolver;
 use App\Models\GradeLevel;
 use App\Models\Subject;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ProgramsController
+class ProgramsController extends PublicController
 {
-    public function __construct(private readonly SchoolResolver $schools) {}
-
     public function index(): Response
     {
-        $schoolId = $this->schools->current()?->id;
+        $schoolId = $this->schoolId();
 
         // `subjects` and `grade_levels` store their names in two columns and
         // expose `name` as an appended accessor. Asking the database for `name`
         // returned the literal word "name" in every row, so the public programs
         // page printed it as each subject's title.
-        $programs = Subject::where('school_id', $schoolId)
+        $programs = Subject::forSchool($schoolId)
             ->with('gradeLevel')
             ->orderBy('name_en')
             ->get(['id', 'name_en', 'name_ar', 'description', 'grade_level_id']);
 
-        $gradeLevels = GradeLevel::where('school_id', $schoolId)
+        $gradeLevels = GradeLevel::forSchool($schoolId)
             ->orderBy('level')
             ->get(['id', 'name_en', 'name_ar', 'level']);
 
@@ -39,7 +36,7 @@ class ProgramsController
 
     public function show(int $id): Response
     {
-        $program = Subject::where('school_id', $this->schools->current()?->id)
+        $program = Subject::forSchool($this->schoolId())
             ->with('gradeLevel')
             ->findOrFail($id);
 

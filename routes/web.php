@@ -119,24 +119,30 @@ Route::get('/news/{post}', [PublicNewsController::class, 'show'])->name('news.sh
 Route::get('/events', [PublicEventsController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [PublicEventsController::class, 'show'])->name('events.show');
 Route::get('/contact', [ContactController::class, 'index'])->name('public.contact');
-Route::post('/contact', [ContactController::class, 'store'])->name('public.contact.submit');
+// Rate limited: this endpoint sends mail to the school's own inbox, and anyone
+// on the internet can post to it.
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('public.contact.submit');
 Route::get('/faq', [FaqController::class, 'index'])->name('public.faq');
 Route::get('/pages/{slug}', [PageController::class, 'show'])->name('public.page');
 
-// Apply / Admissions
-Route::get('/apply', [PublicAdmissionsController::class, 'apply'])->name('apply');
-Route::get('/apply/start', [PublicAdmissionsController::class, 'start'])->name('apply.start');
-Route::post('/apply/start', [PublicAdmissionsController::class, 'storeStart']);
-Route::get('/apply/guardian', [PublicAdmissionsController::class, 'guardian'])->name('apply.guardian');
-Route::post('/apply/guardian', [PublicAdmissionsController::class, 'storeGuardian']);
-Route::get('/apply/student', [PublicAdmissionsController::class, 'student'])->name('apply.student');
-Route::post('/apply/student', [PublicAdmissionsController::class, 'storeStudent']);
-Route::get('/apply/previous-school', [PublicAdmissionsController::class, 'previousSchool'])->name('apply.previous-school');
-Route::post('/apply/previous-school', [PublicAdmissionsController::class, 'storePreviousSchool']);
-Route::get('/apply/documents', [PublicAdmissionsController::class, 'documents'])->name('apply.documents');
-Route::post('/apply/documents', [PublicAdmissionsController::class, 'storeDocuments']);
-Route::get('/apply/review', [PublicAdmissionsController::class, 'review'])->name('apply.review');
-Route::get('/apply/submitted', [PublicAdmissionsController::class, 'submitted'])->name('apply.submitted');
+// Apply / Admissions journey. Rate limited: anonymous visitors can create
+// application rows and store uploads through it.
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/apply', [PublicAdmissionsController::class, 'apply'])->name('apply');
+    Route::get('/apply/start', [PublicAdmissionsController::class, 'start'])->name('apply.start');
+    Route::post('/apply/start', [PublicAdmissionsController::class, 'storeStart']);
+    Route::get('/apply/guardian', [PublicAdmissionsController::class, 'guardian'])->name('apply.guardian');
+    Route::post('/apply/guardian', [PublicAdmissionsController::class, 'storeGuardian']);
+    Route::get('/apply/student', [PublicAdmissionsController::class, 'student'])->name('apply.student');
+    Route::post('/apply/student', [PublicAdmissionsController::class, 'storeStudent']);
+    Route::get('/apply/previous-school', [PublicAdmissionsController::class, 'previousSchool'])->name('apply.previous-school');
+    Route::post('/apply/previous-school', [PublicAdmissionsController::class, 'storePreviousSchool']);
+    Route::get('/apply/documents', [PublicAdmissionsController::class, 'documents'])->name('apply.documents');
+    Route::post('/apply/documents', [PublicAdmissionsController::class, 'storeDocuments']);
+    Route::get('/apply/review', [PublicAdmissionsController::class, 'review'])->name('apply.review');
+    Route::post('/apply/submit', [PublicAdmissionsController::class, 'submit'])->name('apply.submit');
+    Route::get('/apply/submitted', [PublicAdmissionsController::class, 'submitted'])->name('apply.submitted');
+});
 
 // Authentication
 Route::middleware('guest')->group(function () {

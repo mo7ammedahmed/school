@@ -403,15 +403,17 @@ class TimetableController extends Controller
         return $this->filteredIndex(['section_id' => $section]);
     }
 
-    public function mySchedule(): InertiaResponse
+    public function mySchedule(Request $request): InertiaResponse
     {
         $profile = TeacherProfile::where('school_id', $this->schoolId())
             ->where('user_id', auth()->id())
             ->first();
 
+        // The fallback used to call `index()` with no arguments, which is an
+        // ArgumentCountError: every teacher without a profile 500ed here.
         return $profile
             ? $this->filteredIndex(['teacher_id' => $profile->id])
-            : $this->index();
+            : $this->index($request);
     }
 
     /**

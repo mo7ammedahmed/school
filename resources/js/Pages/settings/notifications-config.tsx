@@ -79,7 +79,7 @@ export default function SettingsNotifications({ settings = {} }: { settings?: No
                                 <Button type="button" variant="outline" asChild>
                                     <a href="/settings/school">Cancel</a>
                                 </Button>
-                                <FormFeedback />
+                                <FormFeedback showErrors={false} />
                             </div>
                         </form>
                     </CardContent>

@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read Assignment|null $assignment
+ * @property-read Student|null $student
+ */
 #[Fillable([
     'school_id',
     'assignment_id',

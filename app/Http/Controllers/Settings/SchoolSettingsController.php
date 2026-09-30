@@ -14,7 +14,7 @@ class SchoolSettingsController extends Controller
     public function index(): Response
     {
         $school = auth()->user()->currentSchool;
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         return inertia('settings/school/edit', [
             'school' => [
@@ -39,7 +39,7 @@ class SchoolSettingsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $school = auth()->user()->currentSchool;
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         $validated = $request->validate([
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],

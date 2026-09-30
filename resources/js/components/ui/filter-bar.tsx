@@ -154,7 +154,10 @@ export function FilterBarButton({
           lg: 'h-12 px-6 text-base',
           icon: 'size-10',
           'icon-sm': 'size-9',
-        }[size]
+        }[size],
+        // The prop was destructured and then never merged in, so a caller's own
+        // classes were silently dropped.
+        className
       )}
       {...props}
     >

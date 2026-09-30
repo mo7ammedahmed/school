@@ -1,0 +1,19 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "env": {
+        "browser": true,
+        "es2024": true
+    },
+    "ignorePatterns": ["public/build/**", "vendor/**", "node_modules/**"],
+    "categories": {
+        "correctness": "error"
+    },
+    "overrides": [
+        {
+            "files": ["resources/js/types/**/*.d.ts"],
+            "rules": {
+                "typescript/triple-slash-reference": "off"
+            }
+        }
+    ]
+}

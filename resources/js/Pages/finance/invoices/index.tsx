@@ -7,6 +7,9 @@ import { formatCurrency } from '@/lib/utils';
 import { type ColumnDef } from '@/lib/table';
 import { Link, router } from '@inertiajs/react';
 import { Download, FileDown, Plus, Send } from 'lucide-react';
+import { useLocale } from '@/lib/i18n/locale-context';
+import { t } from '@/lib/i18n/copy';
+import { invoiceStatusLabel, invoiceStatusVariant } from '@/lib/finance/invoice-status';
 
 interface Invoice {
     id: number;
@@ -22,14 +25,6 @@ interface Invoice {
     delivery_channels: Record<string, boolean>;
 }
 
-const statusVariant = (status: string) => {
-    if (status === 'paid') return 'success' as const;
-    if (status === 'issued') return 'info' as const;
-    if (status === 'partially_paid') return 'warning' as const;
-    if (status === 'void') return 'destructive' as const;
-    return 'secondary' as const;
-};
-
 const channelLabel = (channels: Record<string, boolean>) => {
     const used = Object.keys(channels ?? {}).filter((key) => channels[key]);
     if (used.length === 0) return null;
@@ -39,6 +34,8 @@ const channelLabel = (channels: Record<string, boolean>) => {
 };
 
 export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[] }) {
+    const { locale } = useLocale();
+
     const send = (invoice: Invoice) => {
         router.post(`/finance/invoices/${invoice.id}/send`, {}, { preserveScroll: true });
     };
@@ -50,7 +47,7 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
     const columns: ColumnDef<Invoice, any>[] = [
         {
             accessorKey: 'invoice_number',
-            header: 'Invoice #',
+            header: t(locale, 'finance.invoices.number'),
             cell: ({ row }) => (
                 <Link href={`/finance/invoices/${row.original.id}`} className="font-medium hover:underline">
                     {row.original.invoice_number}
@@ -59,38 +56,40 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
         },
         {
             id: 'student',
-            header: 'Student',
+            header: t(locale, 'finance.invoices.student'),
             accessorFn: (row) =>
                 row.student ? `${row.student.first_name} ${row.student.last_name}` : '—',
         },
         {
             accessorKey: 'due_date',
-            header: 'Due',
+            header: t(locale, 'finance.invoices.due'),
         },
         {
             accessorKey: 'total_amount',
-            header: 'Total',
+            header: t(locale, 'finance.invoices.total'),
             cell: ({ row }) => formatCurrency(Number(row.original.total_amount), row.original.currency),
         },
         {
             accessorKey: 'balance_due',
-            header: 'Balance',
+            header: t(locale, 'finance.invoices.balance'),
             cell: ({ row }) => formatCurrency(Number(row.original.balance_due), row.original.currency),
         },
         {
             accessorKey: 'status',
-            header: 'Status',
+            header: t(locale, 'finance.invoices.status'),
             cell: ({ row }) => (
-                <Badge variant={statusVariant(row.original.status)}>{row.original.status.replace('_', ' ')}</Badge>
+                <Badge variant={invoiceStatusVariant(row.original.status)}>
+                    {invoiceStatusLabel(locale, row.original.status)}
+                </Badge>
             ),
         },
         {
             id: 'delivery',
-            header: 'Sent to guardian',
+            header: t(locale, 'finance.invoices.sentToGuardian'),
             cell: ({ row }) => {
                 const channels = channelLabel(row.original.delivery_channels);
                 if (!row.original.sent_at) {
-                    return <span className="text-muted-foreground">Not sent</span>;
+                    return <span className="text-muted-foreground">{t(locale, 'finance.invoices.notSent')}</span>;
                 }
                 return (
                     <div className="text-sm">
@@ -102,7 +101,7 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t(locale, 'common.actions'),
             cell: ({ row }) => {
                 const invoice = row.original;
                 const settled = invoice.status === 'paid';
@@ -112,13 +111,13 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
                         {invoice.status === 'draft' && (
                             <Button variant="ghost" size="sm" onClick={() => issue(invoice)}>
                                 <Send className="mr-1.5 h-3.5 w-3.5" />
-                                Issue
+                                {t(locale, 'finance.invoices.issue')}
                             </Button>
                         )}
                         {!settled && (
                             <Button variant="ghost" size="sm" onClick={() => send(invoice)}>
                                 <Send className="mr-1.5 h-3.5 w-3.5" />
-                                {invoice.sent_at ? 'Resend' : 'Send'}
+                                {t(locale, invoice.sent_at ? 'finance.invoices.resend' : 'finance.invoices.send')}
                             </Button>
                         )}
                         <Button variant="ghost" size="sm" asChild>
@@ -135,28 +134,28 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
 
     return (
         <AppShell
-            title="Invoices"
+            title={t(locale, 'finance.invoices.title')}
             breadcrumbs={[
-                { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Finance', href: '/finance/invoices' },
-                { label: 'Invoices' },
+                { label: t(locale, 'nav.dashboard'), href: '/dashboard' },
+                { label: t(locale, 'nav.finance'), href: '/finance/invoices' },
+                { label: t(locale, 'finance.invoices.title') },
             ]}
         >
             <PageHeader
-                title="Invoices"
-                description="Issue an invoice to send the payment link and PDF to the guardian automatically."
+                title={t(locale, 'finance.invoices.title')}
+                description={t(locale, 'finance.invoices.description')}
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <Link href="/finance/payments/offline">
                                 <FileDown className="mr-2 h-4 w-4" />
-                                Confirm payments
+                                {t(locale, 'finance.invoices.confirmPayments')}
                             </Link>
                         </Button>
                         <Button asChild>
                             <Link href="/finance/invoices/create">
                                 <Plus className="mr-2 h-4 w-4" />
-                                New Invoice
+                                {t(locale, 'finance.invoices.new')}
                             </Link>
                         </Button>
                     </div>
@@ -166,7 +165,7 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
             <DataTable
                 columns={columns}
                 data={invoices}
-                emptyMessage="No invoices yet. Create your first invoice to get started."
+                emptyMessage={t(locale, 'finance.invoices.empty')}
             />
         </AppShell>
     );

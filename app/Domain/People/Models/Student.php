@@ -26,6 +26,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `name` and `guardian` are accessors, not columns.
+ *
+ * @property string $name
+ * @property-read Guardian|null $guardian
+ */
 #[Fillable([
     'school_id',
     'user_id',
@@ -66,6 +72,9 @@ class Student extends Model
 
     /**
      * Guardians linked through the guardian_relationships pivot.
+     */
+    /**
+     * @return BelongsToMany<Guardian, $this>
      */
     public function guardians(): BelongsToMany
     {

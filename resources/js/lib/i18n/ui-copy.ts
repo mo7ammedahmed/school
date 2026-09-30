@@ -1,4 +1,4 @@
-import { handWrittenArabic, type Locale } from './copy';
+import { handWrittenArabic, machineValueArabic, type Locale } from './copy';
 import { router } from '@inertiajs/react';
 
 /**
@@ -52,6 +52,11 @@ const SELECTOR = [
     'option',
     'dt',
     'li',
+    // A cell is visited so a known label written straight into it — the payment
+    // methods and statuses the dashboard prints — can be read; `apply` keeps it
+    // to dictionary hits only. Most cells hold their text directly rather than
+    // in a span, so leaving `td` out meant fixing only the badge case.
+    'td',
     'input',
     '[placeholder]',
     '[title]',
@@ -88,6 +93,15 @@ const memory = new Map<string, string>();
  * produced — rather than repeating four hundred entries every visit.
  */
 const handWritten = new Map(Object.entries(handWrittenArabic()));
+
+/**
+ * Stored values (`bank_transfer`) mapped to Arabic.
+ *
+ * Screens print these as text, so the phrase map alone never matched them: the
+ * dashboard's tables showed `bank transfer` and `partially paid` on an Arabic
+ * screen. Keyed by the stored value, so any spelling a screen chooses is found.
+ */
+const machineValues = new Map(Object.entries(machineValueArabic()));
 
 const attempts = new Map<string, number>();
 let catalogVersion: string | null = null;
@@ -133,7 +147,16 @@ const CONTROL = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/;
  */
 /** What a string already reads as, from the catalog or from the dictionary. */
 function arabicFor(value: string): string | undefined {
-    return memory.get(value) ?? handWritten.get(value);
+    return memory.get(value) ?? handWritten.get(value) ?? machineValues.get(normaliseValue(value));
+}
+
+/** `Bank Transfer`, `bank transfer` and `bank_transfer` are the same value. */
+function normaliseValue(value: string): string {
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
 }
 
 function isTranslatable(value: string): boolean {
@@ -232,8 +255,13 @@ function restore(): void {
 
 function skipped(element: Element): boolean {
     if (SKIP_TAGS.includes(element.tagName)) return true;
-    // A table cell is data, and data belongs to the school, not the translator.
-    if (element.closest('td, [data-no-translate], [contenteditable="true"]')) return true;
+
+    // `td` is deliberately not skipped, but `apply` treats it as data: only a
+    // value the dictionary already knows is written there, and a cell is never
+    // sent to the provider. Without this, every table cell was a hole in the
+    // translated interface — including the statuses and methods the dashboard
+    // prints most.
+    if (element.closest('[data-no-translate], [contenteditable="true"]')) return true;
 
     return false;
 }
@@ -244,6 +272,11 @@ function apply(root: ParentNode): string[] {
 
     root.querySelectorAll(SELECTOR).forEach((element) => {
         if (skipped(element)) return;
+
+        // A cell is data, so only what the dictionary already knows is written
+        // there and an unknown value is never asked about: a student's name or a
+        // number the school entered stays exactly as the school wrote it.
+        const cell = element.closest('td') !== null;
 
         element.childNodes.forEach((node) => {
             if (!(node instanceof Text)) return;
@@ -264,7 +297,7 @@ function apply(root: ParentNode): string[] {
 
                 writtenText.push({ node, original: raw, applied });
                 node.nodeValue = applied;
-            } else if (!arabic) {
+            } else if (!arabic && !cell) {
                 missing.add(value);
             }
         });
@@ -279,7 +312,7 @@ function apply(root: ParentNode): string[] {
             if (arabic && arabic !== value) {
                 writtenAttributes.push({ element, attribute, original: value, applied: arabic });
                 element.setAttribute(attribute, arabic);
-            } else if (!arabic) {
+            } else if (!arabic && !cell) {
                 missing.add(value);
             }
         });

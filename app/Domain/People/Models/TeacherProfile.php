@@ -10,6 +10,7 @@ use App\Domain\Academics\Models\Subject;
 use App\Domain\Attendance\Models\AttendanceSession;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use App\Models\User;
 use Database\Factories\Domain\People\Models\TeacherFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -43,7 +44,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TeacherProfile extends Model
 {
     /** @use HasFactory<TeacherFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     public function school(): BelongsTo
     {

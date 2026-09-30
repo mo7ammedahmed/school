@@ -6,6 +6,7 @@ namespace App\Domain\Academics\Models;
 
 use App\Domain\Finance\Models\FeeStructure;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Database\Factories\Domain\Academics\Models\GradeLevelFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,6 +18,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `name` is an accessor over `name_en`/`name_ar`, not a column.
+ *
+ * @property string $name
+ */
 #[Fillable([
     'school_id',
     'name_ar',
@@ -33,7 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class GradeLevel extends Model
 {
     /** @use HasFactory<GradeLevelFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     protected function name(): Attribute
     {

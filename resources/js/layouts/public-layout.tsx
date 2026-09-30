@@ -4,6 +4,7 @@ import { t, type CopyKey } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { FormFeedback } from '@/components/ui/form-feedback';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { gsap } from 'gsap';
@@ -268,6 +269,17 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                     </nav>
                 </div>
             </header>
+
+            {/*
+                Failure is reported here for every public page, the same way the
+                dashboard shell reports it. The contact form flashes an error
+                when the school has no inbox or the mail server refuses, and the
+                page showed only the success line — so a message that was never
+                sent looked exactly like one that was.
+            */}
+            <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+                <FormFeedback showSuccess={false} />
+            </div>
 
             <main className="public-site flex-1">{children}</main>
 

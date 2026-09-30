@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Content\Models;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends(['event_date', 'start_time', 'end_time', 'target_audience', 'is_active'])]
 class Event extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected function eventDate(): Attribute
     {

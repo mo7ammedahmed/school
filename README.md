@@ -25,7 +25,11 @@ The application is designed to solve the real administrative needs of schools, e
 Key strengths include:
 
 - multi-school / multi-organization architecture
-- school-scoped data ownership through `school_id`
+- school-scoped data ownership through `school_id`. Tenancy has one owner per
+  request: `SchoolResolver` decides the school, `Controller::schoolId()` (with
+  `ensureOwned()`) covers the signed-in app, and public pages extend
+  `Public\PublicController` and filter with the `forSchool()` scope, which fails
+  closed when no school can be resolved
 - role-based access with Spatie Permission
 - Arabic/English bilingual support with RTL-aware layouts
 - educational domain modeling for academic and operational workflows
@@ -34,7 +38,7 @@ Key strengths include:
 - comprehensive settings management for appearance, localization, notifications, payments, and security
 - advanced scheduling with timetable conflicts detection and calendar views
 - two-factor authentication for enhanced security
-- extensive API endpoints for integration capabilities
+- audit logging of privileged changes through spatie/laravel-activitylog
 
 ## Current implementation status
 
@@ -42,6 +46,8 @@ The project already includes a broad set of implemented modules and foundational
 
 ### Platform and foundation
 - Laravel 13 application framework
+- automated gates: PHPUnit suite, PHPStan level 5 (the public controllers are no
+  longer excluded), `tsc --noEmit`, and a production asset build
 - Inertia.js 3 + React 19 + TypeScript frontend
 - Tailwind CSS 4 design system and reusable UI primitives
 - authentication and school context handling
@@ -128,21 +134,25 @@ Each domain follows a consistent structure:
 
 ## Tech stack
 
-- PHP 8.3+
+- PHP 8.3+ (developed on 8.6)
 - Laravel 13
 - Inertia.js 3
 - React 19
-- TypeScript
+- TypeScript 7
 - Tailwind CSS 4
-- Vite
-- MySQL 8+ / SQLite for local development
-- Redis
+- Vite 8
+- SQLite (the configured connection; `phpunit.xml` runs the suite against `:memory:`)
 - Spatie Permission
 - Spatie Activity Log
-- DOMPDF
-- Laravel Sanctum (for API authentication)
-- Laravel Jetstream (foundation)
-- Ziggy (for Laravel routes in JavaScript)
+- laravel/head for `<head>` metadata
+- barryvdh/laravel-dompdf for PDF invoices and report cards
+- predis/predis is installed, but Redis is not wired up as the default cache,
+  session or queue driver — those default to `database`
+- PHPUnit 12, Larastan (PHPStan level 5), Pint, Rector
+
+This application is an Inertia monolith, not a JSON API: pages are rendered by
+controllers and delivered as React components. There is no Sanctum/Passport API
+layer, and the JavaScript does not use Ziggy to read route names.
 
 ## Repository structure
 
@@ -235,14 +245,34 @@ composer run dev
 ## Useful commands
 
 ```bash
-composer run setup
-composer run test
-php artisan test
-npm run build
-npm run lint
-php artisan pint
-phpstan analyse
+composer run setup          # install, .env, key, migrate, npm install, build
+composer run test           # PHPUnit against in-memory SQLite
+composer run analyse        # Larastan / PHPStan level 5 (needs the 1G memory flag it sets)
+npm run typecheck           # tsc --noEmit
+npm run lint                # oxlint, correctness rules, warnings are failures
+npm test                    # vitest, React component tests
+npm run build               # production asset build
+./vendor/bin/pint           # code style — there is no `php artisan pint`
+./vendor/bin/rector process # automated refactors (composer run format runs both)
 ```
+
+All six of `composer run test`, `composer run analyse`, `npm run lint`,
+`npm run typecheck`, `npm test` and `npm run build` are green, and CI runs them on
+every push (see `.github/workflows/ci.yml`).
+
+The frontend linter is oxlint rather than ESLint because `typescript-eslint`
+requires `typescript >=4.8.4 <6.1.0` and this project runs TypeScript 7, so the
+usual typed-linting setup cannot be installed. The gate therefore covers
+correctness rules, not the full lint surface.
+
+Component tests run on Vitest with `happy-dom`, configured separately from
+`vite.config.js` (see `vitest.config.js`) so the Laravel plugin stays out of the
+test run. Tests sit next to the page they cover, and `resources/js/app.tsx`
+excludes `*.test.tsx` from the Inertia page glob — without that exclusion the
+test bundle (and the test libraries it imports) ships in the production build.
+[`renderPage`](resources/js/test/render-page.tsx) mounts a page inside the same
+locale and theme providers `app.tsx` uses, so a page that reads the locale
+renders in tests exactly as it does in the browser.
 
 ## Public website and school experience
 
@@ -289,7 +319,9 @@ Project documentation is available in:
 - [docs/domain-map.md](docs/domain-map.md)
 - [docs/decisions.md](docs/decisions.md)
 - [docs/IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md)
-- [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+
+There is no `docs/API_REFERENCE.md`. Because the app is Inertia-driven, the
+route file (`routes/web.php`) and the controllers are the interface.
 
 ## Roadmap and next improvements
 

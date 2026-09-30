@@ -66,7 +66,7 @@ class FinanceSeeder extends Seeder
                     ],
                     [
                         'academic_year_id' => $year?->id,
-                        'amount' => $amounts[$code] ?? 1000,
+                        'amount' => $amounts[$code],
                         'description' => $feeType->name.' for '.$grade->name,
                     ]
                 );
@@ -239,7 +239,9 @@ class FinanceSeeder extends Seeder
             }
 
             // ---- Refund for one overpaid scenario ----
-            if ($index === 2) {
+            // `$payment` only exists for the paid scenarios above; without the
+            // guard this block dereferenced an undefined variable while seeding.
+            if ($index === 2 && isset($payment)) {
                 Refund::firstOrCreate(
                     [
                         'school_id' => $school->id,

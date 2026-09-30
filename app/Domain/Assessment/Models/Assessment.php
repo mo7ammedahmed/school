@@ -10,11 +10,21 @@ use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `max_score` is `->nullable()` in the schema; the analyser types it as a plain
+ * numeric string and calls the null check on it impossible.
+ *
+ * @property string|null $max_score
+ * @property-read GradingCategory|null $gradingCategory
+ * @property-read Offering|null $offering
+ * @property-read Collection<int, AssessmentScore> $scores
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',

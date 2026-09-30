@@ -7,11 +7,18 @@ namespace App\Domain\Admissions\Models;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read AdmissionPeriod|null $period
+ * @property-read User|null $assignedTo
+ * @property-read User|null $reviewer
+ * @property-read Collection<int, AdmissionApplicationEvent> $events
+ */
 #[Fillable([
     'school_id',
     'admission_period_id',
@@ -23,11 +30,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'guardian_phone',
     'guardian_relationship',
     'guardian_national_id',
+    'guardian_occupation',
+    'guardian_address',
     'student_first_name',
     'student_last_name',
     'student_date_of_birth',
     'student_gender',
     'student_nationality',
+    'student_address',
     'grade_applying',
     'grade_applying_ar',
     'student_notes',
@@ -35,6 +45,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'previous_school_name',
     'previous_school_last_grade',
     'previous_school_year_completed',
+    'previous_school_address',
+    'reason_for_leaving',
     'documents',
     'reviewed_by',
     'reviewed_at',

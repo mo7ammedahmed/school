@@ -13,6 +13,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `description_ar` is one of the bilingual columns the translation layer adds
+ * to this table, so it is invisible to static analysis without this.
+ *
+ * @property string|null $description_ar
+ */
 #[Fillable([
     'school_id',
     'fee_type_id',

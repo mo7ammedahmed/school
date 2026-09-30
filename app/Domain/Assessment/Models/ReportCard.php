@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `comments_ar` is one of the bilingual columns the translation layer adds to
+ * this table, so it is invisible to static analysis without this.
+ *
+ * @property string|null $comments_ar
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',

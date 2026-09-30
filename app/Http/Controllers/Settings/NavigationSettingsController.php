@@ -17,7 +17,7 @@ class NavigationSettingsController extends Controller
     public function index(): Response
     {
         $school = $this->activeSchool();
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         $labels = SchoolNavigationLabel::where('school_id', $school->id)
             ->get(['key', 'name_en', 'name_ar']);
@@ -35,7 +35,7 @@ class NavigationSettingsController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $school = $this->activeSchool();
-        abort_unless($school, 404);
+        abort_unless($school !== null, 404);
 
         $validated = $request->validate([
             'labels' => ['required', 'array'],

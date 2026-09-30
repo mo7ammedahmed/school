@@ -253,7 +253,7 @@ export default function SchoolSettings({ school }: { school: SchoolSettings }) {
                     <Button type="button" variant="outline" onClick={() => form.reset()} disabled={form.processing}>
                         Reset changes
                     </Button>
-                    <FormFeedback />
+                    <FormFeedback showErrors={false} />
                 </div>
             </form>
         </AppShell>

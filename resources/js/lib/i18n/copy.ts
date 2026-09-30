@@ -509,8 +509,21 @@ const en = {
     'finance.invoices.notes': 'Notes',
     'finance.invoices.back': 'Back',
     'finance.invoices.cancel': 'Cancel',
+    'finance.invoices.new': 'New Invoice',
+    'finance.invoices.confirmPayments': 'Confirm payments',
+    'finance.invoices.description': 'Issue an invoice to send the payment link and PDF to the guardian automatically.',
+    'finance.invoices.empty': 'No invoices yet. Create your first invoice to get started.',
+    'finance.invoices.due': 'Due',
+    'finance.invoices.total': 'Total',
+    'finance.invoices.balance': 'Balance',
+    'finance.invoices.sentToGuardian': 'Sent to guardian',
+    'finance.invoices.notSent': 'Not sent',
+    'finance.invoices.issue': 'Issue',
+    'finance.invoices.send': 'Send',
+    'finance.invoices.resend': 'Resend',
     'finance.invoices.status.draft': 'Draft',
     'finance.invoices.status.issued': 'Issued',
+    'finance.invoices.status.partially_paid': 'Partially paid',
     'finance.invoices.status.paid': 'Paid',
     'finance.invoices.status.overdue': 'Overdue',
     'finance.invoices.status.void': 'Void',
@@ -541,6 +554,50 @@ const en = {
     'common.cancel': 'Cancel',
     'common.search': 'Search',
     'common.back': 'Back',
+    'common.actions': 'Actions',
+
+    // Machine values the screens print — statuses, priorities, payment methods.
+    // The key is the stored value (`bank_transfer`), so a screen can render it
+    // however it likes and the label is still found. See `machineValueArabic`.
+    'value.draft': 'Draft',
+    'value.submitted': 'Submitted',
+    'value.under_review': 'Under review',
+    'value.review': 'Review',
+    'value.new': 'New',
+    'value.approved': 'Approved',
+    'value.rejected': 'Rejected',
+    'value.converted': 'Converted',
+    'value.withdrawn': 'Withdrawn',
+    'value.enrolled': 'Enrolled',
+    'value.completed': 'Completed',
+    'value.active': 'Active',
+    'value.inactive': 'Inactive',
+    'value.graduated': 'Graduated',
+    'value.published': 'Published',
+    'value.scheduled': 'Scheduled',
+    'value.archived': 'Archived',
+    'value.pending': 'Pending',
+    'value.confirmed': 'Confirmed',
+    'value.cancelled': 'Cancelled',
+    'value.closed': 'Closed',
+    'value.issued': 'Issued',
+    'value.paid': 'Paid',
+    'value.partially_paid': 'Partially paid',
+    'value.overdue': 'Overdue',
+    'value.void': 'Void',
+    'value.low': 'Low',
+    'value.medium': 'Medium',
+    'value.high': 'High',
+    'value.urgent': 'Urgent',
+    'value.cash': 'Cash',
+    'value.bank_transfer': 'Bank transfer',
+    'value.card': 'Card',
+    'value.cheque': 'Cheque',
+    'value.online': 'Online',
+    'value.present': 'Present',
+    'value.absent': 'Absent',
+    'value.late': 'Late',
+    'value.excused': 'Excused',
 } as const;
 
 const ar: Record<keyof typeof en, string> = {
@@ -1025,8 +1082,21 @@ const ar: Record<keyof typeof en, string> = {
     'finance.invoices.notes': 'ملاحظات',
     'finance.invoices.back': 'رجوع',
     'finance.invoices.cancel': 'إلغاء',
+    'finance.invoices.new': 'فاتورة جديدة',
+    'finance.invoices.confirmPayments': 'تأكيد الدفعات',
+    'finance.invoices.description': 'أصدر فاتورة لإرسال رابط الدفع وملف PDF إلى ولي الأمر تلقائيًا.',
+    'finance.invoices.empty': 'لا توجد فواتير بعد. أنشئ أول فاتورة للبدء.',
+    'finance.invoices.due': 'الاستحقاق',
+    'finance.invoices.total': 'الإجمالي',
+    'finance.invoices.balance': 'المتبقي',
+    'finance.invoices.sentToGuardian': 'أُرسلت إلى ولي الأمر',
+    'finance.invoices.notSent': 'لم تُرسل',
+    'finance.invoices.issue': 'إصدار',
+    'finance.invoices.send': 'إرسال',
+    'finance.invoices.resend': 'إعادة الإرسال',
     'finance.invoices.status.draft': 'مسودة',
     'finance.invoices.status.issued': 'صادرة',
+    'finance.invoices.status.partially_paid': 'مدفوعة جزئيًا',
     'finance.invoices.status.paid': 'مدفوعة',
     'finance.invoices.status.overdue': 'متأخرة',
     'finance.invoices.status.void': 'ملغاة',
@@ -1053,6 +1123,47 @@ const ar: Record<keyof typeof en, string> = {
     'common.cancel': 'إلغاء',
     'common.search': 'بحث',
     'common.back': 'رجوع',
+    'common.actions': 'إجراءات',
+
+    'value.draft': 'مسودة',
+    'value.submitted': 'مُقدَّم',
+    'value.under_review': 'قيد المراجعة',
+    'value.review': 'مراجعة',
+    'value.new': 'جديد',
+    'value.approved': 'مقبول',
+    'value.rejected': 'مرفوض',
+    'value.converted': 'محوَّل إلى طالب',
+    'value.withdrawn': 'منسحب',
+    'value.enrolled': 'مُسجَّل',
+    'value.completed': 'مكتمل',
+    'value.active': 'نشط',
+    'value.inactive': 'غير نشط',
+    'value.graduated': 'متخرّج',
+    'value.published': 'منشور',
+    'value.scheduled': 'مجدول',
+    'value.archived': 'مؤرشف',
+    'value.pending': 'قيد الانتظار',
+    'value.confirmed': 'مؤكَّد',
+    'value.cancelled': 'ملغى',
+    'value.closed': 'مغلق',
+    'value.issued': 'صادرة',
+    'value.paid': 'مدفوعة',
+    'value.partially_paid': 'مدفوعة جزئيًا',
+    'value.overdue': 'متأخرة',
+    'value.void': 'ملغاة',
+    'value.low': 'منخفض',
+    'value.medium': 'متوسط',
+    'value.high': 'عالٍ',
+    'value.urgent': 'عاجل',
+    'value.cash': 'نقدًا',
+    'value.bank_transfer': 'تحويل بنكي',
+    'value.card': 'بطاقة',
+    'value.cheque': 'شيك',
+    'value.online': 'إلكتروني',
+    'value.present': 'حاضر',
+    'value.absent': 'غائب',
+    'value.late': 'متأخر',
+    'value.excused': 'غياب بعذر',
 };
 
 export type CopyKey = keyof typeof en;
@@ -1082,6 +1193,30 @@ export function t(locale: Locale, key: CopyKey, params?: CopyParams): string {
  * reviewed rather than machine-made — a provider is only ever asked about what
  * nobody has written down yet.
  */
+/**
+ * The machine values, as `stored value -> Arabic`.
+ *
+ * Screens print these as text — `bank_transfer` with the underscores taken out
+ * and title-cased — so exact phrase matching cannot find them. Keying on the
+ * stored value means the label is found however a screen chose to print it, and
+ * only values that actually mean something to a reader are in here: a value the
+ * school invented for its own data is left alone.
+ */
+export function machineValueArabic(): Record<string, string> {
+    const pairs: Record<string, string> = {};
+
+    for (const key of Object.keys(en) as CopyKey[]) {
+        if (!key.startsWith('value.')) continue;
+
+        const arabic = ar[key];
+        const english = en[key];
+
+        if (arabic && arabic !== english) pairs[key.slice('value.'.length)] = arabic;
+    }
+
+    return pairs;
+}
+
 export function handWrittenArabic(): Record<string, string> {
     const pairs: Record<string, string> = {};
 

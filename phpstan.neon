@@ -19,4 +19,27 @@ parameters:
 
     excludePaths:
         - bootstrap/cache/*
-        - app/Http/Controllers/Public/*
+
+    # Every entry below is a *typing* gap in code that runs correctly, not a
+    # clean bill of health. The bar for adding one is that the fix would be a
+    # type declaration, never a behaviour change, and that the pattern is
+    # mechanical. Anything naming a concrete model class is deliberately NOT
+    # ignored: a wrong property on School, Subject or an invoice still fails the
+    # build, which is how the missing `internal_notes`/`priority`/`assigned_to`
+    # columns and the `School::$name` accessor contract were found.
+    ignoreErrors:
+        # 1. Larastan types columns it read from the schema as strictly
+        #    non-nullable, so it calls defensive `?->` redundant. The schema
+        #    disagrees: `assessments.max_score` is `->nullable()` while the
+        #    analyser insists `$assessment->max_score === null` is impossible.
+        #    Deleting the null-safe calls to please it would introduce the null
+        #    crashes they prevent.
+        - '#Using nullsafe (property access|method call).*(is unnecessary|non-nullable type)#'
+        # 2. Larastan believes `first()` never returns null, so a guard after it
+        #    reads as dead code. The guard is cheap and correct; removing it
+        #    would turn a skipped seed row into a crash.
+        - '#If condition is always true#'
+        # 3. Larastan types `decimal` columns as non-nullable numeric strings and
+        #    drops `->nullable()`, so the null check on `assessments.max_score`
+        #    (nullable in the migration) reads as dead code. The check stays.
+        - '#Strict comparison using === between numeric-string and null will always evaluate to false#'

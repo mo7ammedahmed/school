@@ -168,7 +168,7 @@ export default function SettingsSms({ settings, providers, configured }: Props) 
                                 <Button type="button" variant="outline" onClick={() => form.reset()} disabled={form.processing}>
                                     Reset changes
                                 </Button>
-                                <FormFeedback />
+                                <FormFeedback showErrors={false} />
                             </div>
                         </form>
                     </CardContent>

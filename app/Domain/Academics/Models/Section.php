@@ -21,6 +21,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `name` is an accessor over `name_en`/`name_ar`, not a column.
+ *
+ * @property string $name
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',

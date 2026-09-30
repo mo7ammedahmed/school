@@ -4,11 +4,13 @@ import { cn } from '@/lib/utils';
 interface FormFeedbackProps {
     /** Hide the success line where the page renders its own confirmation. */
     showSuccess?: boolean;
+    /** Hide the failure block where the shell already reports it. */
+    showErrors?: boolean;
     className?: string;
 }
 
 /**
- * Shared "did it work?" block for settings forms.
+ * Shared "did it work?" block for forms.
  *
  * Every one of these screens used to swallow a rejected save: the controller
  * redirected back with validation errors and nothing on the page displayed
@@ -16,8 +18,13 @@ interface FormFeedbackProps {
  *
  * Inertia shares `flash` and `errors` as page props for both `useForm` posts
  * and plain `<form method="POST">` submissions, so one component covers both.
+ *
+ * Failure is rendered for the whole app by `AppShell`, so a page that wants its
+ * own success confirmation next to the save button uses `showErrors={false}`
+ * and the rejected-save case is still reported — once, at the top of the page,
+ * on every screen that has a form.
  */
-export function FormFeedback({ showSuccess = true, className }: FormFeedbackProps) {
+export function FormFeedback({ showSuccess = true, showErrors = true, className }: FormFeedbackProps) {
     const { flash, errors } = usePage<App.PageProps>().props;
 
     const failure = flash?.error ?? null;
@@ -31,13 +38,13 @@ export function FormFeedback({ showSuccess = true, className }: FormFeedbackProp
                 </p>
             )}
 
-            {failure && (
+            {showErrors && failure && (
                 <p role="alert" className={cn('text-sm text-destructive', className)}>
                     {failure}
                 </p>
             )}
 
-            {messages.length > 0 && (
+            {showErrors && messages.length > 0 && (
                 <div
                     role="alert"
                     className={cn(

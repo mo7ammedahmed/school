@@ -105,7 +105,7 @@ export default function Preferences({ preferences }: { preferences: { locale: st
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/settings/school">Cancel</Link>
                             </Button>
-                            <FormFeedback />
+                            <FormFeedback showErrors={false} />
                         </div>
                     </form>
                 </CardContent>

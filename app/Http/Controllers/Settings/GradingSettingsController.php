@@ -52,7 +52,10 @@ class GradingSettingsController extends Controller
                 'id' => $scale->id,
                 'name' => $scale->name,
                 'description' => $scale->description,
-                'scale' => json_decode($scale->scale, true),
+                // `scale` is cast to an array on the model; the value was written
+                // with a second `json_encode`, so every reader had to decode it
+                // again. The cast is the only codec now.
+                'scale' => $scale->scale,
                 'is_default' => $scale->is_default,
             ]);
 
@@ -209,7 +212,7 @@ class GradingSettingsController extends Controller
                         $scale->update([
                             'name' => $scaleData['name'],
                             'description' => $scaleData['description'] ?? null,
-                            'scale' => json_encode($scaleData['scale']),
+                            'scale' => $scaleData['scale'],
                             'is_default' => $scaleData['is_default'] ?? false,
                         ]);
 
@@ -231,7 +234,7 @@ class GradingSettingsController extends Controller
                     'school_id' => $school->id,
                     'name' => $scaleData['name'],
                     'description' => $scaleData['description'] ?? null,
-                    'scale' => json_encode($scaleData['scale']),
+                    'scale' => $scaleData['scale'],
                     'is_default' => $scaleData['is_default'] ?? false,
                 ]);
 
@@ -319,7 +322,7 @@ class GradingSettingsController extends Controller
             'school_id' => $school->id,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'scale' => json_encode($validated['scale']),
+            'scale' => $validated['scale'],
             'is_default' => $validated['is_default'] ?? false,
         ]);
 
@@ -351,7 +354,7 @@ class GradingSettingsController extends Controller
                 'id' => $s->id,
                 'name' => $s->name,
                 'description' => $s->description,
-                'scale' => json_decode($s->scale, true),
+                'scale' => $s->scale,
                 'is_default' => $s->is_default,
             ]),
             'gradingCategories' => GradingCategory::where('school_id', $school->id)
@@ -380,7 +383,10 @@ class GradingSettingsController extends Controller
             'scaleData' => [
                 'name' => $scale->name,
                 'description' => $scale->description,
-                'scale' => json_decode($scale->scale, true),
+                // `scale` is cast to an array on the model; the value was written
+                // with a second `json_encode`, so every reader had to decode it
+                // again. The cast is the only codec now.
+                'scale' => $scale->scale,
                 'isDefaultScale' => $scale->is_default,
             ],
         ]);
@@ -408,7 +414,7 @@ class GradingSettingsController extends Controller
         $scale->update([
             'name' => $validated['name'] ?? $scale->name,
             'description' => $validated['description'] ?? $scale->description,
-            'scale' => isset($validated['scale']) ? json_encode($validated['scale']) : $scale->scale,
+            'scale' => $validated['scale'] ?? $scale->scale,
             'is_default' => $validated['is_default'] ?? $scale->is_default,
         ]);
 
@@ -492,7 +498,10 @@ class GradingSettingsController extends Controller
                     'id' => $scale->id,
                     'name' => $scale->name,
                     'description' => $scale->description,
-                    'scale' => json_decode($scale->scale, true),
+                    // `scale` is cast to an array on the model; the value was written
+                    // with a second `json_encode`, so every reader had to decode it
+                    // again. The cast is the only codec now.
+                    'scale' => $scale->scale,
                     'is_default' => $scale->is_default,
                 ]),
             'gradingCategories' => collect([$category])->map(fn ($c) => [

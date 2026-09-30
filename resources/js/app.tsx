@@ -110,8 +110,14 @@ function applyAppearanceFromProps(props: RootProps): void {
 }
 
 createInertiaApp({
+    // Test files live next to the pages they cover, and every file matched by
+    // this glob becomes a lazily-loaded page — so a `.test.tsx` here would be
+    // bundled for production and drag the test libraries in with it.
     resolve: (name) =>
-        resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')) as never,
+        resolvePageComponent(
+            `./Pages/${name}.tsx`,
+            import.meta.glob(['./Pages/**/*.tsx', '!./Pages/**/*.test.tsx']),
+        ) as never,
     setup({ el, App, props }) {
         installCsrfTokens();
 

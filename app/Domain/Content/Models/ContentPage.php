@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Domain\Content\Models;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property-read School|null $school
+ */
 #[Fillable([
     'school_id',
     'slug',
@@ -31,7 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class ContentPage extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

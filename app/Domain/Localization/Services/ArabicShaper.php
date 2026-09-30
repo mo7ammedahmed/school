@@ -15,10 +15,8 @@ namespace App\Domain\Localization\Services;
  * pick the correct positional form for every letter, then hand the renderer the
  * visual (already reversed) order it expects.
  *
- * Usage from Blade:
- *
- *     @shaped($subject->name)          {{-- shaped only when the locale is Arabic --}}
- *     ArabicShaper::shape($text)       {{-- always shaped --}}
+ * Usage from Blade: the `shaped` directive (`$subject->name`) shapes only when
+ * the locale is Arabic, while `ArabicShaper::shape($text)` always shapes.
  *
  * Each line is shaped separately so a newline can never travel to another
  * position while the line is being reversed.

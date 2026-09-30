@@ -69,7 +69,7 @@ export default function AttendanceSettings({ settings }: { settings: { late_thre
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/settings/school">Cancel</Link>
                             </Button>
-                            <FormFeedback />
+                            <FormFeedback showErrors={false} />
                         </div>
                     </form>
                 </CardContent>

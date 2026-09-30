@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `date` is an accessor over the session's `session_date`, not a column.
+ *
+ * @property-read AttendanceSession|null $attendanceSession
+ * @property-read Student|null $student
+ */
 #[Fillable([
     'school_id',
     'attendance_session_id',

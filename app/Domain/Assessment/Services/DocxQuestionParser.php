@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Assessment\Services;
 
 use DOMDocument;
-use DOMNode;
+use DOMElement;
 use Illuminate\Support\Str;
 use RuntimeException;
 use ZipArchive;
@@ -81,6 +81,8 @@ class DocxQuestionParser
         $description = null;
         $questions = [];
         $warnings = [];
+
+        /** @var array{prompt: string, options: list<array{key: string, text: string}>, answer: ?string, points: ?float}|null $current */
         $current = null;
 
         // Each question is only complete once the *next* one starts, so the work
@@ -339,7 +341,7 @@ class DocxQuestionParser
         return implode("\n", $lines);
     }
 
-    private function paragraphText(DOMNode $paragraph): string
+    private function paragraphText(DOMElement $paragraph): string
     {
         $text = '';
 

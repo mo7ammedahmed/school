@@ -1,4 +1,5 @@
-/// <reference path="./global.d.ts" />
+// `global.d.ts` declares this namespace and is picked up by tsconfig's
+// `include`, so no triple-slash reference is needed here.
 
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
@@ -55,6 +56,4 @@ export interface User {
 export interface Flash {
     success?: string;
     error?: string;
-    warning?: string;
-    info?: string;
 }

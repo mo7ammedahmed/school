@@ -6,20 +6,23 @@ namespace App\Http\Controllers\Public;
 
 use App\Domain\Content\Models\Event;
 use App\Models\News;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class HomeController
+class HomeController extends PublicController
 {
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $latestNews = News::where('is_published', true)
+        $schoolId = $this->schoolId();
+
+        $latestNews = News::forSchool($schoolId)
+            ->where('is_published', true)
             ->latest('published_at')
             ->take(3)
             ->get(['id', 'title', 'excerpt', 'published_at', 'featured_image_path']);
 
-        $upcomingEvents = Event::where('is_published', true)
+        $upcomingEvents = Event::forSchool($schoolId)
+            ->where('is_published', true)
             ->where('start_date', '>=', now())
             ->orderBy('start_date')
             ->take(3)

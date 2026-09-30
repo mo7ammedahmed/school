@@ -11,6 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `title_ar` and `body_ar` are bilingual columns the translation layer adds to
+ * this table, so they are invisible to static analysis without this.
+ *
+ * @property string|null $title_ar
+ * @property string|null $body_ar
+ */
 #[Fillable([
     'school_id',
     'title',

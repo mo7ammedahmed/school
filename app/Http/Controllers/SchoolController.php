@@ -66,6 +66,9 @@ class SchoolController extends Controller
      * organizations their memberships belong to, so one org can never browse
      * another org's schools.
      */
+    /**
+     * @return Builder<School>
+     */
     private function scopedSchools(): Builder
     {
         $query = School::query();

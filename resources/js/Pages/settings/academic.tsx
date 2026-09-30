@@ -78,7 +78,7 @@ export default function AcademicSettings({ settings }: { settings: { grading_sys
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/settings/school">Cancel</Link>
                             </Button>
-                            <FormFeedback />
+                            <FormFeedback showErrors={false} />
                         </div>
                     </form>
                 </CardContent>

@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
+/**
+ * @property-read School|null $school
+ * @property-read Student|null $student
+ */
 #[Fillable([
     'school_id',
     'student_id',

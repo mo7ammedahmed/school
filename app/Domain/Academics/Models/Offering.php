@@ -14,11 +14,23 @@ use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * The relations every timetable, attendance and assessment screen reaches
+ * through. Without these the analyser types them as the base Model and cannot
+ * see a single property behind them.
+ *
+ * @property-read Subject|null $subject
+ * @property-read Section|null $section
+ * @property-read TeacherProfile|null $teacher
+ * @property-read AcademicYear|null $academicYear
+ * @property-read Collection<int, Assessment> $assessments
+ */
 #[Fillable([
     'school_id',
     'academic_year_id',

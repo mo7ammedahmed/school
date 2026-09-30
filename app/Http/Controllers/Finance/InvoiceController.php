@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Finance;
 
 use App\Domain\Finance\Actions\IssueInvoice;
-use App\Domain\Finance\Events\InvoiceCreated;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Services\GatewaySettings;
 use App\Domain\Finance\Services\InvoiceDeliveryService;
@@ -104,10 +103,12 @@ class InvoiceController extends Controller
             'due_date' => $validated['due_date'],
             'notes' => $validated['notes'] ?? null,
             'currency' => $this->currency(),
+            // A new invoice is always a draft: issuing it is a separate action
+            // that delivers it to the guardian, and payments move it on from
+            // there. The create form used to offer a status dropdown whose value
+            // was thrown away here.
             'status' => 'draft',
         ] + $amounts);
-
-        InvoiceCreated::dispatch($invoice->id, (int) $invoice->student_id, (float) $invoice->total_amount);
 
         return redirect()
             ->route('finance.invoices.show', $invoice)
@@ -167,7 +168,6 @@ class InvoiceController extends Controller
             'subtotal' => 'required|numeric|min:0',
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'discount_amount' => 'nullable|numeric|min:0',
-            'status' => 'required|in:draft,issued,partially_paid,paid,overdue,void',
             'notes' => 'nullable|string',
         ]);
 
@@ -183,7 +183,12 @@ class InvoiceController extends Controller
             'invoice_number' => $validated['invoice_number'],
             'issue_date' => $validated['issue_date'] ?? now()->toDateString(),
             'due_date' => $validated['due_date'],
-            'status' => $validated['status'],
+            // Status is deliberately not editable here. It used to be, which
+            // meant an edit could mark an invoice `issued` (or `paid`, or `void`)
+            // without issuing it, delivering it, or recording a payment — and an
+            // edit of a `partially_paid` invoice reset it to whatever the
+            // dropdown defaulted to, because the form's status list did not
+            // include that status at all.
             'notes' => $validated['notes'] ?? null,
         ] + $amounts);
 

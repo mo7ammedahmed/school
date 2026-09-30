@@ -3,15 +3,12 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { t } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
-
-const STATUSES = ['draft', 'issued', 'paid', 'overdue', 'void'] as const;
 
 export default function FinanceInvoicesEdit({
     invoice,
@@ -24,7 +21,6 @@ export default function FinanceInvoicesEdit({
         subtotal: number;
         tax_rate: number;
         discount_amount: number;
-        status: string;
         notes: string;
     };
 }) {
@@ -64,16 +60,6 @@ export default function FinanceInvoicesEdit({
                             <div className="min-w-0">
                                 <Label htmlFor="invoice_number">{t(locale, 'finance.invoices.number')}</Label>
                                 <Input id="invoice_number" name="invoice_number" defaultValue={invoice.invoice_number} required />
-                            </div>
-                            <div className="min-w-0">
-                                <Label htmlFor="status">{t(locale, 'finance.invoices.status')}</Label>
-                                <Select id="status" name="status" required defaultValue={invoice.status}>
-                                    {STATUSES.map((status) => (
-                                        <option key={status} value={status}>
-                                            {t(locale, `finance.invoices.status.${status}`)}
-                                        </option>
-                                    ))}
-                                </Select>
                             </div>
                             <div className="min-w-0">
                                 <Label htmlFor="issue_date">{t(locale, 'finance.invoices.issueDate')}</Label>

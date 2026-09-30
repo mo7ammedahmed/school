@@ -999,8 +999,13 @@ class TranslationTest extends TestCase
 
         // Warm the cache twice: the second call must not hit the provider.
         $this->fakeTranslation('مرحبا');
-        $this->assertSame('مرحبا', $service->translate('Hello', 'en', 'ar', $school->id));
-        $this->assertSame('مرحبا', $service->translate('Hello', 'en', 'ar', $school->id));
+        $first = $service->translate('Hello', 'en', 'ar', $school->id);
+        $second = $service->translate('Hello', 'en', 'ar', $school->id);
+
+        $this->assertSame('مرحبا', $first);
+        // The second call is served from the cache, so it returns the same text
+        // without a second trip to the provider.
+        $this->assertSame($first, $second);
         Http::assertSentCount(1);
 
         // "Test connection" translates the same sample, so it has to prove the

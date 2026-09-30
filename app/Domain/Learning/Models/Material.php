@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Learning\Models;
 
 use App\Domain\Academics\Models\Offering;
+use App\Domain\Academics\Models\Section;
+use App\Domain\Academics\Models\Subject;
 use App\Domain\Schools\Models\School;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -13,6 +15,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * `subject` and `section` are appended accessors that walk to the offering.
+ *
+ * @property-read Subject|null $subject
+ * @property-read Section|null $section
+ * @property-read Offering|null $offering
+ */
 #[Fillable([
     'school_id',
     'offering_id',

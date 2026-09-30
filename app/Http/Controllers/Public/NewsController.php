@@ -9,11 +9,12 @@ use App\Models\News;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class NewsController
+class NewsController extends PublicController
 {
     public function index(): Response
     {
-        $articles = News::where('is_published', true)
+        $articles = News::forSchool($this->schoolId())
+            ->where('is_published', true)
             ->where('published_at', '<=', now())
             ->latest('published_at')
             ->paginate(10)
@@ -28,7 +29,8 @@ class NewsController
     {
         // `publish_date` is the model's display name for `published_at`, not a
         // column: filtering on it matched nothing at all, so every article 404ed.
-        $article = News::where('is_published', true)
+        $article = News::forSchool($this->schoolId())
+            ->where('is_published', true)
             ->where('published_at', '<=', now())
             ->findOrFail($id);
 

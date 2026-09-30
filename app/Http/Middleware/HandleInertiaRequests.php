@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Domain\Localization\Services\InterfaceCatalog;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Models\SchoolNavigationLabel;
 use App\Domain\Schools\Services\SchoolResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -78,9 +79,11 @@ class HandleInertiaRequests extends Middleware
             'themeConfig' => $school ? $school->getThemeConfig() : [],
             // Light/dark headline palettes, editable in Settings → Theme.
             'themeModes' => $school ? $school->getThemeModes() : null,
+            // No column list here: a partial select hides the row's model class
+            // from the analyser and turns the mapping below untyped.
             'navLabels' => $school ? $school->navigationLabels()
-                ->get(['key', 'name_en', 'name_ar'])
-                ->mapWithKeys(fn ($label) => [
+                ->get()
+                ->mapWithKeys(fn (SchoolNavigationLabel $label): array => [
                     $label->key => ['en' => $label->name_en, 'ar' => $label->name_ar],
                 ])
                 ->all() : [],
@@ -88,11 +91,11 @@ class HandleInertiaRequests extends Middleware
             // The dashboard's Arabic dictionary, sent once per version rather
             // than re-requested six strings at a time while the page loads.
             'uiCopy' => fn (): ?array => $this->interfaceCopy($request),
+            // Only the two severities anything actually flashes: no controller
+            // ever set a `warning` or an `info`, and no page read one.
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
-                'warning' => session('warning'),
-                'info' => session('info'),
             ],
             'csrf_token' => $request->session()->token(),
         ]);
