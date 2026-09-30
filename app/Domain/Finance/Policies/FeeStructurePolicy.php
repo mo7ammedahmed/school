@@ -10,27 +10,34 @@ use App\Models\User;
 /**
  * Who may read or change a fee structure.
  *
- * The policy used `hasPermissionTo('manage-fee-structures')`, which throws
- * `PermissionDoesNotExist` when the permission has not been seeded â€” so `/show`
- * and `/edit` were a 500 for every user, and the tenancy half of the check never
- * ran at all. `checkPermissionTo` answers false for a permission that does not
- * exist, and the school comparison is what actually guards the record.
+ * The policy used `hasPermissionTo('manage-fee-structures')`, which threw
+ * `PermissionDoesNotExist` when the permission had not been seeded — so `/show`
+ * and `/edit` were a 500 for every user. That permission is now seeded, so the
+ * throw is gone and the permission check can be required rather than treated as
+ * a fallback.
+ *
+ * update() and delete() consulted the school alone, so any member of the school
+ * could pass the gate with no permission to change a fee structure at all. Every
+ * method now requires the permission AND the school, matching `StudentPolicy`.
  */
 class FeeStructurePolicy
 {
     public function view(User $user, FeeStructure $feeStructure): bool
     {
-        return $this->owns($feeStructure) || $user->checkPermissionTo('manage-fee-structures');
+        return $user->hasPermissionTo('manage-fee-structures') &&
+            $this->owns($feeStructure);
     }
 
     public function update(User $user, FeeStructure $feeStructure): bool
     {
-        return $this->owns($feeStructure);
+        return $user->hasPermissionTo('manage-fee-structures') &&
+            $this->owns($feeStructure);
     }
 
     public function delete(User $user, FeeStructure $feeStructure): bool
     {
-        return $this->owns($feeStructure);
+        return $user->hasPermissionTo('manage-fee-structures') &&
+            $this->owns($feeStructure);
     }
 
     private function owns(FeeStructure $feeStructure): bool
