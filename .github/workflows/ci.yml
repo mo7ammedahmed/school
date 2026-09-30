@@ -20,7 +20,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          # composer.json requires ^8.3; the development toolchain runs 8.6.
+          # composer.json requires ^8.4; the development toolchain runs 8.6.
           php-version: '8.4'
           extensions: dom, mbstring, zip, sqlite3, pdo_sqlite
           coverage: none
