@@ -6,6 +6,9 @@ here is marked fixed without a test that fails against the old behaviour.
 
 Verified at the end of Phase 3: `phpunit` 538 tests / 3727 assertions, PHPStan
 level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean.
+At the Phase 4 checkpoint below: `phpunit` 555 tests / 3774 assertions, PHPStan
+level 5 clean, Pint clean (643 files); the frontend gates are untouched by this
+phase.
 
 ## Phase 1 — Authorization (complete)
 
@@ -80,6 +83,37 @@ level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean
 | 4 | A password change did not revoke other sessions: the session middleware that keeps the password-hash copy was never enabled | Confirmed | `$middleware->authenticateSessions()`; the change ends every other session on its next request while the device that changed it stays signed in (`ebb29c0`) | `SessionHardeningTest` |
 | 5 | Switching school put a new tenant in the session without regenerating its id; enabling or disabling 2FA did the same for a security-posture change | Confirmed | `regenerate()` on school selection and on both 2FA transitions (`ebb29c0`) | `SessionHardeningTest` (school switch); the 2FA transitions are covered by review, not a case |
 | 6 | The only 2FA test asserted the challenge page answers 200 for a visitor with no sign-in in progress — the behaviour that had to change | Confirmed | Rewritten to the pending state; the enforcement cases moved to `TwoFactorEnforcementTest` | `TwoFactorTest` |
+
+## Phase 4 — Tenant isolation (in progress)
+
+Verified by `tests/Feature/Security/TenantIsolationTest.php`, a cross-tenant
+matrix that asserts the *required* behaviour and started fully red. Findings 1–4
+are fixed; 5–7 are named work still to do.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 1 | Implicit route-model binding resolved ids straight off the primary key, so `show`, `edit`, `update` and `destroy` had nothing to check: enrolments, admission applications, discounts, students, sections and academic years could be opened, edited and deleted by a foreign school | Confirmed | `BelongsToSchool` adds the active tenant to `resolveRouteBindingQuery`; foreign ids answer 404 (not 403, which would confirm the row exists elsewhere) (`2af16b0`) | `TenantIsolationTest` list/show/edit/update/delete cases; the two older 403 assertions were updated to 404 |
+| 2 | `EnrollmentController` listed every school's enrolments, offered every school's students/sections/years in the form, and accepted foreign ids in `exists:` rules — a school could enrol its pupil into a stranger's section | Confirmed | `forSchool()` on list and form queries; `Rule::exists(...)->where('school_id', …)` on both rule sets; `school_id` stamped from the tenant context (`2af16b0`) | `TenantIsolationTest` (list, form, two foreign-FK cases) |
+| 3 | The admissions review queue asked platform-wide questions with one school's id: the reviewer picker listed every school's staff, `assign` accepted any user on the platform, and `bulkUpdate` validated and updated foreign application ids — writing status and event rows onto a stranger's application | Confirmed | Queue resolves the id through `schoolId()`; reviewer candidates must hold an active membership in this school; application ids are scoped by rule and the service takes the school id, filtering both of its queries (`1b6be3c`) | `TenantIsolationTest` (bulk write refused whole-request, foreign reviewer refused, reviewer picker) |
+| 4 | `DiscountController` listed and offered platform-wide rows and stamped `school_id` from the raw session | Confirmed | `forSchool()` on list and pickers; stamp from the tenant context (`1b6be3c`) | `TenantIsolationTest` (list, open, edit, delete) |
+| 5 | 63 models carry `school_id`; only 13 carry `BelongsToSchool`, so the rest can still be queried across schools by an omission | Partly fixed | `TenantContext` + `TenantScope` + auto-stamp + `withoutSchoolScope()` are live on the 13 (`2af16b0`, `1f058bc`); the remaining models are the rollout | Global scope is asserted live by the whole suite; no per-model test yet |
+| 6 | 181 `exists:` rules across controllers and form requests are unscoped, so a foreign id validates | Open | Scoped on the screens fixed above; the rest to be swept, rule by rule | — |
+| 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Open | Tenant-aware binding is the mechanism; the remaining `ensureOwned` call sites should be deleted as each model joins the trait | — |
+
+**Open from Phase 4**
+
+- **The trait rollout is the next commit series.** The remaining school-owned
+  models need `BelongsToSchool` one batch at a time, because each addition can
+  expose a query somewhere that was relying on seeing every school's rows —
+  which is the finding, not a reason to hold back the scope.
+- **`App\Models` aliases duplicate the domain layer.** Thirty thin subclasses
+  exist so old type hints resolve; the policy map knows both names. Consolidating
+  them removes the second name from every `Gate` lookup, but it touches most
+  controllers, so it belongs with the infra Phase 4 model-layer work.
+- **Roles are platform-global** (`config/permission.php` `teams => false`),
+  and the reviewer-picker bug showed why that has to be answered deliberately:
+  "who is in this school" is a membership question, never a role question. The
+  decision and its consequences are recorded as Decision 18.
 
 **Open from Phase 3**
 

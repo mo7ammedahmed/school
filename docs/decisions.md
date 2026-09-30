@@ -228,3 +228,37 @@
   naming: the challenge redirect confirms to an attacker that a password was
   correct (inherent to a two-step flow), and recovery codes exist but are never
   displayed yet, so the follow-up is to show the set once at generation.
+
+## Decision 18: A school is a tenant, not a role team
+- **Status:** Accepted
+- **Context:** `config/permission.php` has `teams => false`, so Spatie roles and
+  permissions are platform rows: there is one `registrar` role, and every
+  school's registrar holds it. Tenancy lives in `UserMembership` — user, school,
+  role name, `is_active`, last login — and `EnsureSchoolContext` proves an active
+  membership before a request is allowed in. That split was being read as an
+  oversight: the admissions review picker asked "who has the reviewer
+  permission?" and offered every school's staff, and `assign` accepted any user
+  id on the platform. The two candidate fixes were to turn Spatie teams on
+  (roles become per-school rows) or to keep roles global and make membership the
+  tenant link. A third question sits behind them: how tenant scope itself is
+  enforced on model queries.
+- **Decision:** Roles stay global; membership is the only answer to "who belongs
+  to this school", and every query about a school's people joins memberships.
+  Tenant scope is `TenantContext` plus a fail-closed global scope: a model that
+  uses `BelongsToSchool` is filtered to the active school on every query, a null
+  context matches nothing rather than everything, writes with no school and no
+  context throw, an update can never move a row between schools, and
+  `withoutSchoolScope()` is the named escape hatch for the few places that mean
+  to cross schools. The context is pinned by `EnsureSchoolContext` after
+  membership is proven, by `ApplySiteMetadata` for the public site (a visitor
+  has no session), and by `TenantContext::runFor()` around code that was handed
+  a school — actions, services, jobs.
+- **Consequences:** The permission catalogue stays one editable vocabulary, the
+  role matrix test keeps covering all eight roles, and "who may do this here?"
+  composes as permission **and** active membership **and** model scope — the
+  reviewer picker is the pattern. The costs are honest: per-school custom roles
+  are not possible without a later mechanism, a feature that forgets membership
+  still passes its permission check (which is exactly the bug the reviewer
+  picker had), and the rollout of the global scope is deliberately incremental —
+  each model that joins the trait can expose a query that was relying on seeing
+  every school's rows, and that exposure is the audit.
