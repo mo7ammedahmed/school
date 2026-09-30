@@ -149,10 +149,6 @@ class PermissionNamesExistTest extends TestCase
             );
 
             foreach (array_unique($matches[1]) as $name) {
-                if ($this->isKnownUnseeded($path, $name)) {
-                    continue;
-                }
-
                 $names[] = $name;
             }
 
@@ -162,21 +158,5 @@ class PermissionNamesExistTest extends TestCase
         }
 
         return $found;
-    }
-
-    /**
-     * The one acknowledged exception, stated rather than skipped silently.
-     *
-     * `app/Policies/TimetablePolicy.php` checks `manage-timetable`, which
-     * nothing seeds. It is dead: the class is not in the policy map
-     * AppServiceProvider registers, `manage-timetable-entries` is what the
-     * live TimetableEntryPolicy checks, and no route resolves to it. A later
-     * commit deletes the class. If it is still here when that commit lands,
-     * this is the assertion that says so.
-     */
-    private function isKnownUnseeded(string $path, string $name): bool
-    {
-        return $name === 'manage-timetable'
-            && str_replace('\\', '/', $path) === str_replace('\\', '/', app_path('Policies/TimetablePolicy.php'));
     }
 }
