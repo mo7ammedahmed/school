@@ -15,18 +15,18 @@ class ContentPagePolicy
     public function view(User $user, ContentPage $model): bool
     {
         return $model->school_id === session('school_id')
-            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
+            && $user->hasPermissionTo('manage-content');
     }
 
     public function update(User $user, ContentPage $model): bool
     {
         return $model->school_id === session('school_id')
-            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
+            && $user->hasPermissionTo('manage-content');
     }
 
     public function delete(User $user, ContentPage $model): bool
     {
         return $model->school_id === session('school_id')
-            && ($user->hasPermissionTo('manage-content') || $user->hasPermissionTo('manage-content-pages'));
+            && $user->hasPermissionTo('manage-content');
     }
 }

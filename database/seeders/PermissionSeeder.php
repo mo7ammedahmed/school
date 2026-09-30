@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -59,6 +61,31 @@ class PermissionSeeder extends Seeder
             'view-own-schedule',
             'submit-assignments',
             'take-quizzes',
+
+            // Permissions checked by policies but not previously seeded.
+            // Added in the same order as their parent permissions above.
+            'manage-grading-scales',
+            'manage-grading-categories',
+            'manage-assessment-scores',
+            'manage-exam-results',
+            'manage-attendance-records',
+            'manage-attendance-sessions',
+            'manage-conversations',
+            'manage-notifications',
+            'manage-news',
+            'manage-events',
+            'manage-faqs',
+            'manage-staff-profiles',
+            'manage-contact-leads',
+            'manage-document-categories',
+            'manage-gateway-transactions',
+            'manage-webhook-events',
+            'manage-invoice-lines',
+            'manage-payment-allocations',
+            'manage-memberships',
+            'manage-quiz-attempts',
+            'manage-school-settings',
+            'manage-classrooms',
         ];
 
         foreach ($permissions as $permission) {

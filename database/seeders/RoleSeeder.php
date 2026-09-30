@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -156,5 +158,51 @@ class RoleSeeder extends Seeder
             'view-own-schedule',
         ]));
         $guardian->syncPermissions($guardianPermissions);
+
+        // ------------------------------------------------------------------
+        // Derived grants: permissions the policies check but the allow/deny
+        // lists above cannot infer.
+        //
+        // Adding a permission to PermissionSeeder hands it to every staff role
+        // whose deny list does not name it, which is how accountant would end
+        // up managing school settings. These are granted against the permission
+        // each feature's route middleware already enforces, so the policy and
+        // the route agree.
+        // ------------------------------------------------------------------
+        $derivedPermissions = [
+            'manage-grading-scales' => ['manage-settings'],
+            'manage-grading-categories' => ['manage-settings'],
+            'manage-assessment-scores' => ['manage-assessments'],
+            'manage-exam-results' => ['manage-exams'],
+            'manage-attendance-records' => ['manage-attendance'],
+            'manage-attendance-sessions' => ['manage-attendance'],
+            'manage-conversations' => ['manage-messages'],
+            'manage-notifications' => ['manage-messages'],
+            'manage-news' => ['manage-content'],
+            'manage-events' => ['manage-content'],
+            'manage-faqs' => ['manage-content'],
+            'manage-staff-profiles' => ['manage-content'],
+            'manage-contact-leads' => ['manage-content'],
+            'manage-document-categories' => ['manage-documents'],
+            'manage-gateway-transactions' => ['manage-settings'],
+            'manage-webhook-events' => ['manage-settings'],
+            'manage-invoice-lines' => ['manage-invoices'],
+            'manage-payment-allocations' => ['manage-payments'],
+            'manage-memberships' => ['manage-users'],
+            'manage-quiz-attempts' => ['manage-quizzes'],
+            'manage-school-settings' => ['manage-settings'],
+            'manage-classrooms' => ['manage-rooms'],
+        ];
+
+        foreach ($derivedPermissions as $permission => $parents) {
+            $model = Permission::firstOrCreate(['name' => $permission]);
+            $roles = Role::whereIn('name', [
+                'super_admin', 'school_admin', 'principal', 'registrar',
+                'teacher', 'accountant', 'student', 'guardian',
+            ])->get()->filter(fn (Role $role) => collect($parents)->contains(
+                fn (string $parent) => $role->checkPermissionTo($parent)
+            ));
+            $model->roles()->sync($roles);
+        }
     }
 }

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\Localization;
 
 use App\Domain\Academics\Models\Subject;
+use App\Domain\Content\Models\ContentPage;
 use App\Domain\Content\Models\Event;
+use App\Domain\Content\Models\News;
 use App\Domain\Localization\Observers\FillsMissingTranslations;
 use App\Domain\Localization\Services\TranslationService;
 use App\Domain\Localization\Services\TranslationSettings;
@@ -13,6 +15,7 @@ use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
 use App\Models\Announcement;
 use App\Models\GradeLevel;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -1140,6 +1143,101 @@ class TranslationTest extends TestCase
         // the sweep, which reports what is still missing.
         $this->assertGreaterThanOrEqual(1, $filled);
         $this->assertLessThan(4, $filled);
+    }
+
+    /**
+     * The regression: this endpoint authorises whatever bilingual model the
+     * request names, and thirteen of the policies it can reach asked for a
+     * permission the catalogue never had.
+     *
+     * `hasPermissionTo('manage-news')` does not return false for a name that is
+     * not seeded — it resolves the name and throws `PermissionDoesNotExist`. So
+     * the deny branch was unreachable too: a user without the permission got a
+     * 500 rather than the 403 they were owed, and a user with it got a 500 as
+     * well. Both tables below are ones the policy map made reachable, and both
+     * are named in the request body, so both have to come back as an answer
+     * rather than an error.
+     */
+    public function test_saving_a_translated_field_authorises_instead_of_erroring(): void
+    {
+        $school = School::factory()->create();
+
+        // Without this the two calls below raise There is no permission named —
+        // which is the 500 this case exists to rule out.
+        $this->seed(PermissionSeeder::class);
+
+        $page = ContentPage::create([
+            'school_id' => $school->id,
+            'slug' => 'about-us',
+            'title' => 'About us',
+        ]);
+
+        $news = News::create([
+            'school_id' => $school->id,
+            'slug' => 'term-dates',
+            'title' => 'Term dates',
+            'content' => 'The term starts on Sunday.',
+        ]);
+
+        $targets = [
+            'content_pages' => $page->id,
+            'news' => $news->id,
+        ];
+
+        Http::fake([
+            'integrate.api.nvidia.com/*' => Http::response([
+                'choices' => [['message' => ['content' => 'مترجم']]],
+            ]),
+        ]);
+
+        // The deny branch: a policy that cannot resolve the name must still say
+        // no, and saying no is a 403.
+        $this->actingAsSchoolUser($school);
+
+        foreach ($targets as $table => $id) {
+            $this->postJson('/translate/save', $this->titleField($table, $id))
+                ->assertForbidden();
+        }
+
+        // The allow branch: the same two targets, with the permission the
+        // policy checks. Anything but a 2xx here is the old 500 again.
+        $this->actingAsSchoolUser($school, ['manage-content', 'manage-news']);
+
+        foreach ($targets as $table => $id) {
+            $response = $this->postJson('/translate/save', $this->titleField($table, $id));
+
+            $this->assertLessThan(
+                500,
+                $response->getStatusCode(),
+                "POST /translate/save against [{$table}] returned a server error instead of an answer.",
+            );
+            $response->assertOk()->assertJson(['saved' => true]);
+        }
+
+        $this->assertDatabaseHas('content_pages', [
+            'id' => $page->id,
+            'title' => 'About us',
+            'title_ar' => 'من نحن',
+        ]);
+
+        $this->assertDatabaseHas('news', [
+            'id' => $news->id,
+            'title' => 'Term dates',
+            'title_ar' => 'مواعيد الفصل',
+        ]);
+    }
+
+    /** The payload the bilingual field editor posts, for a title pair. */
+    private function titleField(string $table, int $id): array
+    {
+        return [
+            'table' => $table,
+            'id' => $id,
+            'source_column' => 'title',
+            'source_value' => $table === 'news' ? 'Term dates' : 'About us',
+            'column' => 'title_ar',
+            'value' => $table === 'news' ? 'مواعيد الفصل' : 'من نحن',
+        ];
     }
 
     /** A row as it would have been saved before translation existed. */

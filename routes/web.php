@@ -424,7 +424,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     // `events.*` routes and left the controllers asking for `content.news.show`
     // and `content.events.show`, routes that did not exist: creating, updating
     // or deleting an article or an event saved the row and then answered 500.
-    Route::middleware('permission:manage-content|manage-content-pages')->group(function () {
+    Route::middleware('permission:manage-content')->group(function () {
         Route::resource('content/pages', ContentPageController::class)->except(['show'])->names('content.pages');
         Route::resource('content/news', NewsController::class)->names('content.news');
         Route::resource('content/events', EventController::class)->names('content.events');
