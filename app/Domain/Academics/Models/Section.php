@@ -9,6 +9,7 @@ use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Database\Factories\Domain\Academics\Models\SectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -45,6 +46,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UseFactory(SectionFactory::class)]
 class Section extends Model
 {
+    use BelongsToSchool;
+
     /** @use HasFactory<SectionFactory> */
     use HasFactory, SoftDeletes;
 

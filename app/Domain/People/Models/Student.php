@@ -13,6 +13,7 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Learning\Models\Submission;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use App\Models\User;
 use Database\Factories\StudentFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
@@ -57,6 +58,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UseFactory(StudentFactory::class)]
 class Student extends Model
 {
+    use BelongsToSchool;
+
     /** @use HasFactory<StudentFactory> */
     use HasFactory, SoftDeletes;
 

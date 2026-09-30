@@ -164,8 +164,8 @@ class TenantIsolationTest extends TestCase
 
         $mine = Student::factory()->create(['school_id' => $school->id]);
         Student::factory()->create(['school_id' => $other->id]);
-        [$section] = $this->academicsFor($school);
-        $foreignSection = $this->academicsFor($other)[2];
+        [, , $section] = $this->academicsFor($school);
+        [, , $foreignSection] = $this->academicsFor($other);
 
         $this->actingAsSchoolUser($school, ['manage-enrollments']);
 
@@ -174,14 +174,23 @@ class TenantIsolationTest extends TestCase
         $response->assertOk();
 
         $props = $response->viewData('page')['props'];
+        $studentIds = array_column($props['students'], 'id');
+        $sectionIds = array_column($props['sections'], 'id');
 
-        $this->assertSame(
-            [$mine->id],
-            array_column($props['students'], 'id'),
+        // `academicsFor()` creates a student and a section per school, so the
+        // comparison is against the school's own rows rather than one fixture.
+        $this->assertContains($mine->id, $studentIds);
+        $this->assertEqualsCanonicalizing(
+            $school->students()->pluck('id')->all(),
+            $studentIds,
             "another school's students leaked into the enrolment form",
         );
-        $this->assertSame([$section->id], array_column($props['sections'], 'id'));
-        $this->assertNotContains($foreignSection->id, array_column($props['sections'], 'id'));
+        $this->assertContains($section->id, $sectionIds);
+        $this->assertEqualsCanonicalizing(
+            $school->sections()->pluck('id')->all(),
+            $sectionIds,
+        );
+        $this->assertNotContains($foreignSection->id, $sectionIds);
     }
 
     public function test_another_schools_application_cannot_be_opened_for_review(): void

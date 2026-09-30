@@ -25,4 +25,24 @@ trait BelongsToSchool
     {
         return $query->where($this->qualifyColumn('school_id'), $schoolId);
     }
+
+    /**
+     * Resolve a route binding inside the active tenant.
+     *
+     * Implicit binding is how a foreign id was reachable at all: the router
+     * resolved `{enrollment}` straight from the primary key, so `show`, `edit`,
+     * `update` and `destroy` had nothing to check and one school could open
+     * another's record by guessing an id. Adding the tenant to the binding query
+     * turns that into a 404 before the action runs — the same answer a missing
+     * row gets, because to this school the row is missing.
+     *
+     * It fails closed: with no context the comparison is against null, which
+     * matches nothing. A route that carries a school-owned binding must have run
+     * `school.context` first, and this is what makes forgetting it loud.
+     */
+    public function resolveRouteBindingQuery($query, $value, $field = null): Builder
+    {
+        return parent::resolveRouteBindingQuery($query, $value, $field)
+            ->where($this->qualifyColumn('school_id'), app(TenantContext::class)->id());
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Academics\Models;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Database\Factories\AcademicYearFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -35,6 +36,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class AcademicYear extends Model
 {
+    use BelongsToSchool;
+
     /** @use HasFactory<AcademicYearFactory> */
     use HasFactory, SoftDeletes;
 

@@ -18,6 +18,11 @@
         </include>
     </source>
     <php>
+        <!-- The suite boots an application per test, so its peak memory grows with
+             the number of tests: 552 tests exhaust the CLI default of 128M in the
+             PDF-export specs. The limit is raised here so `php vendor/bin/phpunit`
+             is green without every caller having to remember a -d flag. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

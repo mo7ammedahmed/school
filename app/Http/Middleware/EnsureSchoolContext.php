@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,6 +68,12 @@ class EnsureSchoolContext
         if ($school) {
             $request->attributes->set('school', $school);
         }
+
+        // Pin the tenant context for everything downstream: controllers, scoped
+        // `exists:` rules and route-model binding all read this one value.
+        // A platform admin with no school selected is a null context, not an
+        // unscoped one.
+        app(TenantContext::class)->set($schoolId === null ? null : (int) $schoolId);
 
         return $next($request);
     }

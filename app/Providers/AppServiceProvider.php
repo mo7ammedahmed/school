@@ -108,6 +108,7 @@ use App\Domain\Scheduling\Policies\CalendarDayPolicy;
 use App\Domain\Scheduling\Policies\PeriodPolicy;
 use App\Domain\Scheduling\Policies\RoomPolicy;
 use App\Domain\Scheduling\Policies\TimetableEntryPolicy;
+use App\Domain\Schools\Support\TenantContext;
 use App\Http\Middleware\ApplySiteMetadata;
 use App\Models\Classroom;
 use App\Models\Enrollment as AppEnrollment;
@@ -141,6 +142,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(WebhookVerifierRegistry::class, fn (): WebhookVerifierRegistry => new WebhookVerifierRegistry([
             new MoyasarWebhookVerifier,
         ]));
+
+        // One tenant context per process. Requests pin it after proving
+        // membership; commands and queued jobs pin it explicitly, and a null
+        // context is a real answer — "no school" — not a reason to see every
+        // school's rows.
+        $this->app->singleton(TenantContext::class);
     }
 
     public function boot(): void

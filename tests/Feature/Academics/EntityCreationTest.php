@@ -147,8 +147,11 @@ class EntityCreationTest extends TestCase
             'grade_level_id' => GradeLevel::factory()->create(['school_id' => $other->id])->id,
         ]);
 
-        $this->get("/sections/{$foreignSection->id}/edit")->assertForbidden();
-        $this->get("/sections/{$foreignSection->id}")->assertForbidden();
+        // The section model resolves bindings inside the active tenant, so a
+        // foreign id is a 404 — the same answer a nonexistent id gets — rather
+        // than a 403 that would confirm the row exists elsewhere.
+        $this->get("/sections/{$foreignSection->id}/edit")->assertNotFound();
+        $this->get("/sections/{$foreignSection->id}")->assertNotFound();
     }
 
     public function test_a_section_code_is_unique_per_school_not_globally(): void

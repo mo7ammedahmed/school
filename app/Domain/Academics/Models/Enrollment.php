@@ -7,6 +7,7 @@ namespace App\Domain\Academics\Models;
 use App\Domain\Finance\Models\FeeAssignment;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Enrollment extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

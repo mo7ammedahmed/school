@@ -91,7 +91,10 @@ class StudentTest extends TestCase
         $this->actingAs($user);
         $this->app['session']->put('school_id', $schoolA->id);
 
+        // 404, not 403: tenant-aware route binding never finds the row, so the
+        // answer is the same one a missing id gets and no other school's id
+        // can be confirmed by probing this route.
         $response = $this->get("/students/{$student->id}");
-        $response->assertStatus(403);
+        $response->assertNotFound();
     }
 }
