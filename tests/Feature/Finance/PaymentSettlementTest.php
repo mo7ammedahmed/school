@@ -8,6 +8,7 @@ use App\Domain\Finance\Models\GatewayTransaction;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\WebhookEvent;
+use App\Domain\Finance\Services\GatewaySettings;
 use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\People\Models\Student;
@@ -15,6 +16,8 @@ use App\Domain\Schools\Models\School;
 use App\Mail\InvoiceMail;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -26,6 +29,26 @@ class PaymentSettlementTest extends TestCase
     {
         parent::setUp();
         Mail::fake();
+        $this->fakeGateway();
+    }
+
+    /**
+     * A gateway that repeats the local record back, so the settlement question
+     * these tests are about is not tangled up with the amount check.
+     */
+    private function fakeGateway(): void
+    {
+        Http::fake(function (ClientRequest $request) {
+            $id = basename((string) parse_url($request->url(), PHP_URL_PATH));
+            $transaction = GatewayTransaction::query()->where('gateway_transaction_id', $id)->first();
+
+            return Http::response([
+                'id' => $id,
+                'status' => 'paid',
+                'amount' => (int) round(((float) ($transaction?->amount ?? 0)) * 100),
+                'currency' => strtoupper((string) ($transaction?->currency ?? 'SAR')),
+            ]);
+        });
     }
 
     public function test_a_gateway_webhook_marks_the_invoice_paid_and_receipts_the_guardian(): void
@@ -34,7 +57,7 @@ class PaymentSettlementTest extends TestCase
 
         $this->postJson('/webhooks/payments/moyasar', $this->payload($payment, 115000))
             ->assertOk()
-            ->assertJson(['status' => 'success']);
+            ->assertJson(['status' => 'settled']);
 
         $invoice->refresh();
         $payment->refresh();
@@ -52,9 +75,10 @@ class PaymentSettlementTest extends TestCase
 
     public function test_a_partial_webhook_payment_leaves_the_invoice_partially_paid(): void
     {
-        [$invoice, $payment] = $this->invoiceWithPendingPayment();
+        [$invoice, $payment, , $transaction] = $this->invoiceWithPendingPayment();
 
         $payment->update(['amount' => 500]);
+        $transaction->update(['amount' => 500]);
 
         $this->postJson('/webhooks/payments/moyasar', $this->payload($payment, 50000))->assertOk();
 
@@ -72,7 +96,9 @@ class PaymentSettlementTest extends TestCase
         $payload = $this->payload($payment, 115000);
 
         $this->postJson('/webhooks/payments/moyasar', $payload)->assertOk();
-        $this->postJson('/webhooks/payments/moyasar', $payload)->assertOk();
+        $this->postJson('/webhooks/payments/moyasar', $payload)
+            ->assertOk()
+            ->assertJson(['status' => 'replayed']);
 
         $invoice->refresh();
 
@@ -98,6 +124,16 @@ class PaymentSettlementTest extends TestCase
             'currency' => 'SAR',
             'payment_method' => 'moyasar',
             'status' => 'pending',
+        ]);
+
+        GatewayTransaction::create([
+            'school_id' => $invoice->school_id,
+            'payment_id' => $second->id,
+            'gateway' => 'moyasar',
+            'gateway_transaction_id' => 'trx-'.$second->id,
+            'status' => 'pending',
+            'currency' => 'SAR',
+            'amount' => 650,
         ]);
 
         $this->postJson('/webhooks/payments/moyasar', $this->payload($second, 65000))->assertOk();
@@ -195,11 +231,19 @@ class PaymentSettlementTest extends TestCase
     }
 
     /**
-     * @return array{0: Invoice, 1: Payment, 2: Guardian}
+     * @return array{0: Invoice, 1: Payment, 2: Guardian, 3: GatewayTransaction}
      */
     private function invoiceWithPendingPayment(): array
     {
         $school = School::factory()->create();
+
+        GatewaySettings::for($school)->save([
+            'gateway' => 'moyasar',
+            'enabled' => true,
+            'public_key' => 'pk_test',
+            'secret_key' => 'sk_test',
+            'webhook_secret' => 'whsec_test_secret',
+        ]);
 
         $student = Student::factory()->create(['school_id' => $school->id, 'email' => null]);
 
@@ -242,33 +286,45 @@ class PaymentSettlementTest extends TestCase
             'status' => 'pending',
         ]);
 
-        GatewayTransaction::create([
+        $transaction = GatewayTransaction::create([
             'school_id' => $school->id,
             'payment_id' => $payment->id,
             'gateway' => 'moyasar',
             'gateway_transaction_id' => 'trx-'.$payment->id,
             'status' => 'pending',
+            'currency' => 'SAR',
             'amount' => 1150,
         ]);
 
-        return [$invoice, $payment, $guardian];
+        return [$invoice, $payment, $guardian, $transaction];
     }
 
     /**
+     * A Moyasar delivery, in the envelope the provider documents.
+     *
      * @return array<string, mixed>
      */
     private function payload(Payment $payment, int $minorAmount): array
     {
+        $transaction = GatewayTransaction::query()
+            ->where('payment_id', $payment->id)
+            ->first();
+
         return [
             'id' => 'evt_'.$payment->id,
-            'type' => 'payment.paid',
-            'amount' => $minorAmount,
-            'status' => 'paid',
-            'metadata' => [
-                'payment_id' => $payment->id,
-                'payment_number' => $payment->payment_number,
-                'invoice_id' => $payment->invoice_id,
-                'school_id' => $payment->school_id,
+            'type' => 'payment_paid',
+            'secret_token' => 'whsec_test_secret',
+            'data' => [
+                'id' => $transaction?->gateway_transaction_id ?? 'trx-'.$payment->id,
+                'status' => 'paid',
+                'amount' => $minorAmount,
+                'currency' => 'SAR',
+                'metadata' => [
+                    'payment_id' => $payment->id,
+                    'payment_number' => $payment->payment_number,
+                    'invoice_id' => $payment->invoice_id,
+                    'school_id' => $payment->school_id,
+                ],
             ],
         ];
     }

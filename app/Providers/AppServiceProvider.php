@@ -80,6 +80,8 @@ use App\Domain\Finance\Policies\PaymentAllocationPolicy;
 use App\Domain\Finance\Policies\PaymentPolicy;
 use App\Domain\Finance\Policies\RefundPolicy;
 use App\Domain\Finance\Policies\WebhookEventPolicy;
+use App\Domain\Finance\Webhooks\MoyasarWebhookVerifier;
+use App\Domain\Finance\Webhooks\WebhookVerifierRegistry;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Identity\Policies\UserMembershipPolicy;
 use App\Domain\Learning\Models\Assignment;
@@ -133,7 +135,12 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // The gateways whose deliveries can be authenticated. A gateway absent
+        // from this list is refused by the webhook endpoint, because there is
+        // nothing to verify it with.
+        $this->app->singleton(WebhookVerifierRegistry::class, fn (): WebhookVerifierRegistry => new WebhookVerifierRegistry([
+            new MoyasarWebhookVerifier,
+        ]));
     }
 
     public function boot(): void

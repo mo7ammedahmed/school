@@ -11,9 +11,11 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Finance\Models\WebhookEvent;
-use Exception;
+use App\Domain\Finance\Webhooks\WebhookResult;
+use App\Domain\Finance\Webhooks\WebhookVerifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PaymentSettlementService
 {
@@ -124,174 +126,194 @@ class PaymentSettlementService
         ])->save();
     }
 
-    public function handleWebhook(string $gateway, array $payload): void
+    /**
+     * Handle one gateway delivery.
+     *
+     * The order is the security property: resolve which school the delivery
+     * claims to belong to, verify the delivery with that school's own secret,
+     * and only then touch the database. A delivery that cannot be verified is
+     * refused without a write.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function handleWebhook(string $gateway, array $payload, WebhookVerifier $verifier): WebhookResult
     {
-        $eventId = $payload['id'] ?? null;
+        $eventId = $this->stringOrNull($payload['id'] ?? null);
 
-        if (! $eventId) {
-            Log::warning('Webhook received without event ID', ['payload' => $payload]);
+        if ($eventId === null) {
+            Log::warning('Webhook received without an event id', ['gateway' => $gateway]);
 
-            return;
+            return WebhookResult::ignored('The delivery carried no event id.');
         }
 
-        $existingEvent = WebhookEvent::where('gateway', $gateway)
+        $payment = $this->resolvePayment($this->paymentData($payload));
+
+        if (! $payment instanceof Payment) {
+            Log::warning('Webhook could not be matched to a payment', [
+                'gateway' => $gateway,
+                'event_id' => $eventId,
+            ]);
+
+            return WebhookResult::ignored('The delivery could not be matched to a payment.');
+        }
+
+        $secret = GatewaySettings::for((int) $payment->school_id)->webhookSecret();
+
+        if ($secret === null || $secret === '' || ! $verifier->verify($payload, $secret)) {
+            Log::warning('Webhook signature verification failed', [
+                'gateway' => $gateway,
+                'event_id' => $eventId,
+                'school_id' => $payment->school_id,
+            ]);
+
+            return WebhookResult::rejected(401, 'The delivery could not be verified.');
+        }
+
+        return $this->processVerifiedWebhook($gateway, $eventId, $payload, $payment);
+    }
+
+    /**
+     * Act on a delivery whose signature has already been verified.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function processVerifiedWebhook(string $gateway, string $eventId, array $payload, Payment $payment): WebhookResult
+    {
+        $existing = WebhookEvent::query()
+            ->where('gateway', $gateway)
             ->where('event_id', $eventId)
             ->first();
 
-        if ($existingEvent) {
-            Log::info('Duplicate webhook event received', ['event_id' => $eventId]);
+        if ($existing !== null && in_array($existing->status, ['completed', 'processing'], true)) {
+            return WebhookResult::replayed();
+        }
 
-            return;
+        $data = $this->paymentData($payload);
+        $transactionId = $this->stringOrNull($data['id'] ?? null);
+
+        $webhookEvent = WebhookEvent::updateOrCreate(
+            ['gateway' => $gateway, 'event_id' => $eventId],
+            [
+                'school_id' => $payment->school_id,
+                'event_type' => $this->eventType($payload),
+                'payload' => $payload,
+                'status' => 'processing',
+                'error_message' => null,
+            ],
+        );
+
+        if ($transactionId === null) {
+            $webhookEvent->update([
+                'status' => 'failed',
+                'error_message' => 'The delivery carried no gateway transaction id.',
+            ]);
+
+            return WebhookResult::rejected(422, 'The delivery carried no gateway transaction id.');
+        }
+
+        $transaction = GatewayTransaction::query()
+            ->where('gateway', $gateway)
+            ->where('gateway_transaction_id', $transactionId)
+            ->first();
+
+        if ($transaction === null) {
+            $transaction = GatewayTransaction::create([
+                'school_id' => $payment->school_id,
+                'payment_id' => $payment->id,
+                'gateway' => $gateway,
+                'gateway_transaction_id' => $transactionId,
+                'status' => 'pending',
+                'currency' => (string) $payment->currency,
+                'amount' => $payment->amount,
+                'payload' => $payload,
+            ]);
         }
 
         try {
-            $payment = $this->resolvePayment($payload);
+            $this->settlePayment($payment, $transaction);
+        } catch (Throwable $e) {
+            $webhookEvent->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
 
-            // The school comes from the payment itself: `webhook_events.school_id`
-            // is required, and gateway payloads do not reliably carry it.
-            $schoolId = $payment?->school_id ?? $this->resolveSchoolId($payload);
-
-            if (! $payment instanceof Payment) {
-                $this->recordFailure($gateway, $eventId, $payload, $schoolId, 'Payment not found for webhook');
-
-                return;
-            }
-
-            $webhookEvent = WebhookEvent::create([
-                'school_id' => $schoolId,
+            Log::error('Webhook settlement failed', [
                 'gateway' => $gateway,
                 'event_id' => $eventId,
-                'event_type' => $payload['event']['type'] ?? ($payload['type'] ?? 'unknown'),
-                'payload' => $payload,
-                'status' => 'processing',
-            ]);
-
-            $transaction = GatewayTransaction::where('gateway_transaction_id', $eventId)->first();
-
-            if (! $transaction) {
-                $transaction = GatewayTransaction::create([
-                    'school_id' => $payment->school_id,
-                    'payment_id' => $payment->id,
-                    'gateway' => $gateway,
-                    'gateway_transaction_id' => $eventId,
-                    'status' => 'completed',
-                    'amount' => $this->amountFromPayload($payload, $payment),
-                    'response' => $payload,
-                ]);
-            }
-
-            $this->settlePayment($payment, $transaction);
-
-            $webhookEvent->update(['status' => 'completed']);
-        } catch (Exception $e) {
-            WebhookEvent::where('gateway', $gateway)
-                ->where('event_id', $eventId)
-                ->update([
-                    'status' => 'failed',
-                    'error_message' => $e->getMessage(),
-                ]);
-
-            Log::error('Webhook processing failed', [
-                'event_id' => $eventId,
+                'school_id' => $payment->school_id,
                 'error' => $e->getMessage(),
             ]);
+
+            return WebhookResult::retryable('The delivery could not be settled.');
         }
+
+        $webhookEvent->update(['status' => 'completed', 'error_message' => null]);
+
+        return WebhookResult::settled();
     }
 
     /**
-     * Keep a record of a webhook we could not act on, as long as we can tell
-     * which school it belongs to. Otherwise it would need a null school, which
-     * the table does not allow.
+     * The payment object inside a delivery.
+     *
+     * Moyasar wraps the payment in a `data` object, the way Stripe and most
+     * providers do; the flat shape older deliveries used is not a shape the
+     * provider documents.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
      */
-    private function recordFailure(
-        string $gateway,
-        string $eventId,
-        array $payload,
-        ?int $schoolId,
-        string $message,
-    ): void {
-        Log::error('Webhook could not be matched to a payment', [
-            'gateway' => $gateway,
-            'event_id' => $eventId,
-            'school_id' => $schoolId,
-        ]);
-
-        if ($schoolId === null) {
-            return;
-        }
-
-        WebhookEvent::create([
-            'school_id' => $schoolId,
-            'gateway' => $gateway,
-            'event_id' => $eventId,
-            'event_type' => $payload['event']['type'] ?? ($payload['type'] ?? 'unknown'),
-            'payload' => $payload,
-            'status' => 'failed',
-            'error_message' => $message,
-        ]);
-    }
-
-    /**
-     * Gateways echo back our own metadata, so an id is the reliable key. The
-     * payment number is kept as a fallback for older payloads.
-     */
-    private function resolvePayment(array $payload): ?Payment
+    private function paymentData(array $payload): array
     {
-        $metadata = $payload['metadata'] ?? [];
+        $data = $payload['data'] ?? null;
 
-        if (is_array($metadata) && ! empty($metadata['payment_id'])) {
-            $payment = Payment::find((int) $metadata['payment_id']);
+        return is_array($data) ? $data : [];
+    }
+
+    /**
+     * Which payment the provider is writing about, from the metadata it echoes
+     * back. This only identifies the school whose secret verifies the delivery;
+     * nothing is settled on the strength of it.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function resolvePayment(array $data): ?Payment
+    {
+        $metadata = $data['metadata'] ?? null;
+
+        if (! is_array($metadata)) {
+            return null;
+        }
+
+        if (! empty($metadata['payment_id'])) {
+            $payment = Payment::query()->find((int) $metadata['payment_id']);
 
             if ($payment !== null) {
                 return $payment;
             }
         }
 
-        if (is_array($metadata) && ! empty($metadata['payment_number'])) {
-            $payment = Payment::where('payment_number', $metadata['payment_number'])->first();
-
-            if ($payment !== null) {
-                return $payment;
-            }
+        if (! empty($metadata['payment_number']) && is_string($metadata['payment_number'])) {
+            return Payment::query()->where('payment_number', $metadata['payment_number'])->first();
         }
 
         return null;
     }
 
-    private function amountFromPayload(array $payload, Payment $payment): float
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function eventType(array $payload): string
     {
-        $amount = $payload['amount'] ?? null;
+        $type = $payload['type'] ?? null;
 
-        if (! is_numeric($amount)) {
-            return (float) $payment->amount;
-        }
-
-        // Moyasar and Stripe report minor units (halalas/cents).
-        return round(((float) $amount) / 100, 4);
+        return is_string($type) && $type !== '' ? $type : 'unknown';
     }
 
-    private function resolveSchoolId(array $payload): ?int
+    private function stringOrNull(mixed $value): ?string
     {
-        $metadata = $payload['metadata'] ?? [];
-
-        if (is_array($metadata) && ! empty($metadata['payment_id'])) {
-            $schoolId = Payment::whereKey((int) $metadata['payment_id'])->value('school_id');
-
-            if ($schoolId !== null) {
-                return (int) $schoolId;
-            }
+        if (is_string($value) && $value !== '') {
+            return $value;
         }
 
-        if (is_array($metadata) && ! empty($metadata['invoice_id'])) {
-            $schoolId = Invoice::whereKey((int) $metadata['invoice_id'])->value('school_id');
-
-            if ($schoolId !== null) {
-                return (int) $schoolId;
-            }
-        }
-
-        if (is_array($metadata) && ! empty($metadata['school_id']) && is_numeric($metadata['school_id'])) {
-            return (int) $metadata['school_id'];
+        if (is_int($value)) {
+            return (string) $value;
         }
 
         return null;
