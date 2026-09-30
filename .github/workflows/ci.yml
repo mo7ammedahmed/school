@@ -9,9 +9,19 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  COMPOSER_CACHE_DIR: ${{ github.workspace }}/.composer-cache
+
 jobs:
   backend:
-    name: PHP â€” tests, static analysis, style
+    name: PHP — tests, static analysis, style
     runs-on: ubuntu-latest
 
     steps:
@@ -25,13 +35,17 @@ jobs:
           extensions: dom, mbstring, zip, sqlite3, pdo_sqlite
           coverage: none
 
+      # composer's post-autoload-dump runs artisan package:discover, which boots
+      # the application, so the .env must exist before composer install - not
+      # after it. key:generate still runs after (it needs the framework installed).
+      - name: Prepare environment
+        run: cp .env.example .env
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Prepare application
-        run: |
-          cp .env.example .env
-          php artisan key:generate
+        run: php artisan key:generate
 
       - name: Tests
         run: vendor/bin/phpunit
@@ -47,7 +61,7 @@ jobs:
         run: vendor/bin/pint --test
 
   frontend:
-    name: Frontend â€” lint, types, asset build
+    name: Frontend — lint, types, asset build
     runs-on: ubuntu-latest
 
     steps:
