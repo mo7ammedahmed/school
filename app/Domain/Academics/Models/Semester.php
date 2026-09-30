@@ -8,6 +8,7 @@ use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Assessment\Models\Exam;
 use App\Domain\Assessment\Models\ReportCard;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Database\Factories\Domain\Academics\Models\SemesterFactory;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -41,7 +42,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Semester extends Model
 {
     /** @use HasFactory<SemesterFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     protected function name(): Attribute
     {

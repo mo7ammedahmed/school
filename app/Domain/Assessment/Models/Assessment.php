@@ -9,6 +9,7 @@ use App\Domain\Academics\Models\GradingCategory;
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -42,7 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Assessment extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

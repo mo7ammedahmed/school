@@ -6,6 +6,7 @@ namespace App\Domain\Academics\Models;
 
 use App\Domain\Assessment\Models\Assessment;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class GradingCategory extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

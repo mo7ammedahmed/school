@@ -8,6 +8,7 @@ use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class ReportCard extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

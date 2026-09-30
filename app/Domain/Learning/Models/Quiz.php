@@ -8,6 +8,7 @@ use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -38,7 +39,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends(['subject', 'section', 'total_marks', 'passing_marks', 'duration_minutes', 'status'])]
 class Quiz extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected function subject(): Attribute
     {

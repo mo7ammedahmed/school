@@ -13,6 +13,7 @@ use App\Domain\Learning\Models\Quiz;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -44,7 +45,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Offering extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

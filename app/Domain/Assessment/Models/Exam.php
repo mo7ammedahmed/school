@@ -9,6 +9,7 @@ use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Scheduling\Models\Room;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends(['subject', 'section', 'total_marks', 'passing_marks', 'status'])]
 class Exam extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected function subject(): Attribute
     {
