@@ -113,6 +113,22 @@ class WebhookSecurityTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_one_schools_secret_does_not_verify_another_schools_delivery(): void
+    {
+        [$invoice, $payment, $transaction] = $this->invoiceWithPendingPayment();
+
+        $other = School::factory()->create();
+
+        GatewaySettings::for($other)->save(['webhook_secret' => 'whsec_other_school']);
+
+        $this->postJson('/webhooks/payments/moyasar', $this->envelope($payment, $transaction, [
+            'secret_token' => 'whsec_other_school',
+        ]))->assertStatus(401);
+
+        $this->assertSame('pending', $payment->refresh()->status);
+        $this->assertSame('issued', $invoice->refresh()->status);
+    }
+
     public function test_a_webhook_is_rejected_when_the_school_has_no_webhook_secret(): void
     {
         [$invoice, $payment, $transaction] = $this->invoiceWithPendingPayment(withWebhookSecret: false);
