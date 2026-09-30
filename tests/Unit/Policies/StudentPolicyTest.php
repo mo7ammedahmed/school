@@ -31,6 +31,8 @@ class StudentPolicyTest extends TestCase
             'school_id' => $school->id,
         ]);
 
+        $this->app['session']->put('school_id', $school->id);
+
         $policy = new StudentPolicy;
         $this->assertTrue($policy->view($user, $student));
     }
@@ -48,6 +50,48 @@ class StudentPolicyTest extends TestCase
 
         $policy = new StudentPolicy;
         $this->assertFalse($policy->view($user, $student));
+    }
+
+    public function test_user_without_permission_cannot_view_same_school_student(): void
+    {
+        $user = User::factory()->create();
+        $school = School::factory()->create();
+        $student = Student::factory()->create([
+            'school_id' => $school->id,
+        ]);
+
+        $this->app['session']->put('school_id', $school->id);
+
+        $policy = new StudentPolicy;
+        $this->assertFalse($policy->view($user, $student));
+    }
+
+    public function test_user_without_permission_cannot_update_same_school_student(): void
+    {
+        $user = User::factory()->create();
+        $school = School::factory()->create();
+        $student = Student::factory()->create([
+            'school_id' => $school->id,
+        ]);
+
+        $this->app['session']->put('school_id', $school->id);
+
+        $policy = new StudentPolicy;
+        $this->assertFalse($policy->update($user, $student));
+    }
+
+    public function test_user_without_permission_cannot_delete_same_school_student(): void
+    {
+        $user = User::factory()->create();
+        $school = School::factory()->create();
+        $student = Student::factory()->create([
+            'school_id' => $school->id,
+        ]);
+
+        $this->app['session']->put('school_id', $school->id);
+
+        $policy = new StudentPolicy;
+        $this->assertFalse($policy->delete($user, $student));
     }
 
     public function test_user_cannot_delete_graduated_student(): void

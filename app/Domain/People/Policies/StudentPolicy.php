@@ -14,7 +14,7 @@ class StudentPolicy
 
     public function view(User $user, Student $student): bool
     {
-        return $user->hasPermissionTo('manage-students') ||
+        return $user->hasPermissionTo('manage-students') &&
             $student->school_id === session('school_id');
     }
 
