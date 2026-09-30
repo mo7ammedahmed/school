@@ -68,6 +68,9 @@ class SecurityController extends Controller
             'two_factor_recovery_codes' => $this->recoveryCodes->hashAll($this->totp->recoveryCodes()),
         ])->save();
 
+        // The account's security posture changed; start a fresh session id.
+        $request->session()->regenerate();
+
         return redirect()
             ->route('settings.security.two-factor')
             ->with('success', 'Two-factor authentication enabled.');
@@ -84,6 +87,8 @@ class SecurityController extends Controller
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
         ])->save();
+
+        $request->session()->regenerate();
 
         return redirect()
             ->route('settings.security.two-factor')

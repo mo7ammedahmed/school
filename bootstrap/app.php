@@ -34,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // rate limited in routes/web.php.
         $middleware->validateCsrfTokens(except: ['webhooks/*']);
 
+        // Keep a copy of the password hash in the session, so a password change
+        // signs out every other device still carrying the old one.
+        $middleware->authenticateSessions();
+
         $middleware->alias([
             'school.context' => EnsureSchoolContext::class,
             'role' => RoleMiddleware::class,

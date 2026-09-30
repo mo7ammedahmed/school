@@ -47,6 +47,11 @@ class SchoolSelectionController extends Controller
 
         session(['school_id' => $membership->school_id]);
 
+        // The session now speaks for a different school; a new id means a
+        // token captured before the switch cannot be replayed against the one
+        // it now stands for.
+        $request->session()->regenerate();
+
         return redirect()->route('dashboard');
     }
 
