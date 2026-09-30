@@ -73,6 +73,32 @@ Operator-level guidance:
 - Private files: \storage/app/private\ (the \local\ disk root in \config/filesystems.php\).
 - RPO and RTO are **decisions the operator must make**, not facts this repo can provide.
 
+## Webhook setup
+
+Each school configures its own gateway under **Settings → Payments**. That
+screen shows the delivery URL and stores the school's `webhook_secret`
+(encrypted at rest):
+
+```
+https://<app-host>/webhooks/payments/moyasar
+```
+
+- Only `moyasar` is accepted today. HyperPay and Stripe have no gateway client
+  in this codebase, so their deliveries are answered **404** rather than
+  trusted. Adding one means implementing its verifier **and** a client that can
+  re-fetch the payment — a signature nobody can confirm against the provider is
+a check in name only.
+- Every delivery is verified against that school's secret (`secret_token` in
+  the body, compared in constant time) before anything is written. A school
+  with no secret cannot settle: the delivery is refused with 401.
+- Settlement never trusts the payload. The gateway is asked for the real
+  status, and the amount and currency must match the local payment (422
+  otherwise). Responses: 200 settled/replayed/ignored, 401 unverifiable, 422
+  inconsistent, 500 retryable — the provider retries 5xx, which is exactly why
+  a permanent mismatch answers 422 instead.
+- The path is CSRF-exempt (a gateway cannot hold a token) and rate limited at
+  60 requests per minute.
+
 ## Configuration notes
 
 - **\REDIS_CLIENT\ trap:** A pre-existing \.env\ saying \REDIS_CLIENT=phpredis\ overrides the corrected default (\predis\) and fails, because this project installs \predis/predis\ and **not** \ext-redis\. Change the \.env\ value to \predis\.

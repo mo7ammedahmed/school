@@ -176,5 +176,30 @@
 - **Consequences:** A school's own data — names, numbers, anything it typed — is
   untouchable, and no provider call is spent guessing at it. The cost is that
   chrome inside a cell which is *not* in the dictionary stays English instead of
-  being machine-translated; the vocabulary covers values, not sentences, so a
+  being  machine-translated; the vocabulary covers values, not sentences, so a
   phrase like "Not sent" still needs a dictionary entry to appear in Arabic.
+
+## Decision 16: A delivery is authenticated per school, and settled from the gateway's own answer
+- **Status:** Accepted
+- **Context:** `/webhooks/payments/{gateway}` is reachable by anyone. It used to
+  accept any POST, write `GatewayTransaction.status = completed`, and settle the
+  invoice the payload named — so a forged body settled money, and a real
+  delivery would have been a 419 anyway because the path was not CSRF-exempt.
+  The payload was also read in a flat shape Moyasar does not send, which is why
+  the missing check was invisible: the documented envelope puts the payment
+  under `data`, and only that shape carries `secret_token`.
+- **Decision:** Three rules. (1) A delivery is verified before it can write
+  anything, using the *school's own* encrypted `webhook_secret` compared in
+  constant time; a school with no secret refuses deliveries. (2) The gateway is
+  the only authority on whether money arrived: the payment is re-fetched, and
+  the amount and currency must match the local record before anything settles.
+  (3) A gateway with no registered `WebhookVerifier` is answered 404 — the
+  registry will not invent a shared secret for a provider that does not send
+  one. Settlement is one transaction that locks the payment and its invoice;
+  `failed` deliveries may be retried, `completed` ones are replayed.
+- **Consequences:** A forged or replayed delivery cannot move money, and a
+  school must configure its secret before online payments settle — fail-closed
+  rather than silently trusting. The cost is that adding a provider takes two
+  pieces (a verifier and a client that can re-fetch), and that the webhook
+  response is now the protocol signal for retries: 4xx means "do not retry",
+  5xx means "try again".
