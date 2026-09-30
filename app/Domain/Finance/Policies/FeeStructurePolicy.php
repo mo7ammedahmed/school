@@ -11,7 +11,7 @@ use App\Models\User;
  * Who may read or change a fee structure.
  *
  * The policy used `hasPermissionTo('manage-fee-structures')`, which threw
- * `PermissionDoesNotExist` when the permission had not been seeded — so `/show`
+ * `PermissionDoesNotExist` when the permission had not been seeded â€” so `/show`
  * and `/edit` were a 500 for every user. That permission is now seeded, so the
  * throw is gone and the permission check can be required rather than treated as
  * a fallback.
