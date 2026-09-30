@@ -4,7 +4,7 @@ Running record for the security mandate. Each finding says whether it was
 confirmed, what changed, which tests pin it, and what is still open. Nothing
 here is marked fixed without a test that fails against the old behaviour.
 
-Verified at the end of Phase 2: `phpunit` 519 tests / 3614 assertions, PHPStan
+Verified at the end of Phase 3: `phpunit` 538 tests / 3727 assertions, PHPStan
 level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean.
 
 ## Phase 1 — Authorization (complete)
@@ -69,3 +69,32 @@ level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean
 - **Tenant scoping of the identification lookup** arrives with the global
   school scope (infra Phase 3 / security Phase 4), which is one piece of work,
   not two.
+
+## Phase 3 — Authentication hardening (complete)
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 1 | A two-factor account signed in with a password alone: the login controller never consulted `two_factor_enabled`, and the challenge sat in the guest group reading `$request->user()`, so it could only answer a user who was already signed in — the one state it exists to prevent. The `auth.two_factor_confirmed` flag it set was read by nothing | Confirmed | A correct password parks the identity in the session (guard logged out, pending id and remember choice stored) and the challenge finishes the sign-in; a visitor with no pending sign-in is sent to the login (`26aaa76`) | `TwoFactorEnforcementTest` — password alone, dashboard unreachable, valid code, invalid code, recovery code once, no pending sign-in, plus the untouched no-2FA path. `TwoFactorTest` now pins the page for the state it is for |
+| 2 | Login, forgot-password, reset-password and the challenge were not limited at all: a password could be guessed at request speed, the reset endpoint could flood an inbox indefinitely, and six digits is a small space to walk | Confirmed | `ThrottlesAttempts`: five attempts a minute keyed by the identity tried (email, or the pending user) plus the caller's address, cleared on success, refused even when the sixth is correct (`8201a4f`) | `AuthThrottleTest` — all four surfaces, plus a sign-in inside the limit |
+| 3 | Recovery codes were stored as plaintext (encrypted at rest, but plaintext) and compared with `in_array`, a scan that stops at the first differing byte | Confirmed | SHA-256 hashes compared with `hash_equals`; a spent code is removed; a legacy plaintext set keeps working and is re-hashed the first time one is used (`b4ca6bc`) | `RecoveryCodesTest` (hashing, matching, spending, legacy) and the enforcement test's recovery-code case |
+| 4 | A password change did not revoke other sessions: the session middleware that keeps the password-hash copy was never enabled | Confirmed | `$middleware->authenticateSessions()`; the change ends every other session on its next request while the device that changed it stays signed in (`ebb29c0`) | `SessionHardeningTest` |
+| 5 | Switching school put a new tenant in the session without regenerating its id; enabling or disabling 2FA did the same for a security-posture change | Confirmed | `regenerate()` on school selection and on both 2FA transitions (`ebb29c0`) | `SessionHardeningTest` (school switch); the 2FA transitions are covered by review, not a case |
+| 6 | The only 2FA test asserted the challenge page answers 200 for a visitor with no sign-in in progress — the behaviour that had to change | Confirmed | Rewritten to the pending state; the enforcement cases moved to `TwoFactorEnforcementTest` | `TwoFactorTest` |
+
+**Open from Phase 3**
+
+- **Recovery codes are never shown.** They are generated, hashed and counted,
+  and the settings screen displays only how many remain — so a user who loses
+  their authenticator cannot actually use one. The follow-up is to display the
+  set once, when it is generated.
+- **An administrator changing another user's roles or memberships does not end
+  that user's sessions.** Only the user's own school switch and 2FA transitions
+  regenerate their session. Invalidating on role change needs either a sweep of
+  the session store or an auth-version column.
+- **The limiter is per identity and address.** A distributed attempt across many
+  addresses is not covered by it; that is what an edge/WAF rate limit is for.
+- **The challenge redirect tells an attacker the password was right** for a
+  two-factor account. That is inherent to a two-step flow and matches common
+  practice; the alternative is a generic "continue" page that reveals nothing,
+  at the cost of a worse experience for the overwhelming majority who are
+  legitimate.

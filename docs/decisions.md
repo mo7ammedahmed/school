@@ -203,3 +203,28 @@
   pieces (a verifier and a client that can re-fetch), and that the webhook
   response is now the protocol signal for retries: 4xx means "do not retry",
   5xx means "try again".
+
+## Decision 17: A password starts a challenge, not a session
+- **Status:** Accepted
+- **Context:** Two-factor authentication was decoration. The login controller
+  never looked at `two_factor_enabled`, and the challenge controller — sitting
+  in the guest group — read `$request->user()`, so it answered only a visitor
+  who was already signed in; the flag it set was read by nothing. None of the
+  authentication routes were rate limited, recovery codes were plaintext
+  compared with `in_array`, and a password change left every other session
+  alive because the session middleware was never enabled.
+- **Decision:** A correct password parks the identity in the session
+  (`auth.two_factor_user_id` plus the remember-me choice) and logs the guard
+  out; only a valid TOTP code or a usable recovery code calls `Auth::login`.
+  All four surfaces — sign-in, forgot-password, reset-password, challenge —
+  allow five attempts a minute, keyed by the identity tried plus the caller's
+  address, and the counter is cleared by success. Recovery codes are SHA-256
+  hashes compared with `hash_equals`, with a legacy plaintext fallback that is
+  re-hashed on first use. `authenticateSessions()` is enabled, so a password
+  change ends the other sessions; switching school and toggling two-factor
+  authentication regenerate the session id.
+- **Consequences:** The session is only created after both factors, and the
+  limiter makes the second factor's small space expensive. Two costs are worth
+  naming: the challenge redirect confirms to an attacker that a password was
+  correct (inherent to a two-step flow), and recovery codes exist but are never
+  displayed yet, so the follow-up is to show the set once at generation.
