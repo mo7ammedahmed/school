@@ -36,7 +36,11 @@ class CreateAcademicYearTest extends TestCase
     public function test_prevents_duplicate_current_year(): void
     {
         $school = School::factory()->create();
-        AcademicYear::factory()->create([
+
+        // Held as an instance rather than re-queried: the model is tenant
+        // scoped, and this assertion is about the row the factory just made,
+        // not about what the un-pinned context can see.
+        $existing = AcademicYear::factory()->create([
             'school_id' => $school->id,
             'is_current' => true,
         ]);
@@ -53,6 +57,6 @@ class CreateAcademicYearTest extends TestCase
 
         $this->assertInstanceOf(AcademicYear::class, $result);
         $this->assertTrue($result->is_current);
-        $this->assertFalse(AcademicYear::where('id', 1)->first()->is_current);
+        $this->assertFalse($existing->refresh()->is_current);
     }
 }

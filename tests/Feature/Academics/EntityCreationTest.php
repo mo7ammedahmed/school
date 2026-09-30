@@ -177,7 +177,9 @@ class EntityCreationTest extends TestCase
             'grade_level_id' => $ownGradeLevel->id,
         ])->assertRedirect()->assertSessionHasNoErrors();
 
-        $this->assertSame(2, Subject::where('code', 'MATH')->count());
+        // Asking across schools is the point of this assertion, so it says so:
+        // the default query is scoped to the active tenant.
+        $this->assertSame(2, Subject::withoutSchoolScope()->where('code', 'MATH')->count());
     }
 
     /**

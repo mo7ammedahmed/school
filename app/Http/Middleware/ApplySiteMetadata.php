@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Domain\Content\Services\SiteMetadata;
 use App\Domain\Schools\Services\SchoolResolver;
+use App\Domain\Schools\Support\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
 use Laravel\Head\Facades\Head;
@@ -36,6 +37,18 @@ class ApplySiteMetadata
 
         if ($school !== null) {
             $this->metadata->applyIdentity($school);
+
+            // The resolved school is the tenant of this request too, not just
+            // its branding. A visitor has no session, so without this the
+            // global tenant scope would hide the public site's own pages from
+            // itself. Authenticated requests are re-pinned by
+            // EnsureSchoolContext once membership has been proven, so a stale
+            // session value cannot outlast this.
+            $tenants = app(TenantContext::class);
+
+            if (! $tenants->hasId()) {
+                $tenants->set((int) $school->getKey());
+            }
         }
 
         if (! $this->routeDeclaresTitle($request)) {

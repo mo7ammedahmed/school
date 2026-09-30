@@ -5,15 +5,38 @@ declare(strict_types=1);
 namespace App\Domain\Admissions\Services;
 
 use App\Domain\Admissions\Models\AdmissionApplication;
+use App\Domain\Schools\Support\TenantContext;
 use App\Models\User;
+use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AdmissionReviewService
 {
+    public function __construct(private readonly TenantContext $tenants) {}
+
+    /**
+     * Run a read or write inside the school it was asked about.
+     *
+     * Every method here is handed a school id, so it pins that school rather
+     * than assuming a request session: the review queue is also driven from
+     * tests and, eventually, commands.
+     *
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $work
+     * @return TResult
+     */
+    private function inSchool(int $schoolId, Closure $work): mixed
+    {
+        return $this->tenants->runFor($schoolId, $work);
+    }
+
     /**
      * Get applications ready for review with optional filters
+     *
+     * @return Collection<int, AdmissionApplication>
      */
     public function getReviewQueue(int $schoolId, array $filters = []): Collection
     {
@@ -48,7 +71,7 @@ class AdmissionReviewService
             });
         }
 
-        return $query->orderBy('submitted_at', 'asc')->get();
+        return $this->inSchool($schoolId, fn () => $query->orderBy('submitted_at', 'asc')->get());
     }
 
     /**
@@ -121,9 +144,9 @@ class AdmissionReviewService
      */
     public function getReviewStatistics(int $schoolId): array
     {
-        $applications = AdmissionApplication::where('school_id', $schoolId)
+        $applications = $this->inSchool($schoolId, fn () => AdmissionApplication::where('school_id', $schoolId)
             ->whereIn('status', ['submitted', 'under_review', 'approved', 'rejected'])
-            ->get();
+            ->get());
 
         $total = $applications->count();
         $submitted = $applications->where('status', 'submitted')->count();
@@ -167,7 +190,7 @@ class AdmissionReviewService
             ]);
         }
 
-        return DB::transaction(function () use ($applicationIds, $status, $schoolId, $currentUser, $notes) {
+        return $this->inSchool($schoolId, fn () => DB::transaction(function () use ($applicationIds, $status, $schoolId, $currentUser, $notes) {
             $updated = AdmissionApplication::where('school_id', $schoolId)
                 ->whereIn('id', $applicationIds)
                 ->whereIn('status', ['submitted', 'under_review']) // Only allow bulk update of reviewable apps
@@ -193,6 +216,6 @@ class AdmissionReviewService
             }
 
             return $updated;
-        });
+        }));
     }
 }

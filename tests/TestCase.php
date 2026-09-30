@@ -6,6 +6,7 @@ namespace Tests;
 
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
@@ -71,6 +72,12 @@ abstract class TestCase extends BaseTestCase
 
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
+
+        // Pin the tenant, as `school.context` would on a real request. Tests
+        // that query school-owned models before firing an HTTP call would
+        // otherwise be looking at nothing, which is the correct fail-closed
+        // answer but not the one a signed-in user's unit of work gets.
+        $this->app->make(TenantContext::class)->set($school->id);
 
         return $user;
     }

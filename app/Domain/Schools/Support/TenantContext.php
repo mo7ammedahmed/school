@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Schools\Support;
 
 use App\Domain\Schools\Models\School;
+use Closure;
 use Illuminate\Http\Request;
 
 /**
@@ -78,5 +79,38 @@ final class TenantContext
     public function hasId(): bool
     {
         return $this->id() !== null;
+    }
+
+    /**
+     * Pin the context for one unit of work, then restore what was there.
+     *
+     * For code that is *given* a school — an action constructed with one, a
+     * service method that takes an id, a queued job carrying one — this is the
+     * explicit statement the console and queue side of the mandate asks for.
+     * It is also what a unit test uses instead of a session: the school is a
+     * parameter, so it is pinned around the work rather than read from
+     * somewhere else.
+     *
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $work
+     * @return TResult
+     */
+    public function runFor(?int $schoolId, Closure $work): mixed
+    {
+        $previous = $this->schoolId;
+        $wasExplicit = $this->explicit;
+
+        $this->set($schoolId);
+
+        try {
+            return $work();
+        } finally {
+            if ($wasExplicit) {
+                $this->set($previous);
+            } else {
+                $this->forget();
+            }
+        }
     }
 }
