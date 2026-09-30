@@ -222,7 +222,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         ->name('dashboard');
 
     // Academics
-    Route::prefix('academic-years')->name('academic-years.')->group(function () {
+    Route::prefix('academic-years')->name('academic-years.')->middleware('permission:manage-academic-years')->group(function () {
         Route::get('/', [AcademicYearController::class, 'index'])->name('index');
         Route::get('/create', [AcademicYearController::class, 'create'])->name('create');
         Route::post('/', [AcademicYearController::class, 'store'])->name('store');
@@ -233,55 +233,71 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/{year}/semesters', [SemesterController::class, 'index'])->name('semesters.index');
     });
 
-    Route::resource('semesters', SemesterController::class)->except(['index']);
-    Route::resource('grade-levels', GradeLevelController::class);
-    Route::resource('sections', SectionController::class);
-    Route::resource('subjects', SubjectController::class);
-    Route::get('/subjects/{subject}/offerings', [SubjectController::class, 'offerings'])->name('subjects.offerings');
+    Route::resource('semesters', SemesterController::class)->except(['index'])->middleware('permission:manage-semesters');
+    Route::resource('grade-levels', GradeLevelController::class)->middleware('permission:manage-grade-levels');
+    Route::resource('sections', SectionController::class)->middleware('permission:manage-sections');
+    Route::resource('subjects', SubjectController::class)->middleware('permission:manage-subjects');
+    Route::get('/subjects/{subject}/offerings', [SubjectController::class, 'offerings'])
+        ->middleware('permission:manage-offerings')
+        ->name('subjects.offerings');
 
     // People
-    Route::resource('students', StudentController::class);
-    Route::resource('guardians', GuardianController::class);
-    Route::resource('teachers', TeacherController::class);
-    Route::get('/teachers/{teacher}/schedule', [TeacherController::class, 'schedule'])->name('teachers.schedule');
+    Route::resource('students', StudentController::class)->middleware('permission:manage-students');
+    Route::resource('guardians', GuardianController::class)->middleware('permission:manage-guardians');
+    Route::resource('teachers', TeacherController::class)->middleware('permission:manage-teachers');
+    Route::get('/teachers/{teacher}/schedule', [TeacherController::class, 'schedule'])
+        ->middleware('permission:manage-teachers')
+        ->name('teachers.schedule');
 
     // Scheduling
-    Route::resource('rooms', RoomController::class);
-    Route::resource('periods', PeriodController::class)->except(['create', 'show', 'edit']);
+    Route::resource('rooms', RoomController::class)->middleware('permission:manage-rooms');
+    Route::resource('periods', PeriodController::class)->except(['create', 'show', 'edit'])->middleware('permission:manage-periods');
 
     // Registered before the resource so /timetable/grid is not swallowed by /timetable/{timetable}.
-    Route::get('/timetable/grid', [TimetableController::class, 'grid'])->name('timetable.grid');
-    Route::get('/timetable/calendar', [TimetableController::class, 'calendar'])->name('timetable.calendar');
-    Route::get('/timetable/list', [TimetableController::class, 'list'])->name('timetable.list');
-    Route::get('/timetable/print', [TimetableController::class, 'print'])->name('timetable.print');
-    Route::get('/timetable/conflicts', [TimetableController::class, 'conflicts'])->name('timetable.conflicts');
-    Route::get('/timetable/export/pdf', [TimetableController::class, 'exportPdf'])->name('timetable.export.pdf');
-    Route::get('/timetable/export/ics', [TimetableController::class, 'exportIcs'])->name('timetable.export.ics');
-    Route::get('/timetable/teacher/{teacher}', [TimetableController::class, 'teacher'])->name('timetable.teacher');
-    Route::get('/timetable/class/{section}', [TimetableController::class, 'section'])->name('timetable.section');
-    Route::post('/timetable/{timetable}/publish', [TimetableController::class, 'publish'])->name('timetable.publish');
-    Route::post('/timetable/{timetable}/unpublish', [TimetableController::class, 'unpublish'])->name('timetable.unpublish');
-    Route::resource('timetable', TimetableController::class);
-    Route::get('/my-schedule', [TimetableController::class, 'mySchedule'])->name('my-schedule');
+    Route::middleware('permission:manage-timetable-entries')->group(function () {
+        Route::get('/timetable/grid', [TimetableController::class, 'grid'])->name('timetable.grid');
+        Route::get('/timetable/calendar', [TimetableController::class, 'calendar'])->name('timetable.calendar');
+        Route::get('/timetable/list', [TimetableController::class, 'list'])->name('timetable.list');
+        Route::get('/timetable/print', [TimetableController::class, 'print'])->name('timetable.print');
+        Route::get('/timetable/conflicts', [TimetableController::class, 'conflicts'])->name('timetable.conflicts');
+        Route::get('/timetable/export/pdf', [TimetableController::class, 'exportPdf'])->name('timetable.export.pdf');
+        Route::get('/timetable/export/ics', [TimetableController::class, 'exportIcs'])->name('timetable.export.ics');
+        Route::get('/timetable/teacher/{teacher}', [TimetableController::class, 'teacher'])->name('timetable.teacher');
+        Route::get('/timetable/class/{section}', [TimetableController::class, 'section'])->name('timetable.section');
+        Route::post('/timetable/{timetable}/publish', [TimetableController::class, 'publish'])->name('timetable.publish');
+        Route::post('/timetable/{timetable}/unpublish', [TimetableController::class, 'unpublish'])->name('timetable.unpublish');
+        Route::resource('timetable', TimetableController::class);
+    });
+    Route::get('/my-schedule', [TimetableController::class, 'mySchedule'])
+        ->middleware('permission:view-own-schedule')
+        ->name('my-schedule');
 
     // Academic calendar
-    Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
-    Route::get('/calendar/feed', [CalendarController::class, 'feed'])->name('calendar.feed');
-    Route::get('/calendar/export.ics', [CalendarController::class, 'download'])->name('calendar.export');
-    Route::resource('calendar-days', CalendarDayController::class)->only(['store', 'update', 'destroy']);
+    Route::middleware('permission:manage-calendar')->group(function () {
+        Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('/calendar/feed', [CalendarController::class, 'feed'])->name('calendar.feed');
+        Route::get('/calendar/export.ics', [CalendarController::class, 'download'])->name('calendar.export');
+        Route::resource('calendar-days', CalendarDayController::class)->only(['store', 'update', 'destroy']);
+    });
 
     // Attendance
-    Route::resource('attendance-sessions', AttendanceSessionController::class)->parameters(['attendance-sessions' => 'session']);
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::get('/attendance/create', [AttendanceController::class, 'create'])->name('attendance.create');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
-    Route::get('/attendance/{attendance}', [AttendanceController::class, 'show'])->name('attendance.show');
-    Route::get('/attendance/{attendance}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
-    Route::put('/attendance/{attendance}', [AttendanceController::class, 'update'])->name('attendance.update');
-    Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
-    Route::post('/attendance/record', [AttendanceController::class, 'record'])->name('attendance.record');
-    Route::get('/attendance/reports/{type}', [AttendanceController::class, 'reports'])->name('attendance.reports');
-    Route::get('/my-attendance', [AttendanceController::class, 'myAttendance'])->name('my-attendance');
+    Route::resource('attendance-sessions', AttendanceSessionController::class)
+        ->parameters(['attendance-sessions' => 'session'])
+        ->middleware('permission:manage-attendance');
+    Route::middleware('permission:manage-attendance')->group(function () {
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/create', [AttendanceController::class, 'create'])->name('attendance.create');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/attendance/{attendance}', [AttendanceController::class, 'show'])->name('attendance.show');
+        Route::get('/attendance/{attendance}/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
+        Route::put('/attendance/{attendance}', [AttendanceController::class, 'update'])->name('attendance.update');
+        Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
+        Route::post('/attendance/record', [AttendanceController::class, 'record'])->name('attendance.record');
+        Route::get('/attendance/reports/{type}', [AttendanceController::class, 'reports'])->name('attendance.reports');
+    });
+    Route::get('/my-attendance', [AttendanceController::class, 'myAttendance'])
+        ->middleware('permission:view-own-attendance')
+        ->name('my-attendance');
 
     // Assessment
     // Word import is registered before the resource so /assessments/import is
@@ -293,50 +309,76 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/assessments/import/template', [AssessmentImportController::class, 'template'])->name('assessments.import.template');
     });
 
-    Route::resource('assessments', AssessmentController::class);
-    Route::get('/assessments/{assessment}/scores', [AssessmentController::class, 'scores'])->name('assessments.scores');
-    Route::resource('exams', ExamController::class);
-    Route::get('/exams/{exam}/results', [ExamController::class, 'results'])->name('exams.results');
-    Route::resource('exam-results', ExamResultController::class)->parameters(['exam-results' => 'result']);
-    Route::resource('report-cards', ReportCardController::class);
-    Route::get('/my-grades', [ReportCardController::class, 'myGrades'])->name('my-grades');
+    Route::resource('assessments', AssessmentController::class)->middleware('permission:manage-assessments');
+    Route::get('/assessments/{assessment}/scores', [AssessmentController::class, 'scores'])
+        ->middleware('permission:manage-assessments')
+        ->name('assessments.scores');
+    Route::resource('exams', ExamController::class)->middleware('permission:manage-exams');
+    Route::get('/exams/{exam}/results', [ExamController::class, 'results'])
+        ->middleware('permission:manage-exams')
+        ->name('exams.results');
+    // An exam result is a grade: whoever may publish report cards may correct
+    // the marks that feed them, and either may reach this list.
+    Route::resource('exam-results', ExamResultController::class)
+        ->parameters(['exam-results' => 'result'])
+        ->middleware('permission:manage-exams|manage-report-cards');
+    Route::resource('report-cards', ReportCardController::class)->middleware('permission:manage-report-cards');
+    Route::get('/my-grades', [ReportCardController::class, 'myGrades'])
+        ->middleware('permission:view-own-grades')
+        ->name('my-grades');
 
     // Learning
-    Route::resource('materials', MaterialController::class);
-    Route::resource('assignments', AssignmentController::class);
-    Route::get('/assignments/{assignment}/submissions', [SubmissionController::class, 'index'])->name('assignments.submissions');
-    Route::get('/my-assignments', [AssignmentController::class, 'myAssignments'])->name('my-assignments');
-    Route::resource('submissions', SubmissionController::class);
-    Route::resource('quizzes', QuizController::class);
-    Route::get('/my-quizzes/{quiz}/attempt', [QuizController::class, 'attempt'])->name('my-quizzes.attempt');
+    Route::resource('materials', MaterialController::class)->middleware('permission:manage-materials');
+    Route::resource('assignments', AssignmentController::class)->middleware('permission:manage-assignments');
+    Route::get('/assignments/{assignment}/submissions', [SubmissionController::class, 'index'])
+        ->middleware('permission:manage-assignments')
+        ->name('assignments.submissions');
+    Route::get('/my-assignments', [AssignmentController::class, 'myAssignments'])
+        ->middleware('permission:submit-assignments')
+        ->name('my-assignments');
+    Route::resource('submissions', SubmissionController::class)->middleware('permission:manage-submissions');
+    Route::resource('quizzes', QuizController::class)->middleware('permission:manage-quizzes');
+    Route::get('/my-quizzes/{quiz}/attempt', [QuizController::class, 'attempt'])
+        ->middleware('permission:take-quizzes')
+        ->name('my-quizzes.attempt');
 
     // Finance
     Route::prefix('finance')->name('finance.')->group(function () {
-        Route::get('/fee-types', [FeeStructureController::class, 'index'])->name('fee-types.index');
-        Route::get('/fee-structures', [FeeStructureController::class, 'index'])->name('fee-structures.index');
-        Route::get('/fee-structures/create', [FeeStructureController::class, 'create'])->name('fee-structures.create');
-        Route::post('/fee-structures', [FeeStructureController::class, 'store'])->name('fee-structures.store');
-        Route::get('/fee-structures/{feeStructure}', [FeeStructureController::class, 'show'])->name('fee-structures.show');
-        Route::get('/fee-structures/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('fee-structures.edit');
-        Route::put('/fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
-        Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])->name('fee-assignments.index');
-        Route::resource('discounts', FinanceDiscountController::class);
+        Route::middleware('permission:manage-fee-types|manage-fee-structures')->group(function () {
+            Route::get('/fee-types', [FeeStructureController::class, 'index'])->name('fee-types.index');
+            Route::get('/fee-structures', [FeeStructureController::class, 'index'])->name('fee-structures.index');
+            Route::get('/fee-structures/create', [FeeStructureController::class, 'create'])->name('fee-structures.create');
+            Route::post('/fee-structures', [FeeStructureController::class, 'store'])->name('fee-structures.store');
+            Route::get('/fee-structures/{feeStructure}', [FeeStructureController::class, 'show'])->name('fee-structures.show');
+            Route::get('/fee-structures/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('fee-structures.edit');
+            Route::put('/fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
+        });
+        Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])
+            ->middleware('permission:manage-fee-assignments')
+            ->name('fee-assignments.index');
+        Route::resource('discounts', FinanceDiscountController::class)->middleware('permission:manage-discounts');
         // Invoice actions must be declared before the resource so the extra
         // segments are not swallowed by the {invoice} wildcard.
-        Route::post('/invoices/{invoice}/issue', [FinanceInvoiceController::class, 'issue'])->name('invoices.issue');
-        Route::post('/invoices/{invoice}/send', [FinanceInvoiceController::class, 'send'])->name('invoices.send');
-        Route::get('/invoices/{invoice}/pdf', [FinanceInvoiceController::class, 'pdf'])->name('invoices.pdf');
-        Route::resource('invoices', FinanceInvoiceController::class);
-        Route::get('/payments/offline', [FinancePaymentController::class, 'offline'])->name('payments.offline');
-        Route::get('/payments/{payment}/review', [FinancePaymentController::class, 'review'])->name('payments.review');
-        Route::post('/payments/{payment}/confirm', [FinancePaymentController::class, 'confirm'])->name('payments.confirm');
-        Route::resource('payments', FinancePaymentController::class);
-        Route::resource('refunds', FinanceRefundController::class);
-        Route::get('/my-fees', [FinanceController::class, 'myFees'])->name('my-fees');
+        Route::middleware('permission:manage-invoices')->group(function () {
+            Route::post('/invoices/{invoice}/issue', [FinanceInvoiceController::class, 'issue'])->name('invoices.issue');
+            Route::post('/invoices/{invoice}/send', [FinanceInvoiceController::class, 'send'])->name('invoices.send');
+            Route::get('/invoices/{invoice}/pdf', [FinanceInvoiceController::class, 'pdf'])->name('invoices.pdf');
+            Route::resource('invoices', FinanceInvoiceController::class);
+        });
+        Route::middleware('permission:manage-payments')->group(function () {
+            Route::get('/payments/offline', [FinancePaymentController::class, 'offline'])->name('payments.offline');
+            Route::get('/payments/{payment}/review', [FinancePaymentController::class, 'review'])->name('payments.review');
+            Route::post('/payments/{payment}/confirm', [FinancePaymentController::class, 'confirm'])->name('payments.confirm');
+            Route::resource('payments', FinancePaymentController::class);
+        });
+        Route::resource('refunds', FinanceRefundController::class)->middleware('permission:manage-refunds');
+        Route::get('/my-fees', [FinanceController::class, 'myFees'])
+            ->middleware('permission:view-own-fees')
+            ->name('my-fees');
     });
 
     // Admissions
-    Route::prefix('admissions')->name('admissions.')->group(function () {
+    Route::prefix('admissions')->name('admissions.')->middleware('permission:manage-admissions')->group(function () {
         Route::get('/periods', [AdmissionsController::class, 'periods'])->name('periods');
         Route::get('/applications', [AdmissionsController::class, 'applications'])->name('applications');
         Route::get('/applications/{id}', [AdmissionsController::class, 'applicationShow'])->name('applications.show');
@@ -351,22 +393,28 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     });
 
     // Enrollment
-    Route::resource('enrollments', EnrollmentController::class);
-    Route::get('/enrollments/waitlist', [EnrollmentController::class, 'waitlist'])->name('enrollments.waitlist');
+    Route::resource('enrollments', EnrollmentController::class)->middleware('permission:manage-enrollments');
+    Route::get('/enrollments/waitlist', [EnrollmentController::class, 'waitlist'])
+        ->middleware('permission:manage-enrollments')
+        ->name('enrollments.waitlist');
 
     // Communication
-    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-    Route::get('/messages/create', [MessageController::class, 'create'])->name('messages.create');
-    Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
-    Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
-    Route::resource('announcements', AnnouncementController::class);
+    Route::middleware('permission:manage-messages')->group(function () {
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+        Route::get('/messages/create', [MessageController::class, 'create'])->name('messages.create');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
+    });
+    Route::resource('announcements', AnnouncementController::class)->middleware('permission:manage-announcements');
     Route::get('/notifications', [MessageController::class, 'notifications'])->name('notifications.index');
 
     // Documents
-    Route::resource('documents', DocumentController::class);
-    Route::get('/documents/upload', [DocumentController::class, 'create'])->name('documents.upload');
-    Route::post('/documents/upload', [DocumentController::class, 'store']);
-    Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
+    Route::middleware('permission:manage-documents')->group(function () {
+        Route::resource('documents', DocumentController::class);
+        Route::get('/documents/upload', [DocumentController::class, 'create'])->name('documents.upload');
+        Route::post('/documents/upload', [DocumentController::class, 'store']);
+        Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
+    });
 
     // Content management (admin)
     //
@@ -383,8 +431,10 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     });
 
     // Reports
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
+    Route::middleware('permission:manage-reports')->group(function () {
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
+    });
 
     // Settings
     Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings|manage-schools')->group(function () {
@@ -464,7 +514,9 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         ->middleware('permission:manage-roles')
         ->name('permissions.index');
     Route::resource('schools', SchoolController::class)->middleware('permission:manage-schools');
-    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])
+        ->middleware('permission:view-audit-logs')
+        ->name('audit-logs.index');
 
     // Student portal
     Route::prefix('student')->name('student.')->middleware('role:student')->group(function () {

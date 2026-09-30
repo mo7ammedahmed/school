@@ -31,7 +31,7 @@ class CalendarTest extends TestCase
     public function test_the_calendar_page_loads(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         $this->get('/calendar')->assertOk();
     }
@@ -39,7 +39,7 @@ class CalendarTest extends TestCase
     public function test_the_calendar_page_supports_week_and_day_views(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         $this->get('/calendar?view=week&date=2026-09-16')->assertOk();
         $this->get('/calendar?view=day&date=2026-09-16')->assertOk();
@@ -48,7 +48,7 @@ class CalendarTest extends TestCase
     public function test_the_calendar_page_falls_back_to_month_for_unknown_views(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         $this->get('/calendar?view=decade')->assertOk();
     }
@@ -56,7 +56,7 @@ class CalendarTest extends TestCase
     public function test_the_feed_aggregates_authored_and_derived_items(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         $year = AcademicYear::factory()->create([
             'school_id' => $school->id,
@@ -98,7 +98,7 @@ class CalendarTest extends TestCase
     public function test_the_feed_can_be_filtered_by_type(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         CalendarDay::create([
             'school_id' => $school->id,
@@ -126,7 +126,7 @@ class CalendarTest extends TestCase
     {
         $school = School::factory()->create();
         $otherSchool = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         CalendarDay::create([
             'school_id' => $otherSchool->id,
@@ -144,7 +144,7 @@ class CalendarTest extends TestCase
     public function test_it_downloads_an_ical_feed(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-calendar']);
 
         CalendarDay::create([
             'school_id' => $school->id,

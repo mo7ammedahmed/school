@@ -125,7 +125,7 @@ class PaymentSettlementTest extends TestCase
     public function test_confirming_an_offline_payment_settles_the_invoice(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-payments']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         $invoice = Invoice::factory()->create([
@@ -170,7 +170,7 @@ class PaymentSettlementTest extends TestCase
     {
         $school = School::factory()->create();
         $other = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-payments']);
 
         $student = Student::factory()->create(['school_id' => $other->id]);
         $invoice = Invoice::factory()->create([

@@ -96,7 +96,7 @@ class TimetableCalendarTest extends TestCase
             'is_published' => true,
         ]);
 
-        $this->actingAsSchoolUser($this->school);
+        $this->actingAsSchoolUser($this->school, ['manage-timetable-entries']);
     }
 
     public function test_lessons_are_projected_onto_each_matching_weekday(): void

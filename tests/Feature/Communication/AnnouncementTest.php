@@ -26,7 +26,7 @@ class AnnouncementTest extends TestCase
     public function test_an_announcement_is_created_with_its_body_and_dates(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         $this->post('/announcements', [
             'title' => 'Sports day',
@@ -51,7 +51,7 @@ class AnnouncementTest extends TestCase
     public function test_an_announcement_in_one_language_fills_the_other_on_save(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         config(['services.openai.api_key' => 'sk-test']);
         TranslationSettings::for($school->id)->save(['provider' => 'openai', 'model' => 'gpt-4o-mini']);
@@ -77,7 +77,7 @@ class AnnouncementTest extends TestCase
     public function test_an_announcement_needs_a_title_in_one_of_the_two_languages(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         $this->post('/announcements', [
             'target_audience' => 'all',
@@ -97,7 +97,7 @@ class AnnouncementTest extends TestCase
         $mine = $this->announcement($school, 'Mine');
         $this->announcement($other, 'Theirs');
 
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         $response = $this->get('/announcements');
 
@@ -115,7 +115,7 @@ class AnnouncementTest extends TestCase
 
         $foreign = $this->announcement($other, 'Theirs');
 
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         $this->get("/announcements/{$foreign->id}")->assertNotFound();
         $this->get("/announcements/{$foreign->id}/edit")->assertNotFound();
@@ -124,7 +124,7 @@ class AnnouncementTest extends TestCase
     public function test_the_detail_screen_renders_both_languages(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-announcements']);
 
         $announcement = $this->announcement($school, 'Book fair');
 

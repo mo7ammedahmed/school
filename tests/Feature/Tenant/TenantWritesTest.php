@@ -39,7 +39,7 @@ class TenantWritesTest extends TestCase
     public function test_enrolling_a_student_files_the_enrolment_under_the_active_school(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-enrollments']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         [$year, $gradeLevel] = $this->yearAndGradeLevel($school);
@@ -68,7 +68,7 @@ class TenantWritesTest extends TestCase
     public function test_a_report_card_is_filed_under_the_active_school(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-report-cards']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         [$year] = $this->yearAndGradeLevel($school);
@@ -95,7 +95,7 @@ class TenantWritesTest extends TestCase
     public function test_publishing_a_report_card_stamps_the_publication_time(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-report-cards']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         [$year] = $this->yearAndGradeLevel($school);
@@ -117,7 +117,7 @@ class TenantWritesTest extends TestCase
     public function test_a_fee_structure_is_filed_under_the_active_school_and_keeps_its_description(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures']);
 
         $feeType = $this->feeType($school);
         [$year, $gradeLevel] = $this->yearAndGradeLevel($school);
@@ -157,7 +157,7 @@ class TenantWritesTest extends TestCase
             'description' => 'Theirs',
         ]);
 
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures']);
 
         $response = $this->get('/finance/fee-structures');
 
@@ -179,7 +179,7 @@ class TenantWritesTest extends TestCase
             'amount' => 200,
         ]);
 
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures']);
 
         $this->get("/finance/fee-structures/{$foreign->id}")->assertForbidden();
         $this->get("/finance/fee-structures/{$foreign->id}/edit")->assertForbidden();
@@ -188,7 +188,7 @@ class TenantWritesTest extends TestCase
     public function test_a_discount_keeps_its_inactive_flag_and_its_school(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-discounts']);
 
         // `is_active=0` is what the old `$request->has('is_active')` check got
         // wrong: it read the field as present rather than as false, so every
@@ -211,7 +211,7 @@ class TenantWritesTest extends TestCase
     public function test_a_refund_is_filed_under_the_active_school(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-refunds']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         $invoice = Invoice::factory()->create([
@@ -251,7 +251,7 @@ class TenantWritesTest extends TestCase
     public function test_refunding_an_invoice_with_no_payment_is_a_field_error_not_a_crash(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-refunds']);
 
         $student = Student::factory()->create(['school_id' => $school->id]);
         $invoice = Invoice::factory()->create([
@@ -291,7 +291,7 @@ class TenantWritesTest extends TestCase
     public function test_a_bilingual_fee_structure_fills_the_missing_language_on_save(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures']);
         $this->enableTranslation($school, 'Tuition fee paid yearly');
 
         $feeType = $this->feeType($school);
@@ -309,7 +309,7 @@ class TenantWritesTest extends TestCase
     public function test_the_rewritten_screens_render(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures', 'manage-fee-types', 'manage-report-cards', 'manage-refunds', 'manage-announcements']);
 
         $feeType = $this->feeType($school);
         [$year, $gradeLevel] = $this->yearAndGradeLevel($school);
@@ -383,7 +383,7 @@ class TenantWritesTest extends TestCase
     {
         $school = School::factory()->create();
         $other = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-fee-structures']);
 
         $this->post('/finance/fee-structures', [
             'fee_type_id' => $this->feeType($other)->id,

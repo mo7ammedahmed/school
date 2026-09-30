@@ -188,7 +188,7 @@ class TranslationTest extends TestCase
     public function test_saving_with_only_english_fills_the_arabic_column(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
         $this->fakeTranslation('الصف الأول');
 
         $this->post('/grade-levels', [
@@ -207,7 +207,7 @@ class TranslationTest extends TestCase
     public function test_saving_with_only_arabic_fills_the_english_column(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         Http::fake([
             'integrate.api.nvidia.com/*' => Http::response([
@@ -231,7 +231,7 @@ class TranslationTest extends TestCase
     public function test_a_translation_the_operator_typed_is_never_overwritten(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         Http::fake();
 
@@ -253,7 +253,7 @@ class TranslationTest extends TestCase
     public function test_saving_with_no_name_in_either_language_is_rejected(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         Http::fake();
 
@@ -269,7 +269,7 @@ class TranslationTest extends TestCase
     public function test_automatic_translation_can_be_switched_off(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         TranslationSettings::for($school->id)->save(['auto_translate' => false]);
 
@@ -292,7 +292,7 @@ class TranslationTest extends TestCase
     public function test_a_provider_outage_does_not_block_the_save(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         Http::fake([
             'integrate.api.nvidia.com/*' => Http::response('upstream unavailable', 503),

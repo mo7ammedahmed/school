@@ -17,7 +17,7 @@ class LocalePreferenceTest extends TestCase
     public function test_choosing_a_locale_persists_it_on_the_server(): void
     {
         $school = School::factory()->create();
-        $user = $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
+        $user = $this->actingAsSchoolUser($school, ['manage-academic-years'], ['locale' => 'en']);
 
         $this->postJson('/locale', ['locale' => 'ar'])
             ->assertOk()
@@ -33,7 +33,7 @@ class LocalePreferenceTest extends TestCase
     public function test_an_unsupported_locale_is_rejected(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
+        $this->actingAsSchoolUser($school, ['manage-academic-years'], ['locale' => 'en']);
 
         $this->postJson('/locale', ['locale' => 'fr'])->assertStatus(422);
         $this->assertNull(session('locale'));
@@ -42,7 +42,7 @@ class LocalePreferenceTest extends TestCase
     public function test_the_server_renders_the_arabic_column_once_arabic_is_selected(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
+        $this->actingAsSchoolUser($school, ['manage-academic-years'], ['locale' => 'en']);
 
         AcademicYear::factory()->create([
             'school_id' => $school->id,
@@ -64,7 +64,7 @@ class LocalePreferenceTest extends TestCase
     public function test_the_shared_locale_prop_follows_the_session(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
+        $this->actingAsSchoolUser($school, ['manage-academic-years'], ['locale' => 'en']);
 
         $this->get('/academic-years')
             ->assertInertia(fn ($page) => $page->where('locale', 'en'));
@@ -78,7 +78,7 @@ class LocalePreferenceTest extends TestCase
     public function test_the_resolved_browser_locale_matches_the_shared_prop_and_html_language(): void
     {
         $school = School::factory()->create(['locale' => 'en']);
-        $user = $this->actingAsSchoolUser($school, [], ['locale' => 'en']);
+        $user = $this->actingAsSchoolUser($school, ['manage-academic-years'], ['locale' => 'en']);
         $user->forceFill(['locale' => null])->save();
 
         $this->withHeaders(['Accept-Language' => 'ar'])

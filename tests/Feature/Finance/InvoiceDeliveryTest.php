@@ -29,7 +29,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_issuing_an_invoice_emails_the_guardian_and_marks_it_sent(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         [$invoice, $guardian] = $this->invoiceWithFinancialGuardian($school);
 
@@ -50,7 +50,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_issuing_writes_an_in_app_notification_for_the_guardian_account(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         [$invoice, $guardian] = $this->invoiceWithFinancialGuardian($school);
 
@@ -66,7 +66,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_delivery_is_skipped_when_automatic_sending_is_disabled(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         GatewaySettings::for($school->id)->save(['auto_send' => false]);
 
@@ -84,7 +84,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_an_invoice_with_no_guardian_contact_is_not_marked_as_sent(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         $student = Student::factory()->create(['school_id' => $school->id, 'email' => null]);
         $invoice = $this->invoiceFor($school, $student);
@@ -101,7 +101,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_resending_a_delivered_invoice_sends_a_reminder_instead(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         [$invoice] = $this->invoiceWithFinancialGuardian($school);
 
@@ -117,7 +117,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_a_guardian_without_contact_details_falls_back_to_the_student(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         $student = Student::factory()->create([
             'school_id' => $school->id,
@@ -140,7 +140,7 @@ class InvoiceDeliveryTest extends TestCase
     public function test_the_financial_guardian_is_preferred_over_other_guardians(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-invoices']);
 
         $student = Student::factory()->create(['school_id' => $school->id, 'email' => null]);
 

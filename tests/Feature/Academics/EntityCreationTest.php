@@ -23,7 +23,7 @@ class EntityCreationTest extends TestCase
     public function test_a_grade_level_is_created_for_the_active_school(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-grade-levels']);
 
         $this->post('/grade-levels', [
             'name_en' => 'Grade One',
@@ -41,7 +41,7 @@ class EntityCreationTest extends TestCase
     public function test_a_section_is_created_with_its_academic_year_and_grade_level(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-sections']);
 
         [$year, $gradeLevel] = $this->yearAndGradeLevel($school);
 
@@ -64,7 +64,7 @@ class EntityCreationTest extends TestCase
     public function test_a_semester_is_created_with_its_academic_year(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-semesters']);
 
         [$year] = $this->yearAndGradeLevel($school);
 
@@ -89,7 +89,7 @@ class EntityCreationTest extends TestCase
     public function test_a_semester_requires_an_academic_year(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-semesters']);
 
         $this->post('/semesters', [
             'name_en' => 'First Semester',
@@ -102,7 +102,7 @@ class EntityCreationTest extends TestCase
     public function test_a_subject_is_created_with_its_grade_level(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-subjects']);
 
         [, $gradeLevel] = $this->yearAndGradeLevel($school);
 
@@ -124,7 +124,7 @@ class EntityCreationTest extends TestCase
     {
         $school = School::factory()->create();
         $other = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-subjects']);
 
         $foreignGradeLevel = GradeLevel::factory()->create(['school_id' => $other->id]);
 
@@ -139,7 +139,7 @@ class EntityCreationTest extends TestCase
     {
         $school = School::factory()->create();
         $other = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-sections']);
 
         $foreignSection = Section::factory()->create([
             'school_id' => $other->id,
@@ -163,7 +163,7 @@ class EntityCreationTest extends TestCase
             'code' => 'MATH',
         ]);
 
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-subjects']);
 
         [, $ownGradeLevel] = $this->yearAndGradeLevel($school);
 

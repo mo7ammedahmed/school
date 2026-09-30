@@ -33,7 +33,7 @@ class StoredFieldsTest extends TestCase
     public function test_a_guardians_emergency_contact_is_stored_and_shown_back(): void
     {
         $school = School::factory()->create();
-        $this->actingAsSchoolUser($school);
+        $this->actingAsSchoolUser($school, ['manage-guardians']);
 
         $this->post('/guardians', [
             'first_name' => 'Amina',

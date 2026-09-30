@@ -31,6 +31,7 @@ class TeacherTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-teachers');
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
 
@@ -48,6 +49,7 @@ class TeacherTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-teachers');
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
 

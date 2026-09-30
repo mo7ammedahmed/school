@@ -38,6 +38,8 @@ class InvoiceTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-invoices');
+
         return [$user, $school, $student];
     }
 
@@ -50,6 +52,8 @@ class InvoiceTest extends TestCase
             'school_id' => $school->id,
             'is_active' => true,
         ]);
+
+        $user->givePermissionTo('manage-invoices');
 
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
@@ -70,6 +74,8 @@ class InvoiceTest extends TestCase
             'school_id' => $school->id,
             'is_active' => true,
         ]);
+
+        $user->givePermissionTo('manage-invoices');
 
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
@@ -196,6 +202,8 @@ class InvoiceTest extends TestCase
             'school_id' => $school->id,
             'is_active' => true,
         ]);
+
+        $user->givePermissionTo('manage-invoices');
 
         $invoice = Invoice::factory()->create([
             'school_id' => $school->id,

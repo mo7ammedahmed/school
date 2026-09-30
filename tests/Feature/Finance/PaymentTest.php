@@ -33,6 +33,8 @@ class PaymentTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-payments');
+
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
 
@@ -58,6 +60,8 @@ class PaymentTest extends TestCase
             'school_id' => $school->id,
             'is_active' => true,
         ]);
+
+        $user->givePermissionTo('manage-payments');
 
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);

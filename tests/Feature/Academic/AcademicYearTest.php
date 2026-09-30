@@ -32,6 +32,7 @@ class AcademicYearTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-academic-years');
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
 
@@ -49,6 +50,7 @@ class AcademicYearTest extends TestCase
             'is_active' => true,
         ]);
 
+        $user->givePermissionTo('manage-academic-years');
         $this->actingAs($user);
         $this->app['session']->put('school_id', $school->id);
 
