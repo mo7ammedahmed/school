@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,8 +26,10 @@ class ReviewController extends Controller
      */
     public function index(Request $request): Response
     {
-        $schoolId = $request->session()->get('school_id');
-        $request->user();
+        // The queue, the statistics and the reviewer picker are all this
+        // school's; the id comes from the shared accessor so a request that
+        // somehow lost its context is refused rather than reading school zero.
+        $schoolId = $this->schoolId();
 
         $filters = $request->only(['status', 'assigned_to', 'priority', 'search']);
         $applications = $this->reviewService->getReviewQueue($schoolId, $filters);
@@ -79,7 +82,16 @@ class ReviewController extends Controller
         $this->authorize('manage-admissions');
 
         $request->validate([
-            'reviewer_id' => 'nullable|integer|exists:users,id',
+            'reviewer_id' => [
+                'nullable',
+                'integer',
+                // Reviewing is school work: the reviewer must be active in this
+                // school. An unscoped `exists:users,id` let one school assign its
+                // applications to another school's staff member.
+                Rule::exists('user_memberships', 'user_id')
+                    ->where('school_id', $this->schoolId())
+                    ->where('is_active', true),
+            ],
         ]);
 
         $this->reviewService->assignApplication(
@@ -140,7 +152,10 @@ class ReviewController extends Controller
 
         $request->validate([
             'application_ids' => ['required', 'array'],
-            'application_ids.*' => ['integer', 'exists:admission_applications,id'],
+            'application_ids.*' => [
+                'integer',
+                Rule::exists('admission_applications', 'id')->where('school_id', $this->schoolId()),
+            ],
             'status' => ['required', 'in:approved,rejected,under_review'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
@@ -148,6 +163,7 @@ class ReviewController extends Controller
         $count = $this->reviewService->bulkUpdateStatus(
             $request->input('application_ids'),
             $request->input('status'),
+            $this->schoolId(),
             $request->user(),
             $request->input('notes')
         );
@@ -221,6 +237,10 @@ class ReviewController extends Controller
      * `rolePermissions`/`permission` relations do not exist and the selected
      * `first_name`/`last_name` columns do not exist on users either.
      *
+     * Membership is part of the question, not just the permission: a role is a
+     * platform-wide row, so without it this picker offered every school's
+     * reviewers as candidates for this school's queue.
+     *
      * @return array<int, array<string, mixed>>
      */
     private function reviewers(): array
@@ -228,6 +248,10 @@ class ReviewController extends Controller
         return User::whereHas('roles.permissions', function ($query) {
             $query->where('name', 'manage-admissions');
         })
+            ->whereHas('memberships', function ($query) {
+                $query->where('school_id', $this->schoolId())
+                    ->where('is_active', true);
+            })
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $user) => [

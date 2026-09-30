@@ -151,9 +151,15 @@ class AdmissionReviewService
     }
 
     /**
-     * Bulk update application status
+     * Bulk update application status, inside one school.
+     *
+     * The ids arrive from a form, and not every caller is holding this school's
+     * ids: the two queries below used to run over the whole table, so a foreign
+     * id was updated to the requested status and then given an event trail on
+     * the stranger's application. The school is part of the query now, on both
+     * the update and the event lookup.
      */
-    public function bulkUpdateStatus(array $applicationIds, string $status, User $currentUser, ?string $notes = null): int
+    public function bulkUpdateStatus(array $applicationIds, string $status, int $schoolId, User $currentUser, ?string $notes = null): int
     {
         if (! in_array($status, AdmissionApplication::STATUSES)) {
             throw ValidationException::withMessages([
@@ -161,8 +167,9 @@ class AdmissionReviewService
             ]);
         }
 
-        return DB::transaction(function () use ($applicationIds, $status, $currentUser, $notes) {
-            $updated = AdmissionApplication::whereIn('id', $applicationIds)
+        return DB::transaction(function () use ($applicationIds, $status, $schoolId, $currentUser, $notes) {
+            $updated = AdmissionApplication::where('school_id', $schoolId)
+                ->whereIn('id', $applicationIds)
                 ->whereIn('status', ['submitted', 'under_review']) // Only allow bulk update of reviewable apps
                 ->update([
                     'status' => $status,
@@ -172,7 +179,8 @@ class AdmissionReviewService
                 ]);
 
             // Create events for each updated application - fetch all applications in one query to avoid N+1
-            $applications = AdmissionApplication::whereIn('id', $applicationIds)
+            $applications = AdmissionApplication::where('school_id', $schoolId)
+                ->whereIn('id', $applicationIds)
                 ->whereIn('status', ['submitted', 'under_review'])
                 ->get();
 

@@ -16,7 +16,7 @@ class DiscountController extends Controller
 {
     public function index()
     {
-        $discounts = Discount::latest()->paginate(15);
+        $discounts = Discount::forSchool($this->schoolId())->latest()->paginate(15);
 
         return Inertia::render('finance/discounts/index', [
             'discounts' => $discounts,
@@ -25,8 +25,11 @@ class DiscountController extends Controller
 
     public function create()
     {
-        $students = Student::orderBy('first_name')->orderBy('last_name')->get();
-        $gradeLevels = GradeLevel::orderBy('name_en')->get();
+        $students = Student::forSchool($this->schoolId())
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+        $gradeLevels = GradeLevel::forSchool($this->schoolId())->orderBy('name_en')->get();
 
         return Inertia::render('finance/discounts/create', [
             'students' => $students,
@@ -48,7 +51,7 @@ class DiscountController extends Controller
         // `has()` is true for `is_active=0` too, which made every discount active
         // however the operator set the field.
         $validated['is_active'] = (bool) $validated['is_active'];
-        $validated['school_id'] = (int) session('school_id');
+        $validated['school_id'] = $this->schoolId();
 
         Discount::create($validated);
 
@@ -64,8 +67,11 @@ class DiscountController extends Controller
 
     public function edit(Discount $discount)
     {
-        $students = Student::orderBy('first_name')->orderBy('last_name')->get();
-        $gradeLevels = GradeLevel::orderBy('name_en')->get();
+        $students = Student::forSchool($this->schoolId())
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+        $gradeLevels = GradeLevel::forSchool($this->schoolId())->orderBy('name_en')->get();
 
         return Inertia::render('finance/discounts/edit', [
             'discount' => $discount,

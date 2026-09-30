@@ -10,9 +10,13 @@ use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Finance\Models\Discount;
+use App\Domain\Identity\Models\UserMembership;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
@@ -252,6 +256,66 @@ class TenantIsolationTest extends TestCase
         $this->assertNull($foreign->refresh()->internal_notes, "another school's application was annotated");
     }
 
+    public function test_bulk_update_cannot_touch_another_schools_application(): void
+    {
+        $school = School::factory()->create();
+        $other = School::factory()->create();
+
+        $mine = $this->applicationFor($school);
+        $foreign = $this->applicationFor($other);
+
+        $this->actingAsSchoolUser($school, ['manage-admissions']);
+
+        // The ids are validated before the service runs, so a list containing a
+        // foreign id is refused whole: no partial write, and no event trail on
+        // the stranger's application either.
+        $this->post('/admissions/review/bulk-update', [
+            'application_ids' => [$mine->id, $foreign->id],
+            'status' => 'approved',
+        ])->assertSessionHasErrors('application_ids.1');
+
+        $this->assertSame('submitted', $mine->refresh()->status);
+        $this->assertSame('submitted', $foreign->refresh()->status);
+        $this->assertDatabaseCount('admission_application_events', 0);
+    }
+
+    public function test_another_schools_staff_cannot_be_assigned_as_a_reviewer(): void
+    {
+        $school = School::factory()->create();
+        $other = School::factory()->create();
+
+        $mine = $this->applicationFor($school);
+        $outsider = $this->staffOf($other);
+
+        $this->actingAsSchoolUser($school, ['manage-admissions']);
+
+        $this->post("/admissions/review/{$mine->id}/assign", [
+            'reviewer_id' => $outsider->id,
+        ])->assertSessionHasErrors('reviewer_id');
+
+        $this->assertNull($mine->refresh()->assigned_to, "another school's staff member was made a reviewer");
+    }
+
+    public function test_the_review_queue_offers_only_this_schools_reviewers(): void
+    {
+        $school = School::factory()->create();
+        $other = School::factory()->create();
+
+        $colleague = $this->staffOf($school);
+        $outsider = $this->staffOf($other);
+
+        $this->actingAsSchoolUser($school, ['manage-admissions']);
+
+        $response = $this->get('/admissions/review');
+
+        $response->assertOk();
+
+        $reviewerIds = array_column($response->viewData('page')['props']['reviewers'], 'id');
+
+        $this->assertContains($colleague->id, $reviewerIds);
+        $this->assertNotContains($outsider->id, $reviewerIds, "another school's staff leaked into the reviewer picker");
+    }
+
     public function test_the_discount_list_shows_only_the_active_schools_rows(): void
     {
         $school = School::factory()->create();
@@ -342,6 +406,37 @@ class TenantIsolationTest extends TestCase
         ]);
 
         return [$student, $year, $section];
+    }
+
+    /**
+     * A user who may review, in the given school, without signing anybody in.
+     */
+    private function staffOf(School $school): User
+    {
+        $user = User::factory()->create();
+
+        UserMembership::factory()->create([
+            'user_id' => $user->id,
+            'school_id' => $school->id,
+            'is_active' => true,
+        ]);
+
+        // The reviewer picker reads the permission through roles, so the
+        // fixture has to grant it the same way the seeded roles do.
+        $permission = Permission::firstOrCreate([
+            'name' => 'manage-admissions',
+            'guard_name' => 'web',
+        ]);
+
+        $role = Role::firstOrCreate([
+            'name' => 'admissions-reviewer',
+            'guard_name' => 'web',
+        ]);
+
+        $role->givePermissionTo($permission);
+        $user->assignRole($role);
+
+        return $user;
     }
 
     private function applicationFor(School $school): AdmissionApplication
