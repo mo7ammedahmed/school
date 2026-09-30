@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Auth\Concerns\ThrottlesAttempts;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class ResetPasswordController extends Controller
 {
+    use ThrottlesAttempts;
+
     public function create(Request $request)
     {
         return inertia('auth/reset-password', [
@@ -29,6 +32,11 @@ class ResetPasswordController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
+
+        $key = $this->attemptKey('password-reset', $request, (string) $request->input('email'));
+
+        $this->ensureIsNotRateLimited($key, 'email');
+        $this->hitAttempts($key);
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
@@ -48,6 +56,8 @@ class ResetPasswordController extends Controller
                 'email' => [__($status)],
             ]);
         }
+
+        $this->clearAttempts($key);
 
         return redirect()->route('login')->with('status', __('passwords.reset'));
     }
