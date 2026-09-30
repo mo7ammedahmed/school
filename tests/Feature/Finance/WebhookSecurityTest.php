@@ -18,6 +18,7 @@ use App\Models\User;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -43,6 +44,15 @@ class WebhookSecurityTest extends TestCase
 
     private const SECRET = 'whsec_test_secret';
 
+    /**
+     * What the gateway answers about the payment, when a test needs it to
+     * disagree with the envelope. Null asks the gateway to repeat the local
+     * record back.
+     *
+     * @var array<string, mixed>|null
+     */
+    private ?array $gatewayAnswer = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -58,14 +68,19 @@ class WebhookSecurityTest extends TestCase
     private function fakeGatewayAskingPaid(): void
     {
         Http::fake(function (ClientRequest $request) {
+            if ($this->gatewayAnswer !== null) {
+                return Http::response($this->gatewayAnswer);
+            }
+
             $id = basename((string) parse_url($request->url(), PHP_URL_PATH));
             $transaction = GatewayTransaction::query()->where('gateway_transaction_id', $id)->first();
+            $payment = $transaction?->payment;
 
             return Http::response([
                 'id' => $id,
                 'status' => 'paid',
-                'amount' => (int) round(((float) ($transaction?->amount ?? 0)) * 100),
-                'currency' => strtoupper((string) ($transaction?->currency ?? 'SAR')),
+                'amount' => (int) round(((float) ($payment?->amount ?? $transaction?->amount ?? 0)) * 100),
+                'currency' => strtoupper((string) ($payment?->currency ?? $transaction?->currency ?? 'SAR')),
             ]);
         });
     }
@@ -164,12 +179,12 @@ class WebhookSecurityTest extends TestCase
     {
         [$invoice, $payment, $transaction] = $this->invoiceWithPendingPayment();
 
-        Http::fake(['api.moyasar.com/*' => Http::response([
+        $this->gatewayAnswer = [
             'id' => $transaction->gateway_transaction_id,
             'status' => 'paid',
             'amount' => 99900,
             'currency' => 'SAR',
-        ])]);
+        ];
 
         $this->postJson('/webhooks/payments/moyasar', $this->envelope($payment, $transaction))
             ->assertStatus(422);
@@ -184,12 +199,12 @@ class WebhookSecurityTest extends TestCase
     {
         [$invoice, $payment, $transaction] = $this->invoiceWithPendingPayment();
 
-        Http::fake(['api.moyasar.com/*' => Http::response([
+        $this->gatewayAnswer = [
             'id' => $transaction->gateway_transaction_id,
             'status' => 'paid',
             'amount' => 115000,
             'currency' => 'USD',
-        ])]);
+        ];
 
         $this->postJson('/webhooks/payments/moyasar', $this->envelope($payment, $transaction))
             ->assertStatus(422);
@@ -202,12 +217,12 @@ class WebhookSecurityTest extends TestCase
     {
         [$invoice, $payment, $transaction] = $this->invoiceWithPendingPayment();
 
-        Http::fake(['api.moyasar.com/*' => Http::response([
+        $this->gatewayAnswer = [
             'id' => $transaction->gateway_transaction_id,
             'status' => 'failed',
             'amount' => 115000,
             'currency' => 'SAR',
-        ])]);
+        ];
 
         // The envelope insists the payment succeeded. Only the gateway's own
         // answer is allowed to decide, so nothing may settle.
@@ -253,14 +268,17 @@ class WebhookSecurityTest extends TestCase
 
         $this->assertSame('paid', $payment->refresh()->status);
         $this->assertSame(1, WebhookEvent::where('gateway', 'moyasar')->where('event_id', 'evt_retry')->count());
-        $this->assertSame('completed', WebhookEvent::where('event_id', 'evt_retry')->first()->status);
+        $this->assertSame('completed', WebhookEvent::where('event_id', 'evt_retry')->value('status'));
 
         // Once completed, the same delivery is a replay, not a second payment.
         $this->postJson('/webhooks/payments/moyasar', $this->envelope($payment, $transaction, [
             'id' => 'evt_retry',
         ]))->assertOk()->assertJson(['status' => 'replayed']);
 
-        $this->assertSame('completed', WebhookEvent::where('event_id', 'evt_retry')->first()->status);
+        // The replay must not have reset the completed event back to processing.
+        $replayed = WebhookEvent::where('event_id', 'evt_retry')->firstOrFail();
+        $replayed->refresh();
+        $this->assertSame('completed', $replayed->status);
         $this->assertEqualsWithDelta(1150.0, (float) $invoice->refresh()->amount_paid, 0.001);
         Mail::assertSentCount(1);
     }
@@ -330,19 +348,23 @@ class WebhookSecurityTest extends TestCase
 
     public function test_a_webhook_failure_does_not_log_the_payload(): void
     {
-        Log::spy();
+        /** @var list<array{string, array<string, mixed>}> $records */
+        $records = [];
+
+        Log::listen(function (MessageLogged $event) use (&$records): void {
+            $records[] = [$event->message, $event->context];
+        });
 
         $this->postJson('/webhooks/payments/moyasar', [
             'data' => ['card' => ['last4' => '4242']],
         ])->assertOk();
 
-        Log::shouldNotHaveReceived('warning', function (string $message, array $context = []): bool {
-            return str_contains((string) json_encode($context), '4242');
-        });
+        $leaked = array_filter(
+            $records,
+            fn (array $record): bool => str_contains((string) json_encode($record), '4242'),
+        );
 
-        Log::shouldNotHaveReceived('error', function (string $message, array $context = []): bool {
-            return str_contains((string) json_encode($context), '4242');
-        });
+        $this->assertSame([], $leaked, 'A webhook failure logged the delivery body, which carries card data.');
     }
 
     // ------------------------------------------------------------------

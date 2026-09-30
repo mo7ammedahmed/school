@@ -41,12 +41,13 @@ class PaymentSettlementTest extends TestCase
         Http::fake(function (ClientRequest $request) {
             $id = basename((string) parse_url($request->url(), PHP_URL_PATH));
             $transaction = GatewayTransaction::query()->where('gateway_transaction_id', $id)->first();
+            $payment = $transaction?->payment;
 
             return Http::response([
                 'id' => $id,
                 'status' => 'paid',
-                'amount' => (int) round(((float) ($transaction?->amount ?? 0)) * 100),
-                'currency' => strtoupper((string) ($transaction?->currency ?? 'SAR')),
+                'amount' => (int) round(((float) ($payment?->amount ?? $transaction?->amount ?? 0)) * 100),
+                'currency' => strtoupper((string) ($payment?->currency ?? $transaction?->currency ?? 'SAR')),
             ]);
         });
     }
