@@ -6,6 +6,19 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
+/**
+ * Grants each role its permissions.
+ *
+ * Super admin takes everything. Student and guardian are stated as allow lists,
+ * so a permission added later is off their plate until someone names it.
+ *
+ * The five staff roles are stated as *deny* lists over the full permission
+ * catalogue, which is the trap: a permission added to {@see PermissionSeeder}
+ * lands in the hands of every staff role whose deny list does not name it. When
+ * you add a permission, add its name to the deny list of each staff role that
+ * must not hold it, in the same commit. `manage-discounts` and
+ * `view-audit-logs` are the standing example.
+ */
 class RoleSeeder extends Seeder
 {
     public function run(): void
@@ -54,6 +67,7 @@ class RoleSeeder extends Seeder
             'manage-payment-gateways',
             'manage-settings',
             'manage-content',
+            'view-audit-logs',
         ]));
         $registrar->syncPermissions($registrarPermissions);
 
@@ -81,6 +95,8 @@ class RoleSeeder extends Seeder
             'manage-subjects',
             'manage-offerings',
             'manage-enrollments',
+            'manage-discounts',
+            'view-audit-logs',
         ]));
         $teacher->syncPermissions($teacherPermissions);
 
@@ -116,6 +132,7 @@ class RoleSeeder extends Seeder
             'view-own-schedule',
             'submit-assignments',
             'take-quizzes',
+            'view-audit-logs',
         ]));
         $accountant->syncPermissions($accountantPermissions);
 
