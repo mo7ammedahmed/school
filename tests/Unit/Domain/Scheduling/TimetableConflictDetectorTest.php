@@ -39,7 +39,7 @@ class TimetableConflictDetectorTest extends TestCase
     {
         parent::setUp();
 
-        $this->detector = new TimetableConflictDetector;
+        $this->detector = app(TimetableConflictDetector::class);
 
         $this->school = School::factory()->create();
         $this->academicYear = AcademicYear::factory()->create(['school_id' => $this->school->id]);

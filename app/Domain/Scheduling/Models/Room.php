@@ -6,6 +6,7 @@ namespace App\Domain\Scheduling\Models;
 
 use App\Domain\Assessment\Models\Exam;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -34,7 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class Room extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected function name(): Attribute
     {

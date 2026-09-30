@@ -11,6 +11,7 @@ use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -45,7 +46,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Appends(['subject'])]
 class TimetableEntry extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected function subject(): Attribute
     {

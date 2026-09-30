@@ -8,6 +8,7 @@ use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Scheduling\Enums\CalendarDayType;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class CalendarDay extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     protected static function booted(): void
     {

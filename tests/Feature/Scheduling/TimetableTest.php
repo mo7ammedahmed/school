@@ -244,7 +244,7 @@ class TimetableTest extends TestCase
             'end_time' => '10:00',
         ]);
 
-        $this->post("/timetable/{$otherEntry->id}/publish")->assertForbidden();
+        $this->post("/timetable/{$otherEntry->id}/publish")->assertNotFound();
     }
 
     public function test_the_conflicts_page_loads(): void

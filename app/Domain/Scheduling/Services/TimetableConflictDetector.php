@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Scheduling\Services;
 
 use App\Domain\Scheduling\Models\TimetableEntry;
+use App\Domain\Schools\Support\TenantContext;
 
 /**
  * Finds double-bookings in the timetable.
@@ -12,9 +13,15 @@ use App\Domain\Scheduling\Models\TimetableEntry;
  * Overlap is evaluated in PHP from parsed minutes rather than in SQL: the
  * comparison is identical on MySQL and SQLite, and a single school-day of
  * entries is always a small set.
+ *
+ * Both entry points name the school they are about, so each pins that school
+ * around its query — the detector is also driven from tests and, eventually,
+ * commands, where no request session can supply the tenant.
  */
 final class TimetableConflictDetector
 {
+    public function __construct(private readonly TenantContext $tenants) {}
+
     /**
      * Conflicts for a candidate entry (used before it is saved).
      *
@@ -57,7 +64,7 @@ final class TimetableConflictDetector
 
         $conflicts = [];
 
-        foreach ($query->get() as $entry) {
+        foreach ($this->tenants->runFor((int) $candidate['school_id'], fn () => $query->get()) as $entry) {
             $otherStart = $this->minutes((string) $entry->start_time);
             $otherEnd = $this->minutes((string) $entry->end_time);
 
@@ -100,11 +107,11 @@ final class TimetableConflictDetector
      */
     public function allForSchool(int $schoolId): array
     {
-        $entries = TimetableEntry::where('school_id', $schoolId)
+        $entries = $this->tenants->runFor($schoolId, fn () => TimetableEntry::where('school_id', $schoolId)
             ->with(['section', 'room', 'offering.subject'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')
-            ->get()
+            ->get())
             ->groupBy('day_of_week');
 
         $conflicts = [];

@@ -261,11 +261,13 @@ class CalendarTest extends TestCase
             'title' => 'Theirs',
         ]);
 
+        // 404 through the tenant-aware binding: the day does not exist for this
+        // school, so the route does not confirm it exists for another one.
         $this->put("/calendar-days/{$day->id}", [
             'title' => 'Hijacked',
             'type' => 'holiday',
             'date' => '2026-09-20',
-        ])->assertForbidden();
+        ])->assertNotFound();
     }
 
     public function test_holidays_are_not_teaching_days_by_default(): void
