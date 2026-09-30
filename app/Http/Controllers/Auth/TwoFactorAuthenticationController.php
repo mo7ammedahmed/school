@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domain\Identity\Services\RecoveryCodes;
 use App\Domain\Identity\Services\TotpService;
 use App\Http\Controllers\Auth\Concerns\ThrottlesAttempts;
 use App\Http\Controllers\Controller;
@@ -27,7 +28,10 @@ class TwoFactorAuthenticationController extends Controller
 {
     use ThrottlesAttempts;
 
-    public function __construct(private readonly TotpService $totp) {}
+    public function __construct(
+        private readonly TotpService $totp,
+        private readonly RecoveryCodes $recoveryCodes,
+    ) {}
 
     public function create(Request $request): Response|RedirectResponse
     {
@@ -69,7 +73,7 @@ class TwoFactorAuthenticationController extends Controller
         $secret = $user->two_factor_secret;
         $isValidCode = is_string($secret) && $secret !== '' && $this->totp->verify($secret, $code);
 
-        if (! $isValidCode && ! $this->consumeRecoveryCode($user, $code)) {
+        if (! $isValidCode && ! $this->recoveryCodes->consume($user, $code)) {
             $this->hitAttempts($key);
 
             throw ValidationException::withMessages([
@@ -101,23 +105,5 @@ class TwoFactorAuthenticationController extends Controller
     private function forgetPending(Request $request): void
     {
         $request->session()->forget(['auth.two_factor_user_id', 'auth.two_factor_remember']);
-    }
-
-    /**
-     * Consume a single-use recovery code, removing it once it has been used.
-     */
-    private function consumeRecoveryCode(User $user, string $code): bool
-    {
-        $codes = $user->two_factor_recovery_codes ?? [];
-
-        if ($code === '' || ! in_array($code, $codes, true)) {
-            return false;
-        }
-
-        $remaining = array_values(array_diff($codes, [$code]));
-
-        $user->forceFill(['two_factor_recovery_codes' => $remaining])->save();
-
-        return true;
     }
 }

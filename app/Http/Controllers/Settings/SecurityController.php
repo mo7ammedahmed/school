@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Domain\Identity\Services\RecoveryCodes;
 use App\Domain\Identity\Services\TotpService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,10 @@ use Inertia\Response;
 
 class SecurityController extends Controller
 {
-    public function __construct(private readonly TotpService $totp) {}
+    public function __construct(
+        private readonly TotpService $totp,
+        private readonly RecoveryCodes $recoveryCodes,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -59,7 +63,9 @@ class SecurityController extends Controller
 
         $user->forceFill([
             'two_factor_enabled' => true,
-            'two_factor_recovery_codes' => $this->totp->recoveryCodes(),
+            // Stored hashed: the list is a set of credentials, and the plaintext
+            // exists only for the moment it is generated.
+            'two_factor_recovery_codes' => $this->recoveryCodes->hashAll($this->totp->recoveryCodes()),
         ])->save();
 
         return redirect()
