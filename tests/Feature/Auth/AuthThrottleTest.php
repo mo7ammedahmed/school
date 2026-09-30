@@ -76,7 +76,10 @@ class AuthThrottleTest extends TestCase
             ->assertSessionHasErrors('email');
 
         $this->assertStringContainsString('Too many attempts', (string) session('errors')->first('email'));
-        Notification::assertTimesSent(5, ResetPassword::class);
+        // Laravel's own token repository only creates one token per minute, so
+        // the first request mails and the rest are answered as sent without
+        // mailing again. The point here is our limiter, which refuses the sixth.
+        Notification::assertSentTimes(ResetPassword::class, 1);
     }
 
     public function test_resetting_a_password_is_rate_limited(): void
