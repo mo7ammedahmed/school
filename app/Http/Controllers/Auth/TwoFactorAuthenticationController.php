@@ -10,17 +10,31 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 
+/**
+ * The second half of a two-factor sign-in.
+ *
+ * The visitor here is deliberately *not* authenticated: the login controller
+ * parked the identity in the session once the password checked out, and this
+ * controller is what turns that pending sign-in into a session. Reading
+ * `$request->user()` — as this class used to — answers only a user who is
+ * already signed in, which is the one state the screen must never serve.
+ */
 class TwoFactorAuthenticationController extends Controller
 {
     use ThrottlesAttempts;
 
     public function __construct(private readonly TotpService $totp) {}
 
-    public function create(): Response
+    public function create(Request $request): Response|RedirectResponse
     {
+        if ($this->pendingUserId($request) === null) {
+            return redirect()->route('login');
+        }
+
         return inertia('auth/two-factor-challenge');
     }
 
@@ -30,17 +44,25 @@ class TwoFactorAuthenticationController extends Controller
             'code' => ['required', 'string'],
         ]);
 
-        $user = $request->user();
+        $userId = $this->pendingUserId($request);
 
-        if (! $user) {
+        if ($userId === null) {
             return redirect()->route('login');
         }
 
         // Six digits is a small space: without a limit the entire range is a
         // few minutes of scripted requests.
-        $key = $this->attemptKey('two-factor', $request, (string) $user->id);
+        $key = $this->attemptKey('two-factor', $request, (string) $userId);
 
         $this->ensureIsNotRateLimited($key, 'code');
+
+        $user = User::query()->find($userId);
+
+        if ($user === null || ! $user->two_factor_enabled) {
+            $this->forgetPending($request);
+
+            return redirect()->route('login');
+        }
 
         $code = preg_replace('/\s+/', '', $validated['code']) ?? '';
 
@@ -51,15 +73,34 @@ class TwoFactorAuthenticationController extends Controller
             $this->hitAttempts($key);
 
             throw ValidationException::withMessages([
-                'code' => ['The provided code is invalid.'],
+                'code' => 'The provided code is invalid.',
             ]);
         }
 
         $this->clearAttempts($key);
 
-        $request->session()->put('auth.two_factor_confirmed', true);
+        $remember = (bool) $request->session()->pull('auth.two_factor_remember', false);
 
-        return redirect()->intended('/dashboard');
+        $this->forgetPending($request);
+
+        Auth::login($user, $remember);
+
+        $request->session()->regenerate();
+        $request->session()->forget('school_id');
+
+        return redirect()->route('school.select');
+    }
+
+    private function pendingUserId(Request $request): ?int
+    {
+        $value = $request->session()->get('auth.two_factor_user_id');
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    private function forgetPending(Request $request): void
+    {
+        $request->session()->forget(['auth.two_factor_user_id', 'auth.two_factor_remember']);
     }
 
     /**
