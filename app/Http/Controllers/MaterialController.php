@@ -8,6 +8,7 @@ use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\Learning\Models\Material;
+use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -44,13 +45,16 @@ class MaterialController extends Controller
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
             'section_id' => 'required_without:offering_id|exists:sections,id',
             'offering_id' => 'nullable|exists:offerings,id',
-            'file' => 'required|file|max:10240',
+            'file' => ['required', AllowedAttachment::rule()],
             'description' => 'nullable|string',
         ]);
 
         $offeringId = $validated['offering_id'] ?? $this->resolveOfferingId((int) $validated['subject_id'], (int) $validated['section_id']);
 
-        $path = $request->file('file')->store('materials', 'public');
+        // The private disk, not `public`. A material is a school document, not a
+        // web asset: on the public disk its URL is inside the document root and
+        // the web server will serve — and execute — whatever extension it kept.
+        $path = $request->file('file')->store('materials');
         $file = $request->file('file');
 
         Material::create([
@@ -94,7 +98,7 @@ class MaterialController extends Controller
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
             'section_id' => 'required_without:offering_id|exists:sections,id',
             'offering_id' => 'nullable|exists:offerings,id',
-            'file' => 'nullable|file|max:10240',
+            'file' => ['nullable', AllowedAttachment::rule()],
             'description' => 'nullable|string',
         ]);
 
@@ -107,10 +111,9 @@ class MaterialController extends Controller
         ];
 
         if ($request->hasFile('file')) {
-            if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-                Storage::disk('public')->delete($material->file_path);
-            }
-            $path = $request->file('file')->store('materials', 'public');
+            $this->deleteStoredFile($material->file_path);
+
+            $path = $request->file('file')->store('materials');
             $data['file_path'] = $path;
             $data['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $data['file_size'] = $request->file('file')->getSize();
@@ -123,13 +126,33 @@ class MaterialController extends Controller
 
     public function destroy(Material $material): RedirectResponse
     {
-        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
-        }
+        $this->deleteStoredFile($material->file_path);
 
         $material->delete();
 
         return redirect()->route('materials.index')->with('success', 'Material deleted successfully.');
+    }
+
+    /**
+     * Remove a material's stored file, wherever it happens to be.
+     *
+     * Materials uploaded before this file stopped being written to the public
+     * disk are still there, so the public disk is checked as well. Checking only
+     * the private one would leave every pre-existing upload sitting in the
+     * document root indefinitely — the copy nobody deletes is the copy that
+     * stays reachable.
+     */
+    private function deleteStoredFile(?string $path): void
+    {
+        if ($path === null || $path === '') {
+            return;
+        }
+
+        foreach (['local', 'public'] as $disk) {
+            if (Storage::disk($disk)->exists($path)) {
+                Storage::disk($disk)->delete($path);
+            }
+        }
     }
 
     private function resolveOfferingId(int $subjectId, int $sectionId): int

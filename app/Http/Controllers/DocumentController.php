@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -32,12 +33,15 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'classification' => 'required|in:transcript,certificate,report,policy,form,other',
-            'file' => 'required|file|max:10240',
+            'file' => ['required', AllowedAttachment::rule()],
             'description' => 'nullable|string',
         ]);
 
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('documents', 'public');
+            // Private disk: a document is a school record, not a web asset. On
+            // the public disk its URL sits inside the document root and the web
+            // server will serve — and execute — whatever extension it kept.
+            $path = $request->file('file')->store('documents');
             $validated['file_path'] = $path;
             $validated['file_size'] = $request->file('file')->getSize();
             $validated['file_type'] = $request->file('file')->extension();
@@ -80,8 +84,13 @@ class DocumentController extends Controller
 
     public function destroy(Document $document): RedirectResponse
     {
-        if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        // Both disks: documents uploaded before this stopped writing to the
+        // public disk are still there, and the copy nobody deletes is the copy
+        // that stays reachable inside the document root.
+        foreach (['local', 'public'] as $disk) {
+            if ($document->file_path && Storage::disk($disk)->exists($document->file_path)) {
+                Storage::disk($disk)->delete($document->file_path);
+            }
         }
 
         $document->delete();

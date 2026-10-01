@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Public;
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Admissions\Models\AdmissionApplication;
 use App\Domain\Admissions\Models\AdmissionPeriod;
+use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -114,10 +115,10 @@ class AdmissionsController extends PublicController
     public function storeDocuments(Request $request): RedirectResponse
     {
         $request->validate([
-            'birth_certificate' => ['required', 'file', 'max:10240'],
-            'previous_school_records' => ['required', 'file', 'max:10240'],
-            'passport_photos' => ['required', 'file', 'max:10240'],
-            'medical_records' => ['required', 'file', 'max:10240'],
+            'birth_certificate' => ['required', AllowedAttachment::rule()],
+            'previous_school_records' => ['required', AllowedAttachment::rule()],
+            'passport_photos' => ['required', AllowedAttachment::rule()],
+            'medical_records' => ['required', AllowedAttachment::rule()],
         ]);
 
         // The uploads used to be read for their filename and thrown away — the

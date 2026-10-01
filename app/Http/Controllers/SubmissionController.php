@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Submission;
 use App\Domain\People\Models\Student;
+use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -39,11 +40,12 @@ class SubmissionController extends Controller
             'assignment_id' => 'required|exists:assignments,id',
             'student_id' => 'required|exists:students,id',
             'content' => 'nullable|string',
-            'file' => 'nullable|file|max:10240',
+            'file' => ['nullable', AllowedAttachment::rule()],
         ]);
 
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('submissions', 'public');
+            // Private disk: a pupil's work is a school record, not a web asset.
+            $path = $request->file('file')->store('submissions');
             $validated['file_path'] = $path;
             $validated['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $validated['file_size'] = $request->file('file')->getSize();
@@ -108,8 +110,13 @@ class SubmissionController extends Controller
 
     public function destroy(Submission $submission): RedirectResponse
     {
-        if ($submission->file_path && Storage::disk('public')->exists($submission->file_path)) {
-            Storage::disk('public')->delete($submission->file_path);
+        // Both disks: submissions uploaded before this stopped writing to the
+        // public disk are still there, and the copy nobody deletes is the copy
+        // that stays reachable inside the document root.
+        foreach (['local', 'public'] as $disk) {
+            if ($submission->file_path && Storage::disk($disk)->exists($submission->file_path)) {
+                Storage::disk($disk)->delete($submission->file_path);
+            }
         }
 
         $submission->delete();

@@ -349,4 +349,35 @@ match the column's scale and is therefore left alone. A column with more scale
 than that would need the same treatment, and the reverse conversion belongs
 beside `toMinorUnits()` when someone next touches it.
 
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 12 | Materials, documents and submissions validated the upload as `'file' => 'file\|max:10240'` and stored it with `store(..., 'public')`. `file` asserts that a file arrived and nothing about what it is, so `shell.php` passed it exactly as readily as `lesson.docx`; the `public` disk is `storage/app/public`, which `storage:link` exposes **inside the document root** as `/storage/materials/<name>.php`. Any account holding `manage-materials`, `manage-documents` or `manage-submissions` could place a file where the web server will execute it | Confirmed — **the most serious finding in this phase** | Two independent changes, because either alone leaves a way in. (1) `Validation\AllowedAttachment` — an extension **and** MIME allowlist of office formats and images, which also refuses `report.pdf.php` and a `.docx` that is really PHP. (2) The private `local` disk. Applied to all four upload endpoints, including the anonymous `POST /apply/documents` | `UploadsAreTypedAndKeptOffTheWebRootTest` — 11 cases: `.php`, `.html` and `report.pdf.php` refused on each endpoint; nothing written to the public disk; the file is still written somewhere; and a real PDF/DOCX is still accepted, so the allowlist is not a rule that refuses everything. Written red at 8 of 11 |
+
+**Why both halves, and why the file name being random was not a defence.** The
+stored name is a Laravel random hash, which is obscurity rather than a control:
+the uploader is shown its own `file_path`, and any list screen that renders one
+hands that path to whoever is reading it. A type rule alone would leave the next
+undiscovered extension (`.phtml`, `.svg`, `.html`) as a way in; a private disk
+alone would leave the allowlist as the only thing between an upload and a request.
+
+The type rule also closes a hole nobody was looking at: `.html` and `.svg` are not
+executable but are *documents*, so a `.html` file on the application's own origin
+is a phishing page that satisfies every same-origin check a browser makes. SVG is
+excluded for the same reason — it can carry script.
+
+**Existing uploads on the public disk were not moved.** The delete paths in all
+three controllers now remove from *both* disks, so a pre-existing file is cleaned
+up the next time it is replaced or deleted rather than sitting in the document
+root forever. Nothing in the codebase links these files — the three show pages
+render metadata and never a URL — so moving them off the public disk broke no
+link. A command to sweep `storage/app/public/{documents,materials,submissions}`
+into `storage/app/private` is the remaining step and is **not** done here; until
+it is, files uploaded before this change are still reachable.
+
+Also removed: `StoreMaterialRequest`, `UpdateMaterialRequest`,
+`StoreDocumentRequest` and `UpdateDocumentRequest`. They were dead — no
+controller, route or test referenced them — and each declared `'file' => 'file|
+max:10240'`. Leaving them in place meant that "tidy up the controllers by using
+the Form Requests" reintroduced the vulnerability exactly.
+
 
