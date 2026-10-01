@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Schools\Services;
 
 use App\Domain\Schools\Models\SchoolSetting;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 
@@ -115,10 +116,13 @@ class SchoolSettingsStore
 
         $merged = array_merge($current, $values);
 
-        SchoolSetting::updateOrCreate(
+        // This store is built with a school id, so it pins that school while it
+        // touches the tenant-scoped settings table — it is also used from
+        // commands and tests, where no request session exists.
+        app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::updateOrCreate(
             ['school_id' => $this->schoolId, 'key' => $this->key],
             ['value' => json_encode($merged), 'type' => 'json'],
-        );
+        ));
 
         $this->values = $merged;
     }
@@ -155,10 +159,10 @@ class SchoolSettingsStore
      */
     private function load(): array
     {
-        $setting = SchoolSetting::query()
+        $setting = app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::query()
             ->where('school_id', $this->schoolId)
             ->where('key', $this->key)
-            ->first();
+            ->first());
 
         if ($setting === null || $setting->value === null || $setting->value === '') {
             return $this->defaults;

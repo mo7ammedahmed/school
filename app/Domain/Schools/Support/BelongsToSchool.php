@@ -65,6 +65,8 @@ trait BelongsToSchool
      *
      * Named so the crossing is greppable: each call site is a deliberate
      * "this is not tenant work" statement, not a missing filter.
+     *
+     * @return Builder<static>
      */
     public static function withoutSchoolScope(): Builder
     {

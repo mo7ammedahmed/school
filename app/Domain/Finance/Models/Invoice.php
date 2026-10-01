@@ -8,6 +8,7 @@ use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -51,7 +52,7 @@ use Illuminate\Support\Collection;
 class Invoice extends Model
 {
     /** @use HasFactory<InvoiceFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToSchool, HasFactory, SoftDeletes;
 
     /** @return BelongsTo<School, $this> */
     public function school(): BelongsTo

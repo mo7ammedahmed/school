@@ -7,6 +7,7 @@ namespace App\Domain\Finance\Models;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class FeeStructure extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     public function school(): BelongsTo
     {

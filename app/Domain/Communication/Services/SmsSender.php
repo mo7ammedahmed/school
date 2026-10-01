@@ -6,6 +6,7 @@ namespace App\Domain\Communication\Services;
 
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
@@ -57,10 +58,12 @@ class SmsSender
     public function all(): array
     {
         if ($this->values === null) {
-            $setting = SchoolSetting::query()
+            // Pinned to this school's own row: the settings table is tenant
+            // scoped now, and the sender is also built outside requests.
+            $setting = app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::query()
                 ->where('school_id', $this->schoolId)
                 ->where('key', self::KEY)
-                ->first();
+                ->first());
 
             $decoded = $setting && $setting->value ? json_decode((string) $setting->value, true) : null;
 
@@ -121,10 +124,10 @@ class SmsSender
             ? $merged['provider']
             : 'log';
 
-        SchoolSetting::updateOrCreate(
+        app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::updateOrCreate(
             ['school_id' => $this->schoolId, 'key' => self::KEY],
             ['value' => json_encode($merged), 'type' => 'json'],
-        );
+        ));
 
         $this->values = $merged;
     }

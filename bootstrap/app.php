@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\ApplySiteMetadata;
 use App\Http\Middleware\EnsureSchoolContext;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PinPublicInvoiceTenant;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'school.context' => EnsureSchoolContext::class,
+            'public.invoice.tenant' => PinPublicInvoiceTenant::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
         ]);

@@ -13,6 +13,7 @@ use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Finance\Models\WebhookEvent;
 use App\Domain\Finance\Webhooks\WebhookResult;
 use App\Domain\Finance\Webhooks\WebhookVerifier;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
@@ -20,7 +21,10 @@ use Throwable;
 
 class PaymentSettlementService
 {
-    public function __construct(private readonly MoyasarGateway $gateway) {}
+    public function __construct(
+        private readonly MoyasarGateway $gateway,
+        private readonly TenantContext $tenants,
+    ) {}
 
     /**
      * Mark a payment as settled and push the money onto its invoice.
@@ -30,15 +34,17 @@ class PaymentSettlementService
      */
     public function settlePayment(Payment $payment, GatewayTransaction $transaction): void
     {
-        $transaction->update([
-            'status' => 'completed',
-            'response' => [
-                'settled_at' => now()->toIso8601String(),
-                'amount' => $transaction->amount,
-            ],
-        ]);
+        $this->tenants->runFor((int) $payment->school_id, function () use ($payment, $transaction): void {
+            $transaction->update([
+                'status' => 'completed',
+                'response' => [
+                    'settled_at' => now()->toIso8601String(),
+                    'amount' => $transaction->amount,
+                ],
+            ]);
 
-        $this->markPaid($payment, $transaction->gateway_transaction_id, 'payment_settled');
+            $this->markPaid($payment, $transaction->gateway_transaction_id, 'payment_settled');
+        });
     }
 
     /**
@@ -52,6 +58,15 @@ class PaymentSettlementService
     }
 
     private function markPaid(Payment $payment, ?string $reference, string $action): void
+    {
+        // Settlement is always the payment's own school's work: the caller may
+        // be a webhook with no session or a command with no request at all.
+        $this->tenants->runFor((int) $payment->school_id, function () use ($payment, $reference, $action): void {
+            $this->settleInTenant($payment, $reference, $action);
+        });
+    }
+
+    private function settleInTenant(Payment $payment, ?string $reference, string $action): void
     {
         $alreadySettled = false;
 
@@ -172,47 +187,54 @@ class PaymentSettlementService
             return WebhookResult::ignored('The delivery could not be matched to a payment.');
         }
 
-        $secret = GatewaySettings::for((int) $payment->school_id)->webhookSecret();
+        // The delivery identifies its own school through the payment it names,
+        // and from here on everything is that school's work: the secret that
+        // verifies it, the event ledger, the transaction, the money. A webhook
+        // has no session, so the context is pinned from the identified school
+        // rather than inherited from whatever fallback the request had.
+        return $this->tenants->runFor((int) $payment->school_id, function () use ($gateway, $eventId, $payload, $payment, $verifier): WebhookResult {
+            $secret = GatewaySettings::for((int) $payment->school_id)->webhookSecret();
 
-        if ($secret === null || $secret === '' || ! $verifier->verify($payload, $secret)) {
-            Log::warning('Webhook signature verification failed', [
-                'gateway' => $gateway,
-                'event_id' => $eventId,
-                'school_id' => $payment->school_id,
-            ]);
+            if ($secret === null || $secret === '' || ! $verifier->verify($payload, $secret)) {
+                Log::warning('Webhook signature verification failed', [
+                    'gateway' => $gateway,
+                    'event_id' => $eventId,
+                    'school_id' => $payment->school_id,
+                ]);
 
-            return WebhookResult::rejected(401, 'The delivery could not be verified.');
-        }
-
-        try {
-            // One transaction for the event record, the transaction record and
-            // the money: a failure leaves nothing half-written for the provider
-            // to build a retry on.
-            return DB::transaction(fn (): WebhookResult => $this->settleVerifiedWebhook($gateway, $eventId, $payload, $payment));
-        } catch (Throwable $e) {
-            // A concurrent delivery may have won the insert and settled while
-            // this attempt failed on the unique index. That settlement stands;
-            // this attempt is a replay, not a failure to record.
-            $winner = WebhookEvent::query()
-                ->where('gateway', $gateway)
-                ->where('event_id', $eventId)
-                ->first();
-
-            if ($winner !== null && $winner->status === 'completed') {
-                return WebhookResult::replayed();
+                return WebhookResult::rejected(401, 'The delivery could not be verified.');
             }
 
-            $this->recordFailure($gateway, $eventId, (int) $payment->school_id, $e->getMessage());
+            try {
+                // One transaction for the event record, the transaction record and
+                // the money: a failure leaves nothing half-written for the provider
+                // to build a retry on.
+                return DB::transaction(fn (): WebhookResult => $this->settleVerifiedWebhook($gateway, $eventId, $payload, $payment));
+            } catch (Throwable $e) {
+                // A concurrent delivery may have won the insert and settled while
+                // this attempt failed on the unique index. That settlement stands;
+                // this attempt is a replay, not a failure to record.
+                $winner = WebhookEvent::query()
+                    ->where('gateway', $gateway)
+                    ->where('event_id', $eventId)
+                    ->first();
 
-            Log::error('Webhook processing failed', [
-                'gateway' => $gateway,
-                'event_id' => $eventId,
-                'school_id' => $payment->school_id,
-                'error' => $e->getMessage(),
-            ]);
+                if ($winner !== null && $winner->status === 'completed') {
+                    return WebhookResult::replayed();
+                }
 
-            return WebhookResult::retryable('The delivery could not be processed.');
-        }
+                $this->recordFailure($gateway, $eventId, (int) $payment->school_id, $e->getMessage());
+
+                Log::error('Webhook processing failed', [
+                    'gateway' => $gateway,
+                    'event_id' => $eventId,
+                    'school_id' => $payment->school_id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return WebhookResult::retryable('The delivery could not be processed.');
+            }
+        });
     }
 
     /**
@@ -408,7 +430,7 @@ class PaymentSettlementService
     private function recordFailure(string $gateway, string $eventId, int $schoolId, string $message): void
     {
         try {
-            $event = WebhookEvent::query()->firstOrNew(['gateway' => $gateway, 'event_id' => $eventId]);
+            $event = $this->tenants->runFor($schoolId, fn () => WebhookEvent::query()->firstOrNew(['gateway' => $gateway, 'event_id' => $eventId]));
 
             // Never demote a completed delivery: its settlement already stands,
             // and a failed mark would invite a retry that should not happen.
@@ -480,8 +502,13 @@ class PaymentSettlementService
             return null;
         }
 
+        // Deliberately unscoped, and this is the only crossing in the flow: the
+        // metadata is a claim that says which school's secret must verify the
+        // delivery, so the payment has to be found before the school is known.
+        // Nothing is settled on the strength of this lookup — the verified
+        // settlement below runs inside the identified school.
         if (! empty($metadata['payment_id'])) {
-            $payment = Payment::query()->find((int) $metadata['payment_id']);
+            $payment = Payment::withoutSchoolScope()->find((int) $metadata['payment_id']);
 
             if ($payment !== null) {
                 return $payment;
@@ -489,7 +516,7 @@ class PaymentSettlementService
         }
 
         if (! empty($metadata['payment_number']) && is_string($metadata['payment_number'])) {
-            return Payment::query()->where('payment_number', $metadata['payment_number'])->first();
+            return Payment::withoutSchoolScope()->where('payment_number', $metadata['payment_number'])->first();
         }
 
         return null;

@@ -28,8 +28,10 @@ class PublicInvoicePaymentController extends Controller
 {
     public function __construct(private readonly MoyasarGateway $gateway) {}
 
-    public function show(Invoice $invoice): View
+    public function show(int $invoice): View
     {
+        $invoice = $this->invoice($invoice);
+
         $invoice->loadMissing(['school', 'student', 'lines', 'payments']);
 
         $settings = GatewaySettings::for((int) $invoice->school_id);
@@ -47,16 +49,18 @@ class PublicInvoicePaymentController extends Controller
         ]);
     }
 
-    public function pdf(Invoice $invoice): Response
+    public function pdf(int $invoice): Response
     {
-        return InvoicePdf::download($invoice);
+        return InvoicePdf::download($this->invoice($invoice));
     }
 
     /**
      * Start an online checkout with the school's configured provider.
      */
-    public function checkout(Request $request, Invoice $invoice): RedirectResponse
+    public function checkout(Request $request, int $invoice): RedirectResponse
     {
+        $invoice = $this->invoice($invoice);
+
         $settings = GatewaySettings::for((int) $invoice->school_id);
 
         if ($invoice->isPaid()) {
@@ -106,8 +110,10 @@ class PublicInvoicePaymentController extends Controller
      * The offline path: a guardian says they have transferred the money, which
      * records a pending payment for the finance team to confirm.
      */
-    public function offline(Request $request, Invoice $invoice): RedirectResponse
+    public function offline(Request $request, int $invoice): RedirectResponse
     {
+        $invoice = $this->invoice($invoice);
+
         $request->validate([
             'reference' => ['nullable', 'string', 'max:255'],
         ]);
@@ -122,6 +128,20 @@ class PublicInvoicePaymentController extends Controller
         return redirect()
             ->to(InvoiceLinks::payUrl($invoice))
             ->with('success', 'Thank you. The school will confirm your transfer shortly.');
+    }
+
+    /**
+     * The invoice the signed link is about, resolved inside its own school.
+     *
+     * The route parameter stays an int on purpose: a type-hinted model would be
+     * resolved by SubstituteBindings, which runs before the route's own
+     * middleware, so the binding would look for the invoice inside the
+     * request's fallback school and 404 a link the school itself emailed. The
+     * pin middleware runs first; this lookup is then scoped to that school.
+     */
+    private function invoice(int $id): Invoice
+    {
+        return Invoice::query()->whereKey($id)->firstOrFail();
     }
 
     /**

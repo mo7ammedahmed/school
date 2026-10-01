@@ -228,7 +228,7 @@ class PaymentSettlementTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $this->post("/finance/payments/{$payment->id}/confirm")->assertForbidden();
+        $this->post("/finance/payments/{$payment->id}/confirm")->assertNotFound();
     }
 
     /**

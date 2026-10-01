@@ -542,7 +542,9 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
 // Public payment links handed to guardians in invoice emails. Access is proven
 // by the signature rather than a session, so these sit outside the auth group.
-Route::prefix('pay')->name('public.invoices.')->middleware('signed')->group(function () {
+// The signature proves access; the invoice owns the tenant, so the group pins
+// it before binding resolves (see PinPublicInvoiceTenant).
+Route::prefix('pay')->name('public.invoices.')->middleware(['signed', 'public.invoice.tenant'])->group(function () {
     Route::get('/{invoice}', [PublicInvoicePaymentController::class, 'show'])->name('pay');
     Route::get('/{invoice}/pdf', [PublicInvoicePaymentController::class, 'pdf'])->name('pdf');
     Route::post('/{invoice}/checkout', [PublicInvoicePaymentController::class, 'checkout'])->name('checkout');

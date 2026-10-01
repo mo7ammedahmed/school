@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Finance\Models;
 
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\BelongsToSchool;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 ])]
 class GatewayTransaction extends Model
 {
-    use SoftDeletes;
+    use BelongsToSchool, SoftDeletes;
 
     /** @return BelongsTo<School, $this> */
     public function school(): BelongsTo

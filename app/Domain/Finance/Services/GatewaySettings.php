@@ -6,6 +6,7 @@ namespace App\Domain\Finance\Services;
 
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolSetting;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -226,10 +227,13 @@ class GatewaySettings
         $merged['enabled'] = (bool) ($merged['enabled'] ?? false);
         $merged['auto_send'] = (bool) ($merged['auto_send'] ?? false);
 
-        SchoolSetting::updateOrCreate(
+        // The setting is this school's own row, so it is written inside that
+        // school's context: the tenant scope is live on SchoolSetting, and a
+        // settings save can happen outside a request (a command, a seeder).
+        app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::updateOrCreate(
             ['school_id' => $this->schoolId, 'key' => self::KEY],
             ['value' => json_encode($merged), 'type' => 'json'],
-        );
+        ));
 
         $this->values = $merged;
     }
@@ -239,10 +243,12 @@ class GatewaySettings
      */
     private function load(): array
     {
-        $setting = SchoolSetting::query()
+        // Pinned rather than unscoped: the row wanted is this school's, and a
+        // context-free read must not become a cross-school read.
+        $setting = app(TenantContext::class)->runFor($this->schoolId, fn () => SchoolSetting::query()
             ->where('school_id', $this->schoolId)
             ->where('key', self::KEY)
-            ->first();
+            ->first());
 
         if ($setting === null || $setting->value === null || $setting->value === '') {
             return self::defaults();

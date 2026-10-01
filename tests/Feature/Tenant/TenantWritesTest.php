@@ -181,8 +181,8 @@ class TenantWritesTest extends TestCase
 
         $this->actingAsSchoolUser($school, ['manage-fee-structures']);
 
-        $this->get("/finance/fee-structures/{$foreign->id}")->assertForbidden();
-        $this->get("/finance/fee-structures/{$foreign->id}/edit")->assertForbidden();
+        $this->get("/finance/fee-structures/{$foreign->id}")->assertNotFound();
+        $this->get("/finance/fee-structures/{$foreign->id}/edit")->assertNotFound();
     }
 
     public function test_a_discount_keeps_its_inactive_flag_and_its_school(): void
