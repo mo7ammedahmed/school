@@ -555,6 +555,10 @@ const en = {
     'common.search': 'Search',
     'common.back': 'Back',
     'common.actions': 'Actions',
+    'common.previous': 'Previous',
+    'common.next': 'Next',
+    'common.pageOf': 'Page {page} of {pages}',
+    'common.showingRange': 'Showing {from}–{to} of {total}',
 
     // Machine values the screens print — statuses, priorities, payment methods.
     // The key is the stored value (`bank_transfer`), so a screen can render it
@@ -1124,6 +1128,10 @@ const ar: Record<keyof typeof en, string> = {
     'common.search': 'بحث',
     'common.back': 'رجوع',
     'common.actions': 'إجراءات',
+    'common.previous': 'السابق',
+    'common.next': 'التالي',
+    'common.pageOf': 'صفحة {page} من {pages}',
+    'common.showingRange': 'عرض {from}–{to} من {total}',
 
     'value.draft': 'مسودة',
     'value.submitted': 'مُقدَّم',

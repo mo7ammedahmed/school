@@ -10,6 +10,7 @@ use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -60,6 +61,80 @@ class InvoiceTest extends TestCase
 
         $response = $this->get('/finance/invoices');
         $response->assertStatus(200);
+    }
+
+    /**
+     * Money crosses the wire as a decimal string, not a float.
+     *
+     * The column is a decimal, and a float is the one representation that cannot
+     * hold most decimal fractions exactly: 0.1 in binary is 0.1000000000000000055511151231257827.
+     * Casting on the way out means the browser is handed a number that is not
+     * the number in the database, and a column of them added together stops
+     * matching the total the school is owed. A string survives the trip intact
+     * and is parsed only where it is rendered.
+     */
+    public function test_the_list_carries_money_as_a_decimal_string(): void
+    {
+        [$user, $school, $student] = $this->schoolUser();
+
+        $invoice = Invoice::create([
+            'school_id' => $school->id,
+            'student_id' => $student->id,
+            'invoice_number' => 'INV-ROUNDING',
+            'status' => 'draft',
+            'issue_date' => now(),
+            'due_date' => now()->addDays(7),
+            'total_amount' => '1150.07',
+            'balance_due' => '1150.07',
+            'currency' => 'SAR',
+        ]);
+
+        $this->actingAs($user);
+        $this->app['session']->put('school_id', $school->id);
+
+        $row = $this->inertiaProp($this->get('/finance/invoices'), 'invoices.data.0');
+
+        $this->assertIsString(
+            $row['total_amount'],
+            'total_amount arrived as a float, so the decimal has already lost precision before the page '
+            .'sees it.',
+        );
+
+        // Compared against the column, not against a literal. The contract is
+        // that the payload is the stored decimal handed straight through, at
+        // whatever scale the column declares — not that this code decided how
+        // many zeros a figure should have.
+        $stored = $invoice->fresh();
+
+        $this->assertSame((string) $stored->total_amount, $row['total_amount']);
+        $this->assertSame((string) $stored->balance_due, $row['balance_due']);
+    }
+
+    /**
+     * A prop by dot path, read from the rendered page payload.
+     *
+     * `assertInertiaHas` can assert but not return, and this case is about the
+     * type of a value rather than a particular amount.
+     */
+    private function inertiaProp(TestResponse $response, string $path): array
+    {
+        $matched = preg_match(
+            '#<script[^>]*type="application/json"[^>]*>(.*?)</script>#s',
+            (string) $response->getContent(),
+            $matches,
+        );
+
+        $this->assertSame(1, $matched, 'The response carries no Inertia page payload.');
+
+        $page = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true);
+
+        $this->assertIsArray($page, 'The page payload did not decode.');
+
+        $value = data_get($page, 'props.'.$path);
+
+        $this->assertIsArray($value, "The payload carries no array at [props.{$path}].");
+
+        return $value;
     }
 
     public function test_invoice_can_be_created(): void

@@ -24,6 +24,14 @@ use Symfony\Component\HttpFoundation\Response;
 
 class InvoiceController extends Controller
 {
+    /**
+     * Rows per page on the invoice ledger.
+     *
+     * Deliberately not configurable: every other list in the product uses the
+     * same number, and a setting nobody reads is a setting that drifts.
+     */
+    private const PER_PAGE = 15;
+
     public function __construct(private readonly InvoiceDeliveryService $delivery) {}
 
     public function index(Request $request): InertiaResponse
@@ -47,7 +55,13 @@ class InvoiceController extends Controller
             });
         }
 
-        $invoices = $query->latest()->get()->map(fn (Invoice $invoice) => [
+        // Paginated rather than `->get()`: this is the largest table in the
+        // product, and a school with years of history has tens of thousands of
+        // rows, all of which were being returned to the browser and held in
+        // memory to build the response. `withQueryString()` so the page links
+        // carry `status` and `search` — without it, page two of a filtered
+        // ledger is page two of the whole ledger under the same filter bar.
+        $invoices = $query->latest()->paginate(self::PER_PAGE)->withQueryString()->through(fn (Invoice $invoice): array => [
             'id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
             'student' => $invoice->student ? [
@@ -56,8 +70,12 @@ class InvoiceController extends Controller
             ] : null,
             'issue_date' => optional($invoice->issue_date)->toDateString(),
             'due_date' => optional($invoice->due_date)->toDateString(),
-            'total_amount' => (float) $invoice->total_amount,
-            'balance_due' => (float) $invoice->balance_due,
+            // The column is a decimal, and it stays a string across the wire.
+            // Casting to float here is what a financial figure must not do: it
+            // is how a total that balances in the database stops balancing on
+            // screen. The page formats the value for display.
+            'total_amount' => (string) $invoice->total_amount,
+            'balance_due' => (string) $invoice->balance_due,
             'currency' => $invoice->currency,
             'status' => $invoice->status,
             'sent_at' => optional($invoice->sent_at)->toIso8601String(),

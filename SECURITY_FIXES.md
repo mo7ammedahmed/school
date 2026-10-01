@@ -257,10 +257,9 @@ host-header-driven link is a defect everywhere. A deployment that genuinely
 serves the app from several hostnames is a tenant *routing* question (see
 `SchoolResolver` and Decision 7), not a link-generation one.
 
-Still open in this phase: `Finance\InvoiceController::index` still loads every
-row with `->get()`, the SchoolResolver fallback has not been re-checked against
-the domain/slug requirement, and the audit-log, upload and money findings are not
-yet started.
+Still open in this phase: the SchoolResolver fallback has not been re-checked
+against the domain/slug requirement, and the audit-log, upload and remaining
+money findings are not yet started.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
@@ -292,5 +291,20 @@ quietly treated as hardened. It is also materially weaker than the script case:
 a style injection cannot read the CSRF token, call the API, or exfiltrate
 anything, whereas inline script can do all three. Removing it belongs with a
 frontend pass, not a header edit.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 7 | `Finance\InvoiceController::index` answered `->get()` and mapped every row in the school. The ledger is the largest table in the product, so this returns the school's entire invoice history to the browser and holds all of it in memory to build the response | Confirmed | `->paginate(15)->withQueryString()`, mapping one page. `withQueryString()` so a filtered ledger's page links keep their filter — without it, page two of a filtered list is page two of the whole list under the same filter bar | `InvoiceListIsPaginatedTest` — 8 cases: a 60-row table yields at most 15 rows, a total is reported, page two is disjoint from page one, the total counts only this school, the `status` and `search` filters still bind the later page *and* the total, a page past the end is empty rather than a 500, and no page leaks another school's invoice. Written red at 8 of 8 |
+| 8 | The same map cast `total_amount` and `balance_due` to `float`. The columns are decimals, and a float cannot hold most decimal fractions exactly — `(float) '1150.07'` is not `1150.07` — so the browser was handed figures that are not the figures in the database | Confirmed | Both are cast to `string`, at the column's own scale. `formatCurrency` accepts `number \| string` and parses at the moment it renders, so the value is in binary floating point only for the `Intl` call that prints it | `InvoiceTest::test_the_list_carries_money_as_a_decimal_string` — the payload value must be a string and must equal the stored column. Deliberately asserted against the column rather than a literal: the contract is that the stored decimal is handed through untouched, not that this code picks a scale |
+
+**Why the pager had to arrive with a UI, not just a `paginate()`.** The shared
+`DataTable` accepts a paginator payload and renders its rows, and nothing else —
+it has no pager. Switching the controller alone would have been a silent
+truncation: the accountant would see fifteen invoices and no way to reach the
+sixteenth, and nothing on the screen would say the list was cut off. The pager
+is now on the page, carrying the filters, with a count of what is being shown.
+The same gap exists on the students list, which is already paginated on the
+server and already shows no pager; it is recorded here rather than fixed in this
+commit, which is about the ledger.
 
 

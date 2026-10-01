@@ -8,13 +8,23 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string = 'SAR', locale: string = 'en') {
+/**
+ * Money arrives from the API as a decimal string and is parsed here, at the
+ * moment it becomes text.
+ *
+ * The alternative is a `Number()` at the edge of every component that displays
+ * an amount, which is the same value in binary floating point with more places
+ * to go wrong. Parsing inside the formatter means there is one conversion in
+ * the codebase, it happens last, and `Intl` does the rounding to the currency's
+ * own minor unit rather than the value arriving pre-rounded.
+ */
+export function formatCurrency(amount: number | string, currency: string = 'SAR', locale: string = 'en') {
     return new Intl.NumberFormat(locale, {
         style: 'currency',
         currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(typeof amount === 'string' ? Number.parseFloat(amount) : amount);
 }
 
 export function formatDate(date: string | Date, locale: string = 'en', options?: Intl.DateTimeFormatOptions) {

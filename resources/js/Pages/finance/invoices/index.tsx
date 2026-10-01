@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
+import { Pagination } from '@/components/ui/pagination';
 import { formatCurrency } from '@/lib/utils';
 import { type ColumnDef } from '@/lib/table';
 import { Link, router } from '@inertiajs/react';
@@ -17,12 +18,25 @@ interface Invoice {
     student?: { first_name: string; last_name: string } | null;
     issue_date: string | null;
     due_date: string | null;
-    total_amount: number;
-    balance_due: number;
+    // Money arrives as a string. The column is a decimal and the backend no
+    // longer casts it to a float, so nothing has to un-round a value that was
+    // already in binary floating point by the time it reached the browser.
+    total_amount: string;
+    balance_due: string;
     currency: string;
     status: string;
     sent_at: string | null;
     delivery_channels: Record<string, boolean>;
+}
+
+/** A Laravel length-aware paginator, as the ledger index returns. */
+interface InvoicePage {
+    data: Invoice[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
 }
 
 const channelLabel = (channels: Record<string, boolean>) => {
@@ -33,7 +47,13 @@ const channelLabel = (channels: Record<string, boolean>) => {
         .join(' · ');
 };
 
-export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[] }) {
+export default function FinanceInvoicesIndex({
+    invoices,
+    filters,
+}: {
+    invoices: InvoicePage;
+    filters?: { status?: string; search?: string };
+}) {
     const { locale } = useLocale();
 
     const send = (invoice: Invoice) => {
@@ -42,6 +62,27 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
 
     const issue = (invoice: Invoice) => {
         router.post(`/finance/invoices/${invoice.id}/issue`, {}, { preserveScroll: true });
+    };
+
+    /**
+     * Paging keeps the filters.
+     *
+     * The rows on screen were narrowed by `status` and `search`, and a pager
+     * that drops them turns "page 2" into a different question than the one the
+     * accountant asked. Empty filters are left out of the query entirely rather
+     * than sent as blanks, so the URL stays the one the filters themselves
+     * would have produced.
+     */
+    const goToPage = (page: number) => {
+        router.get(
+            '/finance/invoices',
+            {
+                ...(filters?.status ? { status: filters.status } : {}),
+                ...(filters?.search ? { search: filters.search } : {}),
+                page,
+            },
+            { preserveScroll: true, preserveState: true }
+        );
     };
 
     const columns: ColumnDef<Invoice, any>[] = [
@@ -67,12 +108,12 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
         {
             accessorKey: 'total_amount',
             header: t(locale, 'finance.invoices.total'),
-            cell: ({ row }) => formatCurrency(Number(row.original.total_amount), row.original.currency),
+            cell: ({ row }) => formatCurrency(row.original.total_amount, row.original.currency),
         },
         {
             accessorKey: 'balance_due',
             header: t(locale, 'finance.invoices.balance'),
-            cell: ({ row }) => formatCurrency(Number(row.original.balance_due), row.original.currency),
+            cell: ({ row }) => formatCurrency(row.original.balance_due, row.original.currency),
         },
         {
             accessorKey: 'status',
@@ -164,9 +205,28 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: Invoice[]
 
             <DataTable
                 columns={columns}
-                data={invoices}
+                data={invoices.data}
                 emptyMessage={t(locale, 'finance.invoices.empty')}
             />
+
+            <Pagination
+                className="mt-4"
+                pageCount={invoices.last_page}
+                currentPage={invoices.current_page}
+                previousLabel={t(locale, 'common.previous')}
+                nextLabel={t(locale, 'common.next')}
+                onPageChange={goToPage}
+            />
+
+            {invoices.total > 0 && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                    {t(locale, 'common.showingRange', {
+                        from: invoices.from ?? 0,
+                        to: invoices.to ?? 0,
+                        total: invoices.total,
+                    })}
+                </p>
+            )}
         </AppShell>
     );
 }
