@@ -12,6 +12,11 @@ phase. At the Phase 5 checkpoint: `phpunit` 564 tests / 3786 assertions, PHPStan
 level 5 clean, Pint clean (647 files), `tsc --noEmit` clean, `oxlint` 0 warnings,
 Vitest 17 passed.
 
+Re-audited at the Phase 1 checkpoint (the finding-18 work it absorbed, the
+invoice divergence, the policy-discovery guard and the conversation-privacy
+fix): `phpunit` 1058 tests / 4695 assertions, PHPStan level 5 clean, Pint clean
+(670 files), `tsc --noEmit` clean, `oxlint` 0 warnings.
+
 ## Phase 1 — Authorization (complete)
 
 | # | Finding | Status | Change | Tests |
@@ -571,6 +576,28 @@ The rollout order is the command's: run
 `php artisan conversations:backfill-participants --dry-run`, review the counts,
 then run it without the flag. Until then legacy direct threads are invisible
 rather than open.
+
+**Re-audited from the router outward, and found sound.** Every route behind
+`auth + school.context` carries a `permission:` or `role:` gate except the 16
+personal routes the matrix lists with a reason each — re-derived independently
+through the router's own middleware (`Route::gatherMiddleware()`) and the two
+sets match. All 53 policies conjoin a permission with the tenant; no ability was
+found without both. Of the 41 models a route binds, 38 resolve through
+`Gate::getPolicyFor()`; the three that do not are named in `PolicyDiscoveryTest`
+with the gate that makes a per-row policy unnecessary. The eight-role matrix was
+re-run and passes.
+
+**Two observations left as observations, not findings.** The admissions
+controllers repeat `can:manage-admissions` in controller middleware on top of
+the route group's `permission:manage-admissions`; the role matrix reads route
+middleware and cannot see controller middleware, but both ask for the same
+permission, so there is no behavioural gap — only a gate the matrix does not
+enumerate. And the staff roles in `RoleSeeder` are deny-lists over the whole
+permission catalogue, so a permission added to `PermissionSeeder` lands on every
+staff role that does not name it; today that means, for example, a teacher holds
+`manage-rooms`, `manage-periods` and `manage-reports` because none is on the
+teacher deny list. That is a roles-design question, not a code defect, and a
+scope review belongs beside the seeder rather than in this phase.
 
 **Audited this round and found sound, recorded so they are not re-litigated.** The
 guardian portal's `/children/{child}/…` routes call `authorizeChild()`, which
