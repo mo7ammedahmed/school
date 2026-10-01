@@ -11,6 +11,9 @@
         />
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
         <meta name="theme-color" content="#0a5c42" />
+        {{-- The same nonce SecurityHeaders put in script-src. Vite propagates it
+             to every tag it generates; this is what lets the Inertia bootstrap
+             stay inline without 'unsafe-inline' in the policy. --}}
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
         @inertiaHead

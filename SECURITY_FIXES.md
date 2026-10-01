@@ -257,9 +257,24 @@ host-header-driven link is a defect everywhere. A deployment that genuinely
 serves the app from several hostnames is a tenant *routing* question (see
 `SchoolResolver` and Decision 7), not a link-generation one.
 
-Still open in this phase: the CSP still carries `unsafe-inline` and
-`unsafe-eval`, `X-XSS-Protection` is still set, `getAllPermissions()` still runs
-un-cached on every Inertia request, `Finance\InvoiceController::index` still
-loads every row with `->get()`, and the SchoolResolver fallback has not been
-re-checked against the domain/slug requirement.
+Still open in this phase: `getAllPermissions()` still runs un-cached on every
+Inertia request, `Finance\InvoiceController::index` still loads every row with
+`->get()`, the SchoolResolver fallback has not been re-checked against the
+domain/slug requirement, and the audit-log, upload and money findings are not
+yet started.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 2 | `script-src` carried `'unsafe-inline' 'unsafe-eval'`, which together make the CSP a no-op against XSS: any script string on the origin executes, and script that runs before the CSRF token, the tenant scope or the policy layer is consulted defeats all three | Confirmed | Both removed. A 32-byte CSPRNG nonce per request authorises the tags the response actually emits, propagated to every Vite-generated tag via `Vite::useCspNonce()` | `ContentSecurityPolicyTest` — 8 cases: neither token present, `'self'` retained, nonce unique per response, nonce length and alphabet, dev server still permitted. Written red at 5 of 8 |
+| 3 | `X-XSS-Protection: 1; mode=block` was set. It was removed from every current browser years ago, so it advertises a protection the application does not have | Confirmed | Header removed | `ContentSecurityPolicyTest` |
+| 4 | A CSP that is correct as a string and broken in a browser is worse than a weak one, because it is trusted. Nothing checked that the rendered document satisfies the header | Confirmed | — | `RenderedPageMatchesItsCspTest` renders `/`, reads the nonce off the response's own header, and fails on any executable inline `<script>` that does not carry it. Data blocks (`type="application/json"`, which is how Inertia ships the page payload) are correctly not counted |
+
+**`style-src` keeps `'unsafe-inline'`, deliberately.** The UI sets element styles
+at runtime, so removing it needs a nonce threaded through every style binding or
+a refactor of the frontend. It is a real gap and is recorded here rather than
+quietly treated as hardened. It is also materially weaker than the script case:
+a style injection cannot read the CSRF token, call the API, or exfiltrate
+anything, whereas inline script can do all three. Removing it belongs with a
+frontend pass, not a header edit.
+
 
