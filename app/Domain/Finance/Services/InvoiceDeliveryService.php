@@ -9,6 +9,7 @@ use App\Domain\Communication\Services\SmsSender;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\People\Models\Guardian;
+use App\Domain\Schools\Support\TenantContext;
 use App\Mail\InvoiceMail;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,8 @@ use Throwable;
  */
 class InvoiceDeliveryService
 {
+    public function __construct(private readonly TenantContext $tenants) {}
+
     /**
      * @return array{channels: array<string, bool>, recipients: int, detail: string, errors: list<string>}
      */
@@ -32,6 +35,23 @@ class InvoiceDeliveryService
         Invoice $invoice,
         string $kind = InvoiceMail::KIND_ISSUED,
         ?Payment $payment = null,
+    ): array {
+        // Delivery reads the invoice's guardians, student and school, and writes
+        // notifications — all tenant rows. Pinned from the invoice so a queued
+        // or command-driven send sees the same school a request would.
+        return $this->tenants->runFor(
+            (int) $invoice->school_id,
+            fn (): array => $this->deliverInsideSchool($invoice, $kind, $payment),
+        );
+    }
+
+    /**
+     * @return array{channels: array<string, bool>, recipients: int, detail: string, errors: list<string>}
+     */
+    private function deliverInsideSchool(
+        Invoice $invoice,
+        string $kind,
+        ?Payment $payment,
     ): array {
         $invoice->loadMissing(['school', 'student']);
 
