@@ -252,13 +252,22 @@
   to cross schools. The context is pinned by `EnsureSchoolContext` after
   membership is proven, by `ApplySiteMetadata` for the public site (a visitor
   has no session), and by `TenantContext::runFor()` around code that was handed
-  a school — actions, services, jobs.
+  a school — actions, services, jobs. Validation is part of the same boundary:
+  the validation factory resolves a tenant-aware validator, so a string
+  `exists:`/`unique:` rule naming a school-owned table is narrowed to the active
+  tenant without the call site having to remember, and an unscoped
+  `Rule::exists()`/`Rule::unique()` object is caught by a source scan that fails
+  the build unless it carries a filter or a written reason.
 - **Consequences:** The permission catalogue stays one editable vocabulary, the
   role matrix test keeps covering all eight roles, and "who may do this here?"
   composes as permission **and** active membership **and** model scope — the
   reviewer picker is the pattern. The costs are honest: per-school custom roles
   are not possible without a later mechanism, a feature that forgets membership
   still passes its permission check (which is exactly the bug the reviewer
-  picker had), and the rollout of the global scope is deliberately incremental —
+  picker had),  and the rollout of the global scope is deliberately incremental —
   each model that joins the trait can expose a query that was relying on seeing
-  every school's rows, and that exposure is the audit.
+  every school's rows, and that exposure is the audit. The validator narrowing
+  is invisible at the call site, which is the point, but it also means a rule
+  that genuinely needs to ask about another school's row must be written as an
+  object rule with an explicit filter — a visible crossing rather than a
+  forgotten one.

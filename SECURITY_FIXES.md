@@ -87,8 +87,10 @@ phase.
 ## Phase 4 — Tenant isolation (in progress)
 
 Verified by `tests/Feature/Security/TenantIsolationTest.php`, a cross-tenant
-matrix that asserts the *required* behaviour and started fully red. Findings 1–5
-are fixed; 6–7 are named work still to do.
+matrix that asserts the *required* behaviour and started fully red, and by
+`tests/Feature/Security/TenantValidationRuleScopeTest.php`, which proves the
+validation mechanism and scans the source for object rules that bypass it.
+Findings 1–6 are fixed; 7 is named work still to do.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
@@ -97,7 +99,7 @@ are fixed; 6–7 are named work still to do.
 | 3 | The admissions review queue asked platform-wide questions with one school's id: the reviewer picker listed every school's staff, `assign` accepted any user on the platform, and `bulkUpdate` validated and updated foreign application ids — writing status and event rows onto a stranger's application | Confirmed | Queue resolves the id through `schoolId()`; reviewer candidates must hold an active membership in this school; application ids are scoped by rule and the service takes the school id, filtering both of its queries (`1b6be3c`) | `TenantIsolationTest` (bulk write refused whole-request, foreign reviewer refused, reviewer picker) |
 | 4 | `DiscountController` listed and offered platform-wide rows and stamped `school_id` from the raw session | Confirmed | `forSchool()` on list and pickers; stamp from the tenant context (`1b6be3c`) | `TenantIsolationTest` (list, open, edit, delete) |
 | 5 | 63 models carry `school_id`; only 13 carried `BelongsToSchool`, so the rest could be queried across schools by an omission | Fixed | Rollout complete: `TenantContext`, fail-closed `TenantScope`, auto-stamp and `withoutSchoolScope()` are live on every school-owned model (`2af16b0`, `1f058bc`, `85b99ca`, `1a436b6`, `597c4c9`, `b9e9725`). Three deliberate exclusions, each with its reason recorded: `UserMembership` (the resolver cannot depend on its own answer), `AuditLog` (platform and support actions too), `WebsiteThemePreset` (no `school_id` by design) | The whole suite runs against the live scope; the rollout exposed and fixed real unscoped services: the timetable conflict detector, the settings stores used outside requests, invoice delivery, and settlement |
-| 6 | 181 `exists:` rules across controllers and form requests are unscoped, so a foreign id validates | Open | Scoped on the screens fixed above; the rest to be swept, rule by rule | — |
+| 6 | 181 `exists:` rules across controllers, form requests and DTOs are unscoped, so a foreign id validates | Fixed | `TenantAwareValidator` is resolved by the validation factory and narrows every string `exists:`/`unique:` rule naming a table with a `school_id` column to the active tenant, fail-closed with no context (`7d3d6a9`). `Rule::exists()`/`Rule::unique()` objects bypass the validator, so the guard test scans the source and fails when one of them names a tenant table without its own filter, with a reasoned exemption list for deliberate crossings | `TenantValidationRuleScopeTest` — four runtime cases (foreign row refused, other school's unique value free, platform table untouched, no context accepts nothing) plus the source scan; the whole suite passes unchanged with the resolver live |
 | 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Open, no longer reachable | Every model those checks guarded is now tenant-bound, so a foreign id 404s at the route before the check runs; the remaining call sites are dead code to delete, not a live disagreement | The isolation matrix and the suite exercise the binding path |
 
 **Open from Phase 4**
