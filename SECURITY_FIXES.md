@@ -500,7 +500,27 @@ comment saying why it is repeated rather than inherited.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
-| 17 | A conversation typed `direct` is readable by every teacher in the school. The `conversations` table has no participants at all — only `school_id`, `type` (defaulting to `'direct'`) and `subject` — so `ConversationPolicy::view` has nothing to check beyond the permission and the school, and `manage-messages` is not in the teacher role's exclusion list, so every teacher holds it. Verified rather than inferred: a second teacher, holding the permission, in the same school, with no relationship to the conversation, opened one and received the full body of a message naming a child and describing that child's behaviour | Confirmed — **not fixed, and this is the reason** | None. The fix is a schema change, not a policy change | Verified with a throwaway test that was then deleted — a test asserting the current broad visibility would be asserting the finding, not the fix, and committing it would make the behaviour look intentional. Not claimed as a test |
+| 18 | The public faculty **list** chose its columns — eight, allowlisted — and the public single-teacher **page** returned the whole row. So a visitor opening one teacher saw twenty fields: everything the list withheld, which is `employee_id`, `hire_date`, `metadata` and `school_id` — an HR record and a join key — plus `created_at`, `updated_at`, `deleted_at`, `avatar_path` and the Arabic `bio_ar` / `qualification_ar` / `specialization_ar` the list never published. `user_id` is the one that matters most in principle: it ties a public profile to a login account | Confirmed | The eight columns are now a single `PUBLIC_COLUMNS` constant used by both methods, so the two cannot drift again. `metadata` is excluded for a second reason: nothing constrains what goes in it, so a column that is safe today is not safe by design | `PublicStaffPagesDoNotLeakInternalColumnsTest` — 5 cases, written red at 4 of 5 against the old controller (the set-equality case showed all twenty field names). Three assert the specific leaked fields are absent. One asserts the profile page's field set is *set-equal* to the list's, minus `subjects` — so a column added to the model later cannot appear here unnoticed, which a list of forbidden keys would not catch. The fifth guards the other direction, because set equality would also pass if the list quietly dropped everything |
+
+**Why this was missed for as long as it was.** `PublicSiteTest` already covered this
+page, and it passes: it asserts the page *has* `specialization` and `subjects`, and
+never asks what else is in the payload. A test that checks what a page contains is
+not a test of what a page may contain — which is the same shape as finding 15,
+where the security of a write depended on a setting nobody had looked at.
+
+**`config/database.php` was also changed, and not for the reason above.** PHPStan
+reported two errors in a file nobody had touched: a `PHP_VERSION_ID >= 80500`
+version check that is always true under `php: ^8.5`, so its fallback branch is
+unreachable. The check was also
+holding onto `PDO::MYSQL_ATTR_SSL_CA`, which PHP 8.5 deprecates in favour of
+`Pdo\Mysql::ATTR_SSL_CA` — the constant the true branch already used. Removing the
+check is a simplification rather than a behaviour change, and it retires a
+deprecated constant, so no `phpstan.neon` entry was added; the config's own comment
+records why.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 17 | A conversation typed `direct` is readable by every teacher in the school. The `conversations` table has no participants at all — only `school_id`, `type` (defaulting to `'direct'`) and `subject` — so `ConversationPolicy::view` has nothing to check beyond the permission and the school, and `manage-messages` is not in the teacher role's exclusion list, so every teacher holds it. Verified rather than inferred: a second teacher, holding the permission, in the same school, with no relationship to the conversation, opened one and received the full body of a message naming a child and describing that child's behaviour | Confirmed — **not fixed, and this is why** | None. The fix is a schema change, not a policy change | Verified with a throwaway test that was then deleted — a test asserting the current broad visibility would be asserting the finding, not the fix, and committing it would make the behaviour look intentional. Not claimed as a test |
 
 **Why this was not fixed here, specifically.** There is no way to make the policy
 narrower without first deciding who a conversation's participants *are*, and that
