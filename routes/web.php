@@ -32,7 +32,6 @@ use App\Http\Controllers\Finance\DiscountController as FinanceDiscountController
 use App\Http\Controllers\Finance\InvoiceController as FinanceInvoiceController;
 use App\Http\Controllers\Finance\PaymentController as FinancePaymentController;
 use App\Http\Controllers\Finance\RefundController as FinanceRefundController;
-use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GradeLevelController;
 use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;

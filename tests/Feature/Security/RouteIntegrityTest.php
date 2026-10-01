@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Security;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Tests\TestCase;
@@ -31,7 +32,7 @@ class RouteIntegrityTest extends TestCase
     {
         $missing = [];
 
-        foreach (RouteFacade::getRoutes() as $route) {
+        foreach (RouteFacade::getRoutes()->getRoutes() as $route) {
             $action = $route->getAction('uses');
 
             if (! is_string($action) || ! str_contains($action, '@')) {
@@ -62,7 +63,7 @@ class RouteIntegrityTest extends TestCase
     {
         $shadowed = [];
 
-        foreach (RouteFacade::getRoutes() as $route) {
+        foreach (RouteFacade::getRoutes()->getRoutes() as $route) {
             if ($route->getName() === null || $route->getDomain() !== null) {
                 continue;
             }
@@ -74,7 +75,7 @@ class RouteIntegrityTest extends TestCase
             }
 
             $matched = RouteFacade::getRoutes()->match(
-                \Illuminate\Http\Request::create($path, $this->sampleMethod($route)),
+                Request::create($path, $this->sampleMethod($route)),
             );
 
             if ($matched->getName() !== $route->getName()) {
