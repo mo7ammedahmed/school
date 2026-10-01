@@ -48,16 +48,22 @@ class TeacherController extends Controller
 
     public function show(TeacherProfile $teacher): Response
     {
+        $this->authorize('view', $teacher);
+
         return inertia('teachers/show', ['teacher' => $teacher]);
     }
 
     public function edit(TeacherProfile $teacher): Response
     {
+        $this->authorize('update', $teacher);
+
         return inertia('teachers/edit', ['teacher' => $teacher]);
     }
 
     public function update(Request $request, TeacherProfile $teacher): RedirectResponse
     {
+        $this->authorize('update', $teacher);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',

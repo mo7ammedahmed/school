@@ -67,6 +67,8 @@ class StudentController extends Controller
 
     public function show(Student $student): Response
     {
+        $this->authorize('view', $student);
+
         $student->load('guardians');
 
         return inertia('students/show', ['student' => $student]);
@@ -74,6 +76,8 @@ class StudentController extends Controller
 
     public function edit(Student $student): Response
     {
+        $this->authorize('update', $student);
+
         $guardians = Guardian::where('school_id', $this->schoolId())
             ->orderBy('first_name')
             ->get();
@@ -83,6 +87,8 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student): RedirectResponse
     {
+        $this->authorize('update', $student);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -114,6 +120,8 @@ class StudentController extends Controller
 
     public function destroy(Student $student): RedirectResponse
     {
+        $this->authorize('delete', $student);
+
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Student deleted successfully.');

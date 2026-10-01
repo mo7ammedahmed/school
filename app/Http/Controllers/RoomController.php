@@ -44,16 +44,22 @@ class RoomController extends Controller
 
     public function show(Room $room): Response
     {
+        $this->authorize('view', $room);
+
         return inertia('rooms/show', ['room' => $room]);
     }
 
     public function edit(Room $room): Response
     {
+        $this->authorize('update', $room);
+
         return inertia('rooms/edit', ['room' => $room]);
     }
 
     public function update(Request $request, Room $room): RedirectResponse
     {
+        $this->authorize('update', $room);
+
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -70,6 +76,8 @@ class RoomController extends Controller
 
     public function destroy(Room $room): RedirectResponse
     {
+        $this->authorize('delete', $room);
+
         $room->delete();
 
         return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');

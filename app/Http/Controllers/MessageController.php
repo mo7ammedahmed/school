@@ -71,6 +71,8 @@ class MessageController extends Controller
 
     public function show(Conversation $conversation): Response
     {
+        $this->authorize('view', $conversation);
+
         $conversation->load(['messages.sender']);
 
         return inertia('messages/show', ['conversation' => $conversation]);

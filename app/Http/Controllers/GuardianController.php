@@ -48,16 +48,22 @@ class GuardianController extends Controller
 
     public function show(Guardian $guardian): Response
     {
+        $this->authorize('view', $guardian);
+
         return inertia('guardians/show', ['guardian' => $guardian]);
     }
 
     public function edit(Guardian $guardian): Response
     {
+        $this->authorize('update', $guardian);
+
         return inertia('guardians/edit', ['guardian' => $guardian]);
     }
 
     public function update(Request $request, Guardian $guardian): RedirectResponse
     {
+        $this->authorize('update', $guardian);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -76,6 +82,8 @@ class GuardianController extends Controller
 
     public function destroy(Guardian $guardian): RedirectResponse
     {
+        $this->authorize('delete', $guardian);
+
         $guardian->delete();
 
         return redirect()->route('guardians.index')->with('success', 'Guardian deleted successfully.');

@@ -71,7 +71,7 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
-        $this->ensureUserBelongsToCurrentSchool($user);
+        $this->authorize('view', $user);
 
         $user->load('roles');
 
@@ -80,7 +80,7 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
-        $this->ensureUserBelongsToCurrentSchool($user);
+        $this->authorize('update', $user);
 
         $user->load('roles');
         $roles = Role::where('guard_name', 'web')->orderBy('name')->get(['id', 'name']);
@@ -95,7 +95,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $this->ensureUserBelongsToCurrentSchool($user);
+        $this->authorize('update', $user);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -134,7 +134,7 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        $this->ensureUserBelongsToCurrentSchool($user);
+        $this->authorize('delete', $user);
 
         if ($user->id === auth()->id()) {
             return back()->withErrors(['user' => 'You cannot delete yourself.']);
@@ -164,16 +164,5 @@ class UserController extends Controller
             'is_active' => (bool) ($membership?->is_active ?? false),
             'last_login_at' => $membership?->last_login_at?->toDateTimeString(),
         ];
-    }
-
-    private function ensureUserBelongsToCurrentSchool(User $user): void
-    {
-        abort_unless(
-            $user->memberships()
-                ->where('school_id', session('school_id'))
-                ->where('is_active', true)
-                ->exists(),
-            404,
-        );
     }
 }

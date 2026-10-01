@@ -26,15 +26,55 @@ Vitest 17 passed.
 
 **Open from Phase 1**
 
-- **Four dead routes** named controller methods that do not exist, so any role
-  that passes the gate got a 500: `subjects.offerings`, `my-grades`,
-  `finance.my-fees`, `finance.fee-assignments.index`. Closed in Phase 5: all
-  four are retired with their reasons, and `RoleRouteMatrixTest` no longer
-  carries an exclusion list, so it exercises every gate again.
-- **Controller-level `authorize()` is thin** (four controllers, twelve call
-  sites). Route groups are the enforcement layer now, and every guarded model
-  has a mapped policy; the follow-up is to consult policies in show/edit and
-  mutating actions so the check lives next to the action it protects.
+- ~~**Four dead routes** named controller methods that do not exist~~ — closed in
+  Phase 5: all four retired with their reasons, and `RoleRouteMatrixTest` no
+  longer carries an exclusion list, so it exercises every gate again.
+- ~~**Controller-level `authorize()` is thin**~~ — closed below. The six resource
+  controllers that consulted nothing now consult their policy in every `show`,
+  `edit` and mutating action, and doing so surfaced a latent over-grant in 53
+  policy abilities that had to be fixed first.
+
+### The latent over-grant, and why adding `authorize()` was not safe on its own
+
+`StudentPolicy` was corrected to `&&` in Phase 1, and the same disjunction was
+left in 53 abilities across 53 other policies:
+
+```php
+return $user->hasPermissionTo('manage-students') ||
+    $student->school_id === session('school_id');
+```
+
+That grants to a registrar as intended, and it also grants to a pupil whose only
+claim is that the row belongs to their own school. It was harmless *by accident*:
+no controller called `authorize()`, so the second operand was never reached on a
+real request. **The Phase 1 follow-up was the thing that would have made it
+reachable** — adding `authorize()` to a screen turns a dormant over-grant into a
+live one. The order matters more than either change alone.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 8 | 53 policy abilities conjoined nothing: `permission \|\| same school` granted on the tenant alone, dormant only because no controller consulted them | Confirmed, latent | `\|\|` → `&&` in all 53; `StudentPolicy` was already correct and is not in the count | `PolicyAbilitiesAreConjunctiveTest` — a source-level scan over every policy on disk, written red at 53 failures, plus a guard that every ability checks *some* permission |
+| 9 | `InvoicePolicyTest` never pinned the session, so the old `\|\|` masked it and the test asserted against a policy that was never really consulted | Confirmed | Session pinned in the two affected cases; a third case added asserting the permission alone does **not** open another school's invoice, so the conjunction cannot be "simplified" back | `InvoicePolicyTest` |
+| 10 | `StudentController`, `GuardianController`, `TeacherController`, `RoomController`, `MessageController` and `UserController` consulted no policy in `show`/`edit`/mutating actions | Confirmed | `$this->authorize()` in all 15 show/edit/mutating actions | `ActionLevelAuthorizationTest` — 53 cases: a foreign row refused, a same-school row allowed through to validation, and a same-school row still refused when the session points elsewhere. Verified red without the change |
+| 11 | `UserController::ensureUserBelongsToCurrentSchool()` hand-rolled a membership check, answering 404 where every other layer answers 403 | Confirmed | Deleted; `UserPolicy` consulted instead. The policy was already equivalent — `currentMembership` filters `is_active = true` | `ActionLevelAuthorizationTest` user cases |
+
+**On the answer a refusal takes.** `ActionLevelAuthorizationTest` accepts 403
+*or* 404 for a foreign row rather than pinning one, and that is deliberate. For
+every tenant-bound model `BelongsToSchool` narrows route-model binding, so the
+id never resolves and the answer is 404 — the better of the two, since a 403
+confirms the row exists elsewhere. `User` carries no `school_id` and is not
+tenant-bound, so nothing upstream can refuse it and the policy inside the action
+is the only defence there; those four cases are held to an exact 403. Asserting
+one fixed code everywhere would have pinned the suite to whichever layer happens
+to run first and called a working defence a regression the next time a model
+gained or lost `BelongsToSchool`.
+
+Writing that test also caught a false pass worth recording: the first version
+granted only `manage-users`, but `/settings/*` is gated on
+`manage-settings|manage-schools` at the group, so the middleware refused every
+user case with a 403 — which the refusal assertions would have accepted as a
+pass while the policy was never consulted. Both permissions are now granted, and
+the allow-case assertion is what makes that class of mistake loud.
 
 ## Phase 2 — Payments and webhooks (complete)
 
