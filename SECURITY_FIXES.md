@@ -203,3 +203,23 @@ What was retired, and what stands in for it:
   exposes, and `view-own-grades` / `view-own-fees` are checked by nothing now
   that the portals are the only self-service routes. They stay seeded until the
   screens exist or the policies are retired with them.
+
+## Phase 6 — Platform hardening (in progress)
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 1 | Every generated absolute URL was built from the request's `Host` header. A password-reset request sent with `Host: evil.test` mailed the victim a genuine, token-bearing reset link to the attacker's domain; the same origin builds invoice links and the signed `/pay/{invoice}` URLs | Confirmed | `URL::forceRootUrl(config('app.url'))` in `AppServiceProvider::boot()`, in every environment, not only production | `GeneratedUrlHostTest` — the reset mail is asserted to carry the configured host; `url('/')` is asserted to be rooted there too |
+
+`forceScheme('https')` was already there but production-only, and it fixes the
+scheme rather than the host, so it never covered this. Forcing the root in every
+environment is deliberate: `APP_URL` is set in all of them, and a
+host-header-driven link is a defect everywhere. A deployment that genuinely
+serves the app from several hostnames is a tenant *routing* question (see
+`SchoolResolver` and Decision 7), not a link-generation one.
+
+Still open in this phase: the CSP still carries `unsafe-inline` and
+`unsafe-eval`, `X-XSS-Protection` is still set, `getAllPermissions()` still runs
+un-cached on every Inertia request, `Finance\InvoiceController::index` still
+loads every row with `->get()`, and the SchoolResolver fallback has not been
+re-checked against the domain/slug requirement.
+

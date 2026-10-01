@@ -163,6 +163,25 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Generated absolute URLs must come from the configured origin, never
+        // from the request's `Host` header. Without this the header is an input
+        // to link generation: a password-reset request sent with
+        // `Host: evil.test` mails the victim a genuine, token-bearing link to
+        // the attacker. The same root builds invoice links and the signed
+        // `/pay/{invoice}` URLs, so this one call covers the class.
+        //
+        // Forced outside production too. `APP_URL` is a real setting in every
+        // environment, and a host-header-driven link is a defect in all of them;
+        // the only reason to skip this would be a deployment that genuinely
+        // serves the app from several hostnames at once, which is a
+        // multi-tenant routing decision (see SchoolResolver), not a link
+        // generation one.
+        $configuredUrl = config('app.url');
+
+        if (is_string($configuredUrl) && $configuredUrl !== '') {
+            URL::forceRootUrl(rtrim($configuredUrl, '/'));
+        }
+
         // Every string `exists:` / `unique:` rule against a school-owned table
         // is validated inside the active tenant; see TenantAwareValidator for
         // why this is a factory-level concern rather than a per-rule edit.
