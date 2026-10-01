@@ -498,6 +498,44 @@ member of the school. The matrix named `GET /materials/{material}/download`
 before the suite finished. Both now carry the permission explicitly, with a
 comment saying why it is repeated rather than inherited.
 
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 17 | A conversation typed `direct` is readable by every teacher in the school. The `conversations` table has no participants at all — only `school_id`, `type` (defaulting to `'direct'`) and `subject` — so `ConversationPolicy::view` has nothing to check beyond the permission and the school, and `manage-messages` is not in the teacher role's exclusion list, so every teacher holds it. Verified rather than inferred: a second teacher, holding the permission, in the same school, with no relationship to the conversation, opened one and received the full body of a message naming a child and describing that child's behaviour | Confirmed — **not fixed, and this is the reason** | None. The fix is a schema change, not a policy change | Verified with a throwaway test that was then deleted — a test asserting the current broad visibility would be asserting the finding, not the fix, and committing it would make the behaviour look intentional. Not claimed as a test |
+
+**Why this was not fixed here, specifically.** There is no way to make the policy
+narrower without first deciding who a conversation's participants *are*, and that
+question has no cheap answer: a new `conversation_participants` table is easy, but
+the backfill is not. Existing conversations have no recorded participants, and the
+only derivable approximation — "everyone who has sent a message" — would silently
+lock staff out of conversations they can currently read and cannot be verified as
+correct. A migration that guesses is worse than the honest state of having no
+participants.
+
+So the choice is a product one, and the options are genuinely different:
+
+- **Add participants** and make `view` a membership check, with an explicit policy
+  decision about who may see a conversation they are not in (an administrator, for
+  instance, for safeguarding reasons) and what the backfill does.
+- **Keep it school-wide and stop calling it `direct`.** The access model may well
+  be right for internal staff messaging; what is misleading is the type value and
+  the UI, which both promise a private channel the schema does not provide.
+- **Keep the type and accept the exposure**, on the record, with the reasoning.
+
+What should not happen is leaving it as it is by default. The word `direct` is
+doing work the data model does not support, and a school that assumes its teachers'
+messages about individual children are private will be wrong.
+
+**Audited this round and found sound, recorded so they are not re-litigated.** The
+guardian portal's `/children/{child}/…` routes call `authorizeChild()`, which
+verifies the guardian–student relationship and answers 403, with the child binding
+tenant-scoped on top. The student portal takes no student id from the URL at all
+and derives the student from `user_id` plus the session school. School switching
+requires an active membership, takes the *membership's* school id rather than the
+request's, regenerates the session, and is POST-only. School provisioning and the
+platform routes are gated on `manage-schools` (super_admin only) and
+`can:access-platform` respectively, so the unscoped `School` route binding is
+intentional. `SupportAccessController` is a stub returning a static string.
+
 **One upload path was checked and found sound, recorded so it is not re-litigated.**
 `SchoolSettingsController::store()` takes a logo on `image|max:2048`, and `image`
 looks like it should admit SVG — an SVG can carry script, and the file is served
