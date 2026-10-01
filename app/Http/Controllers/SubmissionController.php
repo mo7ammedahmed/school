@@ -45,7 +45,8 @@ class SubmissionController extends Controller
 
         if ($request->hasFile('file')) {
             // Private disk: a pupil's work is a school record, not a web asset.
-            $path = $request->file('file')->store('submissions');
+            // The disk is named, not inherited — see DocumentController::store().
+            $path = $request->file('file')->store('submissions', 'local');
             $validated['file_path'] = $path;
             $validated['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $validated['file_size'] = $request->file('file')->getSize();

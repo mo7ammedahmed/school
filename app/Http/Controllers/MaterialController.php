@@ -54,7 +54,8 @@ class MaterialController extends Controller
         // The private disk, not `public`. A material is a school document, not a
         // web asset: on the public disk its URL is inside the document root and
         // the web server will serve — and execute — whatever extension it kept.
-        $path = $request->file('file')->store('materials');
+        // The disk is named, not inherited — see DocumentController::store().
+        $path = $request->file('file')->store('materials', 'local');
         $file = $request->file('file');
 
         Material::create([
@@ -113,7 +114,8 @@ class MaterialController extends Controller
         if ($request->hasFile('file')) {
             $this->deleteStoredFile($material->file_path);
 
-            $path = $request->file('file')->store('materials');
+            // The disk is named, not inherited — see DocumentController::store().
+            $path = $request->file('file')->store('materials', 'local');
             $data['file_path'] = $path;
             $data['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $data['file_size'] = $request->file('file')->getSize();

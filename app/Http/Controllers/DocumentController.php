@@ -41,7 +41,11 @@ class DocumentController extends Controller
             // Private disk: a document is a school record, not a web asset. On
             // the public disk its URL sits inside the document root and the web
             // server will serve — and execute — whatever extension it kept.
-            $path = $request->file('file')->store('documents');
+            // The disk is named, not inherited. `store()` with one argument falls back
+            // to `config('filesystems.default')`, so the guarantee that a document is
+            // not written inside the document root would otherwise be a value in
+            // `.env` rather than anything this code says.
+            $path = $request->file('file')->store('documents', 'local');
             $validated['file_path'] = $path;
             $validated['file_size'] = $request->file('file')->getSize();
             $validated['file_type'] = $request->file('file')->extension();

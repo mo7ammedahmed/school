@@ -430,6 +430,25 @@ size up front, so it can be consulted for free. The number is a ceiling rather t
 a working limit — four megabytes of document XML is a thousand questions' worth of
 text several times over.
 
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 15 | Documents, materials and submissions were moved off the public disk by finding 12, but their writes read `->store('documents')` — with **no disk argument**. `store()` then falls back to `config('filesystems.default')`, which is `FILESYSTEM_DISK`. The sibling admissions upload names `store(..., 'local')` and was safe by construction; these three were safe only because `.env` happened to say `local`. `FILESYSTEM_DISK=public` is an ordinary, reasonable-looking setting to set for asset serving, and the moment it is set, every user upload in the product is back inside the document root with no code change at all | Confirmed | All three name `'local'` at the call site, so the guarantee is in the code rather than in the environment. Two scans keep it that way: no controller writes a user upload without naming a disk, and the public disk holds exactly three writes — the appearance screen's logo and favicon, and the school settings screen's logo | `UserUploadsDoNotDependOnTheDefaultDiskTest` — 5 cases. The three behavioural ones set `filesystems.default` to `public` deliberately and assert the upload is absent from the web root *and* present on the private disk, so an endpoint that simply refused everything could not pass them. The scan for public-disk writes is written as an exact list, so a fourth entry fails by name rather than by count; it earned its keep by finding the second logo endpoint, which had not been enumerated |
+
+**Why a value in `.env` is not a security control.** Finding 12's allowlist still
+refuses a `.php`, so the two are not independent and this is not a second live
+hole — it is the disk guarantee resting on an environment setting a deployer can
+change for an unrelated reason, with no code review in the path. The two branding
+images that legitimately stay on the public disk are restricted to raster types by
+their own validation, and are named individually in the test so neither is
+accidental.
+
+**One structural observation the scan surfaced, recorded rather than fixed.** The
+logo is writable from two endpoints — the appearance screen and the school settings
+screen — which store to two different directories. That is one setting with two
+write paths, which is exactly the shape that let finding 15 exist. Consolidating
+them is a UI decision about which screen owns branding, not a security fix, so it
+is left here.
+
 **One upload path was checked and found sound, recorded so it is not re-litigated.**
 `SchoolSettingsController::store()` takes a logo on `image|max:2048`, and `image`
 looks like it should admit SVG — an SVG can carry script, and the file is served
