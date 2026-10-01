@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('website_revisions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
-            $table->string('revisionable_type'); // The model being revised (e.g., App\Models\WebsitePage)
+            $table->string('revisionable_type'); // The model being revised (e.g. App\Domain\Content\Models\WebsitePage)
             $table->foreignId('revisionable_id'); // The ID of the model being revised
             $table->json('data'); // Snapshot of the model's data
             $table->string('changed_by')->nullable(); // User who made the change
