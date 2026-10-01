@@ -230,7 +230,8 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/{year}', [AcademicYearController::class, 'show'])->name('show');
         Route::get('/{year}/edit', [AcademicYearController::class, 'edit'])->name('edit');
         Route::put('/{year}', [AcademicYearController::class, 'update'])->name('update');
-        Route::delete('/{year}', [AcademicYearController::class, 'destroy'])->name('destroy');
+        // No destroy: the controller has no method for it, the screen has no
+        // delete action, and deleting a year cascades into its sections.
         Route::get('/{year}/semesters', [SemesterController::class, 'index'])->name('semesters.index');
     });
 
@@ -238,17 +239,19 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::resource('grade-levels', GradeLevelController::class)->middleware('permission:manage-grade-levels');
     Route::resource('sections', SectionController::class)->middleware('permission:manage-sections');
     Route::resource('subjects', SubjectController::class)->middleware('permission:manage-subjects');
-    Route::get('/subjects/{subject}/offerings', [SubjectController::class, 'offerings'])
-        ->middleware('permission:manage-offerings')
-        ->name('subjects.offerings');
+    // No offerings screen: the route named a method nobody wrote and no page
+    // links to it. The Offering model is used by the timetable, not by a
+    // subject drill-down.
 
     // People
     Route::resource('students', StudentController::class)->middleware('permission:manage-students');
     Route::resource('guardians', GuardianController::class)->middleware('permission:manage-guardians');
-    Route::resource('teachers', TeacherController::class)->middleware('permission:manage-teachers');
-    Route::get('/teachers/{teacher}/schedule', [TeacherController::class, 'schedule'])
-        ->middleware('permission:manage-teachers')
-        ->name('teachers.schedule');
+    // The staff screens have no delete and no per-teacher schedule: the teacher
+    // list links to show/edit only, and a teacher's timetable is read from the
+    // timetable screens.
+    Route::resource('teachers', TeacherController::class)
+        ->except(['destroy'])
+        ->middleware('permission:manage-teachers');
 
     // Scheduling
     Route::resource('rooms', RoomController::class)->middleware('permission:manage-rooms');
@@ -324,9 +327,9 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         ->parameters(['exam-results' => 'result'])
         ->middleware('permission:manage-exams|manage-report-cards');
     Route::resource('report-cards', ReportCardController::class)->middleware('permission:manage-report-cards');
-    Route::get('/my-grades', [ReportCardController::class, 'myGrades'])
-        ->middleware('permission:view-own-grades')
-        ->name('my-grades');
+    // A pupil's own grades live in the student portal (`student.grades`) and a
+    // guardian's in `guardian.children.grades`; this duplicate named a method
+    // nobody wrote and no screen linked to.
 
     // Learning
     Route::resource('materials', MaterialController::class)->middleware('permission:manage-materials');
@@ -354,9 +357,8 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
             Route::get('/fee-structures/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('fee-structures.edit');
             Route::put('/fee-structures/{feeStructure}', [FeeStructureController::class, 'update'])->name('fee-structures.update');
         });
-        Route::get('/fee-assignments', [FeeStructureController::class, 'assignments'])
-            ->middleware('permission:manage-fee-assignments')
-            ->name('fee-assignments.index');
+        // No fee-assignment screen: the route named a method nobody wrote and
+        // no page links to it. Fees are assigned per invoice today.
         Route::resource('discounts', FinanceDiscountController::class)->middleware('permission:manage-discounts');
         // Invoice actions must be declared before the resource so the extra
         // segments are not swallowed by the {invoice} wildcard.
@@ -373,9 +375,9 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
             Route::resource('payments', FinancePaymentController::class);
         });
         Route::resource('refunds', FinanceRefundController::class)->middleware('permission:manage-refunds');
-        Route::get('/my-fees', [FinanceController::class, 'myFees'])
-            ->middleware('permission:view-own-fees')
-            ->name('my-fees');
+        // A pupil's own fees live in the student portal (`student.fees`) and a
+        // guardian's in `guardian.children.fees`; this duplicate named a method
+        // nobody wrote and no screen linked to.
     });
 
     // Admissions
@@ -394,10 +396,10 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     });
 
     // Enrollment
+    // The list has no waitlist screen: `/enrollments/waitlist` was registered
+    // after the resource and was answered by `enrollments.show` with
+    // `enrollment = "waitlist"`, behind a method that did not exist as well.
     Route::resource('enrollments', EnrollmentController::class)->middleware('permission:manage-enrollments');
-    Route::get('/enrollments/waitlist', [EnrollmentController::class, 'waitlist'])
-        ->middleware('permission:manage-enrollments')
-        ->name('enrollments.waitlist');
 
     // Communication
     Route::middleware('permission:manage-messages')->group(function () {
@@ -411,10 +413,13 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
     // Documents
     Route::middleware('permission:manage-documents')->group(function () {
+        // The resource's own create/store are the upload screen: the "Upload
+        // Document" button links to /documents/create and the form posts to
+        // /documents. A second /documents/upload pair was registered after the
+        // resource, so `documents/{document}` with `document = "upload"`
+        // answered it first and the pair was unreachable — as was
+        // /documents/categories, which had no method and no screen either.
         Route::resource('documents', DocumentController::class);
-        Route::get('/documents/upload', [DocumentController::class, 'create'])->name('documents.upload');
-        Route::post('/documents/upload', [DocumentController::class, 'store']);
-        Route::get('/documents/categories', [DocumentController::class, 'categories'])->name('documents.categories');
     });
 
     // Content management (admin)
@@ -433,8 +438,9 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
     // Reports
     Route::middleware('permission:manage-reports')->group(function () {
+        // The index lists three report names; there is no export method and no
+        // screen button that asks for one.
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/{report}/export', [ReportController::class, 'export'])->name('reports.export');
     });
 
     // Settings
@@ -510,10 +516,12 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     });
 
     // Administration
-    Route::resource('roles', RoleController::class)->middleware('permission:manage-roles');
-    Route::get('/permissions', [RoleController::class, 'permissions'])
+    // Roles are read-only here: the index screen itself says assignments happen
+    // in Settings -> Users, and the resource's other six actions named methods
+    // nobody wrote — as did /permissions.
+    Route::get('/roles', [RoleController::class, 'index'])
         ->middleware('permission:manage-roles')
-        ->name('permissions.index');
+        ->name('roles.index');
     Route::resource('schools', SchoolController::class)->middleware('permission:manage-schools');
     Route::get('/audit-logs', [AuditLogController::class, 'index'])
         ->middleware('permission:view-audit-logs')
