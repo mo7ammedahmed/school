@@ -543,30 +543,34 @@ records why.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
-| 17 | A conversation typed `direct` is readable by every teacher in the school. The `conversations` table has no participants at all — only `school_id`, `type` (defaulting to `'direct'`) and `subject` — so `ConversationPolicy::view` has nothing to check beyond the permission and the school, and `manage-messages` is not in the teacher role's exclusion list, so every teacher holds it. Verified rather than inferred: a second teacher, holding the permission, in the same school, with no relationship to the conversation, opened one and received the full body of a message naming a child and describing that child's behaviour | Confirmed — **not fixed, and this is why** | None. The fix is a schema change, not a policy change | Verified with a throwaway test that was then deleted — a test asserting the current broad visibility would be asserting the finding, not the fix, and committing it would make the behaviour look intentional. Not claimed as a test |
+| 17 | A conversation typed `direct` is readable by every teacher in the school. The `conversations` table has no participants at all — only `school_id`, `type` (defaulting to `'direct'`) and `subject` — so `ConversationPolicy::view` has nothing to check beyond the permission and the school, and `manage-messages` is not in the teacher role's exclusion list, so every teacher holds it. Verified rather than inferred: a second teacher, holding the permission, in the same school, with no relationship to the conversation, opened one and received the full body of a message naming a child and describing that child's behaviour | Fixed | A `conversation_participants` pivot; `ConversationPolicy` reads a `direct` conversation only for its participants, the author joins on creation, and the list stops showing threads the caller is not in. `internal` keeps its existing meaning: the school board the messages form actually creates. Legacy `direct` rows fail closed until `conversations:backfill-participants` attaches the senders a thread can prove, `--dry-run` first | `ConversationPrivacyTest` — 9 cases, written red at 7 against the unfixed code (a non-participant opened a direct thread and saw it listed; a sender was not attached on creation; the command did not exist) |
 
-**Why this was not fixed here, specifically.** There is no way to make the policy
-narrower without first deciding who a conversation's participants *are*, and that
-question has no cheap answer: a new `conversation_participants` table is easy, but
-the backfill is not. Existing conversations have no recorded participants, and the
-only derivable approximation — "everyone who has sent a message" — would silently
-lock staff out of conversations they can currently read and cannot be verified as
-correct. A migration that guesses is worse than the honest state of having no
-participants.
+**How it was fixed, and the decisions inside it.**
 
-So the choice is a product one, and the options are genuinely different:
+- **Participants, not a rename.** The pivot is the missing fact the finding
+  named: `direct` now asks membership, and `manage-conversations` stays a
+  necessary second condition. The seeder derives `manage-conversations` from
+  `manage-messages`, so the audience is staff who can already open the screen.
+- **`internal` keeps its meaning.** `MessageController::store` creates
+  `internal`, and `messages/create.tsx` offers "Start a school conversation"
+  with no recipient picker. Making every conversation participant-only would
+  have left each new thread readable by its author alone — a broken feature, not
+  a hardened one. A `direct` conversation means what it says; an `internal` one
+  is the school's board, and the policy states both.
+- **No school-scoped override.** A school administrator cannot read a
+  colleague's direct thread without being added to it; the platform
+  `super_admin` keeps the existing `Gate::before` break-glass, which is already
+  recorded as a platform capability.
+- **Legacy rows fail closed.** A `direct` conversation with no participants is
+  readable by nobody until the backfill runs. The command derives the audience
+  from the people who wrote in the thread — the only audience the data can
+  support — reports conversations with no messages and therefore no derivable
+  audience, and writes nothing under `--dry-run`.
 
-- **Add participants** and make `view` a membership check, with an explicit policy
-  decision about who may see a conversation they are not in (an administrator, for
-  instance, for safeguarding reasons) and what the backfill does.
-- **Keep it school-wide and stop calling it `direct`.** The access model may well
-  be right for internal staff messaging; what is misleading is the type value and
-  the UI, which both promise a private channel the schema does not provide.
-- **Keep the type and accept the exposure**, on the record, with the reasoning.
-
-What should not happen is leaving it as it is by default. The word `direct` is
-doing work the data model does not support, and a school that assumes its teachers'
-messages about individual children are private will be wrong.
+The rollout order is the command's: run
+`php artisan conversations:backfill-participants --dry-run`, review the counts,
+then run it without the flag. Until then legacy direct threads are invisible
+rather than open.
 
 **Audited this round and found sound, recorded so they are not re-litigated.** The
 guardian portal's `/children/{child}/…` routes call `authorizeChild()`, which

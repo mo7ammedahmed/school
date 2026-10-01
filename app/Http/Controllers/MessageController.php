@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Communication\Models\Conversation;
 use App\Domain\Communication\Models\Message;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
@@ -15,7 +16,17 @@ class MessageController extends Controller
     public function index(): Response
     {
         $schoolId = session('school_id');
+        $userId = (int) auth()->id();
+
         $conversations = Conversation::where('school_id', $schoolId)
+            // `internal` is the school board; a `direct` conversation is only
+            // its participants' business, and the list must not leak its
+            // subject or its last message to everybody else (see
+            // ConversationPolicy).
+            ->where(function (Builder $query) use ($userId): void {
+                $query->where('type', 'internal')
+                    ->orWhereHas('participants', fn (Builder $participants) => $participants->where('users.id', $userId));
+            })
             ->with(['messages.sender'])
             ->latest()
             ->paginate(15);
@@ -58,6 +69,12 @@ class MessageController extends Controller
             'type' => 'internal',
             'subject' => $validated['subject'],
         ]);
+
+        // The author is recorded as a participant. `internal` conversations do
+        // not need the membership to be readable, but it is the truth about who
+        // is in the thread and the only record a future `direct` flow can build
+        // on.
+        $conversation->participants()->attach(auth()->id());
 
         Message::create([
             'school_id' => $schoolId,
