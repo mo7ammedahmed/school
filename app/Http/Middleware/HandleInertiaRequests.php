@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Domain\Identity\Services\SharedPermissionList;
 use App\Domain\Localization\Services\InterfaceCatalog;
 use App\Domain\Schools\Models\School;
 use App\Domain\Schools\Models\SchoolNavigationLabel;
@@ -20,6 +21,7 @@ class HandleInertiaRequests extends Middleware
     public function __construct(
         private readonly SchoolResolver $schools,
         private readonly InterfaceCatalog $interfaceCatalog,
+        private readonly SharedPermissionList $permissions,
     ) {}
 
     public function version(Request $request): ?string
@@ -65,7 +67,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'roles' => $user->getRoleNames()->toArray(),
-                    'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+                    'permissions' => $this->permissions->for($user),
                     'school' => $school ? $this->safeSchool($school) : null,
                 ] : null,
             ],

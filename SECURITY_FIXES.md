@@ -257,10 +257,9 @@ host-header-driven link is a defect everywhere. A deployment that genuinely
 serves the app from several hostnames is a tenant *routing* question (see
 `SchoolResolver` and Decision 7), not a link-generation one.
 
-Still open in this phase: `getAllPermissions()` still runs un-cached on every
-Inertia request, `Finance\InvoiceController::index` still loads every row with
-`->get()`, the SchoolResolver fallback has not been re-checked against the
-domain/slug requirement, and the audit-log, upload and money findings are not
+Still open in this phase: `Finance\InvoiceController::index` still loads every
+row with `->get()`, the SchoolResolver fallback has not been re-checked against
+the domain/slug requirement, and the audit-log, upload and money findings are not
 yet started.
 
 | # | Finding | Status | Change | Tests |
@@ -268,6 +267,23 @@ yet started.
 | 2 | `script-src` carried `'unsafe-inline' 'unsafe-eval'`, which together make the CSP a no-op against XSS: any script string on the origin executes, and script that runs before the CSRF token, the tenant scope or the policy layer is consulted defeats all three | Confirmed | Both removed. A 32-byte CSPRNG nonce per request authorises the tags the response actually emits, propagated to every Vite-generated tag via `Vite::useCspNonce()` | `ContentSecurityPolicyTest` — 8 cases: neither token present, `'self'` retained, nonce unique per response, nonce length and alphabet, dev server still permitted. Written red at 5 of 8 |
 | 3 | `X-XSS-Protection: 1; mode=block` was set. It was removed from every current browser years ago, so it advertises a protection the application does not have | Confirmed | Header removed | `ContentSecurityPolicyTest` |
 | 4 | A CSP that is correct as a string and broken in a browser is worse than a weak one, because it is trusted. Nothing checked that the rendered document satisfies the header | Confirmed | — | `RenderedPageMatchesItsCspTest` renders `/`, reads the nonce off the response's own header, and fails on any executable inline `<script>` that does not carry it. Data blocks (`type="application/json"`, which is how Inertia ships the page payload) are correctly not counted |
+| 5 | `getAllPermissions()` cost three queries on every request and Inertia ships the result on every navigation. Spatie's permission cache does not cover it: that caches the role→permission relation, while the per-user union is rebuilt from the model the session guard re-resolves each request — so in a client-side app the cost was paid on every page load, for a list that rarely changes | Confirmed | `SharedPermissionList` caches per user and per guard; the middleware reads through it. Invalidation is attached to the role/permission mutators themselves rather than to call sites, so a role assigned from a controller nobody updated still invalidates | `SharedPermissionListIsCachedTest` — 6 cases: the three queries named on a cold cache, zero on a warm one for both the service and the rendered payload, plus role change / grant / revoke / no cross-user leak. Written red at 4 of 6 |
+| 6 | The list shared to the client is a privilege statement; whether it leaked anything else was never checked | Confirmed, no change needed | `safeSchool()` is a fixed column allowlist and the user payload is id/name/email/roles/permissions. The cache is keyed by id *and* guard, because one id can hold different roles under different guards | `SharedPermissionListIsCachedTest` — two roles are never served the same list |
+
+**Two things worth remembering about the permission cache.** Invalidation had to
+be *event-driven* rather than time-based: a TTL cache is wrong in both
+directions, and the wrong one is a security problem — a permission revoked would
+keep being offered to the browser until the entry expired, and one granted would
+be missing for the same window. The TTL is a backstop, not the mechanism.
+
+The second is a bug this phase introduced and then had to find. The invalidation
+guarded on `app()->bound(...)` so seeders and console commands, which boot
+without the HTTP bindings, could not fail — and because the service was never
+registered, that guard made *every* invalidation a silent no-op. The cache looked
+like it worked (queries fell to zero) while being impossible to invalidate. A
+defensive guard around a lookup that is supposed to succeed turns a loud error
+into a silent one; the binding is now registered explicitly, and the guard is
+kept only for the console path that genuinely needs it.
 
 **`style-src` keeps `'unsafe-inline'`, deliberately.** The UI sets element styles
 at runtime, so removing it needs a nonce threaded through every style binding or

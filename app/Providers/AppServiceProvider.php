@@ -84,6 +84,7 @@ use App\Domain\Finance\Webhooks\MoyasarWebhookVerifier;
 use App\Domain\Finance\Webhooks\WebhookVerifierRegistry;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Identity\Policies\UserMembershipPolicy;
+use App\Domain\Identity\Services\SharedPermissionList;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Material;
 use App\Domain\Learning\Models\Quiz;
@@ -150,6 +151,14 @@ class AppServiceProvider extends ServiceProvider
         // context is a real answer — "no school" — not a reason to see every
         // school's rows.
         $this->app->singleton(TenantContext::class);
+
+        // The permission list Inertia shares with the browser. Registered as a
+        // singleton because the cache entry it serves is per user and per
+        // request, not per instance — two instances would still agree, but
+        // there is no reason to build a second one. It is bound here rather than
+        // resolved ad hoc because `User` reaches it to invalidate on a role
+        // change, and a class that is never registered fails open.
+        $this->app->singleton(SharedPermissionList::class);
     }
 
     public function boot(): void
