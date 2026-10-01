@@ -25,11 +25,20 @@ class InvoicePolicy
             $invoice->status === 'draft';
     }
 
+    /**
+     * A partially paid invoice is still editable.
+     *
+     * The update path deliberately keeps whatever has been collected and only
+     * recomputes the balance, and a feature test pins that behaviour
+     * (`InvoiceTest::test_editing_a_partially_paid_invoice_keeps_it_partially_paid`),
+     * so "draft only" was the stale half of this rule. `issued`, `paid` and
+     * `voided` stay locked.
+     */
     public function update(User $user, Invoice $invoice): bool
     {
         return $user->hasPermissionTo('manage-invoices') &&
             $invoice->school_id === session('school_id') &&
-            $invoice->status === 'draft';
+            in_array($invoice->status, ['draft', 'partially_paid'], true);
     }
 
     public function delete(User $user, Invoice $invoice): bool

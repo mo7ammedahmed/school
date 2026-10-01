@@ -160,7 +160,8 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice): InertiaResponse
     {
-        $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
+        // The policy is the single source of truth for what may be changed.
+        $this->authorize('update', $invoice);
 
         return Inertia::render('finance/invoices/edit', [
             'invoice' => $invoice->toArray(),
@@ -170,7 +171,7 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
-        $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
+        $this->authorize('update', $invoice);
 
         $validated = $request->validate([
             'student_id' => ['required', 'integer', $this->studentExistsRule()],
@@ -211,6 +212,11 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): RedirectResponse
     {
+        // Only a draft is deletable; the policy says so and the screen agrees.
+        // The payment check stays on top of it: a draft that somehow carries a
+        // payment is still refused, so this cannot be a loosening.
+        $this->authorize('delete', $invoice);
+
         abort_if((float) $invoice->amount_paid > 0, 403, 'Invoices with payments cannot be deleted.');
 
         $invoice->delete();
@@ -223,6 +229,10 @@ class InvoiceController extends Controller
      */
     public function issue(Invoice $invoice, IssueInvoice $issueInvoice): RedirectResponse
     {
+        // `issue` is draft-only: re-issuing an issued invoice would announce and
+        // deliver it a second time.
+        $this->authorize('issue', $invoice);
+
         abort_if($invoice->isPaid(), 403, 'This invoice is already settled.');
 
         $issueInvoice->execute($invoice);
@@ -314,14 +324,5 @@ class InvoiceController extends Controller
     private function currency(): string
     {
         return GatewaySettings::for($this->schoolId())->currency();
-    }
-
-    /**
-     * Once an invoice has been handed to a guardian it is a financial document:
-     * edits go through void-and-reissue rather than silent mutation.
-     */
-    private function abortIfLocked(Invoice $invoice, string $message): void
-    {
-        abort_if(in_array($invoice->status, ['issued', 'paid', 'void'], true), 403, $message);
     }
 }

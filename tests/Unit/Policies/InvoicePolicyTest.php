@@ -92,4 +92,42 @@ class InvoicePolicyTest extends TestCase
         $policy = new InvoicePolicy;
         $this->assertFalse($policy->update($user, $invoice));
     }
+
+    /**
+     * The controller's update path deliberately keeps the collected amount and
+     * recomputes only the balance, and a feature test pins that a partially
+     * paid invoice stays partially paid. "Draft only" was the stale half of the
+     * rule; `issued`, `paid` and `voided` remain locked.
+     */
+    public function test_a_partially_paid_invoice_can_still_be_updated(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-invoices');
+        $school = School::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'school_id' => $school->id,
+            'status' => 'partially_paid',
+        ]);
+
+        $this->app['session']->put('school_id', $school->id);
+
+        $policy = new InvoicePolicy;
+        $this->assertTrue($policy->update($user, $invoice));
+    }
+
+    public function test_an_issued_invoice_cannot_be_deleted(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-invoices');
+        $school = School::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'school_id' => $school->id,
+            'status' => 'issued',
+        ]);
+
+        $this->app['session']->put('school_id', $school->id);
+
+        $policy = new InvoicePolicy;
+        $this->assertFalse($policy->delete($user, $invoice));
+    }
 }

@@ -57,6 +57,7 @@ live one. The order matters more than either change alone.
 | 9 | `InvoicePolicyTest` never pinned the session, so the old `\|\|` masked it and the test asserted against a policy that was never really consulted | Confirmed | Session pinned in the two affected cases; a third case added asserting the permission alone does **not** open another school's invoice, so the conjunction cannot be "simplified" back | `InvoicePolicyTest` |
 | 10 | `StudentController`, `GuardianController`, `TeacherController`, `RoomController`, `MessageController` and `UserController` consulted no policy in `show`/`edit`/mutating actions | Confirmed | `$this->authorize()` in all 15 show/edit/mutating actions | `ActionLevelAuthorizationTest` — 53 cases: a foreign row refused, a same-school row allowed through to validation, and a same-school row still refused when the session points elsewhere. Verified red without the change |
 | 11 | `UserController::ensureUserBelongsToCurrentSchool()` hand-rolled a membership check, answering 404 where every other layer answers 403 | Confirmed | Deleted; `UserPolicy` consulted instead. The policy was already equivalent — `currentMembership` filters `is_active = true` | `ActionLevelAuthorizationTest` user cases |
+| 12 | `InvoiceController` carried its own copy of the invoice immutability rule and it was weaker than `InvoicePolicy`'s: an issued invoice with no recorded payments could be deleted, and an issued or partially paid invoice could be issued a second time (re-announcing and re-delivering it). The copy also spelled the locked status `void`, which the enum spells `voided`, so a voided invoice would have slipped through it. The policy's third ability — `update` allowed on a draft only — was the stale layer: the update path deliberately preserves a partially paid invoice's collected amount, and `InvoiceTest::test_editing_a_partially_paid_invoice_keeps_it_partially_paid` pins that | Confirmed | The policy is now consulted by `edit`, `update`, `destroy` and `issue`, and is the single source of truth: `update` allows `draft|partially_paid`; `delete` and `issue` stay draft-only. The controller's duplicated `abortIfLocked()` is deleted | `InvoicePolicyEnforcementTest` — 9 cases, written red at 3 against the old controller and policy (issued invoice deleted 302, issued invoice re-issued 302, partially paid invoice re-issued 302); `InvoicePolicyTest` pins the corrected `update` and the draft-only `delete` |
 
 **On the answer a refusal takes.** `ActionLevelAuthorizationTest` accepts 403
 *or* 404 for a foreign row rather than pinning one, and that is deliberate. For
@@ -75,6 +76,15 @@ granted only `manage-users`, but `/settings/*` is gated on
 user case with a 403 — which the refusal assertions would have accepted as a
 pass while the policy was never consulted. Both permissions are now granted, and
 the allow-case assertion is what makes that class of mistake loud.
+
+**One divergence in this pass was not a one-way fix.** `InvoiceController` and
+`InvoicePolicy` disagreed about all three write abilities, so which layer won was
+decided per ability from the evidence: `update` follows the controller and its
+pinned feature test (a partially paid invoice stays editable and keeps the
+collected amount), while `delete` and `issue` follow the policy (draft-only),
+because no screen offered either on a non-draft invoice, no test relied on it,
+and `send` is the resend path. The local duplicate is gone, including its
+spelling of the locked status — it checked `void` where the enum spells `voided`.
 
 ## Phase 2 — Payments and webhooks (complete)
 
