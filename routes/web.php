@@ -152,12 +152,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store']);
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
     Route::post('/reset-password/{token}', [ResetPasswordController::class, 'store']);
-    Route::get('/verify-email', [VerifyEmailController::class, 'create'])->name('verification.notice');
     Route::get('/two-factor-challenge', [TwoFactorAuthenticationController::class, 'create'])->name('two-factor.login');
     Route::post('/two-factor-challenge', [TwoFactorAuthenticationController::class, 'store']);
 });
 
 Route::middleware('auth')->group(function () {
+    // The verification notice is for a user who is signed in and unverified, so
+    // it belongs here: inside the guest group the `guest` middleware bounced the
+    // one visitor the page is for to the dashboard.
+    Route::get('/verify-email', [VerifyEmailController::class, 'create'])->name('verification.notice');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('/select-school', [SchoolSelectionController::class, 'index'])->name('school.select');
     Route::post('/select-school', [SchoolSelectionController::class, 'select']);
