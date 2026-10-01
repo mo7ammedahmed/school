@@ -11,6 +11,7 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Finance\Models\WebhookEvent;
+use App\Domain\Finance\Support\Money;
 use App\Domain\Finance\Webhooks\WebhookResult;
 use App\Domain\Finance\Webhooks\WebhookVerifier;
 use App\Domain\Schools\Support\TenantContext;
@@ -397,7 +398,10 @@ class PaymentSettlementService
      */
     private function mismatch(Payment $payment, array $status): ?string
     {
-        $expectedAmount = (int) round(((float) $payment->amount) * 100);
+        // The same conversion the gateway was charged with. Two sides computing this
+        // separately is what let an 8.20 payment be charged 819 halalas and then
+        // refused for expecting 820.
+        $expectedAmount = Money::toMinorUnits($payment->amount);
         $reportedAmount = $status['amount'] ?? null;
 
         if (! is_numeric($reportedAmount) || (int) $reportedAmount !== $expectedAmount) {

@@ -324,4 +324,29 @@ one commit here that touches many pages at once. It was verified by rendering th
 component rather than by reading forty screens: 8 component cases, the full
 frontend suite, `tsc`, lint, and a production build.
 
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 11 | The gateway was charged `(int) ($amount * 100)` while settlement expected `(int) round($amount * 100)`. `8.20 * 100` is `819.9999999999999` in binary floating point, so an 8.20 payment was charged **819 halalas**; the gateway confirmed 819; settlement expected 820, called it a mismatch and answered 422. The customer's money is taken and the invoice stays open | Confirmed | One conversion, `Finance\Support\Money::toMinorUnits()`, used by `createPayment`, by `refund` (which had the same truncation), and by the settlement's mismatch check. Rounded, so the nearest halala is sent | `GatewayChargesWhatSettlementExpectsTest` — 6 cases over three amounts that truncate (8.20, 33.30, 0.29): the minor units sent equal the minor units settlement expects, and a payment the gateway confirms at exactly the figure we charged it settles rather than being refused. Written red at 6 of 6 |
+
+**Why this was invisible for so long, and why the test is shaped the way it is.**
+The existing settlement tests fake a gateway that *rounds* — independently, and
+correctly, because they are testing the settlement side. Both sides therefore
+agreed, and neither agreed with what was actually sent. Asserting each side
+against its own literal would have kept that property forever.
+
+So the test does not assert the arithmetic twice. It charges a payment through
+the real `MoyasarGateway`, then has the fake gateway confirm the figure that was
+actually transmitted, and asserts the payment settles. That is the invariant a
+customer experiences, and it fails whenever either side drifts.
+
+The scale of it: **137 of the first 2000 two-decimal amounts** truncate to the
+wrong number of halalas — about 7% of ordinary money, not an edge case. The
+three in the test are a sample of real ones from that set.
+
+A related float hazard is *not* fixed here and is not claimed to be:
+`amountFromMinorUnits()` divides by 100 and rounds to 4 places, which happens to
+match the column's scale and is therefore left alone. A column with more scale
+than that would need the same treatment, and the reverse conversion belongs
+beside `toMinorUnits()` when someone next touches it.
+
 

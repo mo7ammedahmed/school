@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domain\Finance\Services;
 
 use App\Domain\Finance\Models\Payment;
+use App\Domain\Finance\Support\Money;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -54,7 +55,7 @@ class MoyasarGateway implements PaymentGatewayInterface
         try {
             $response = Http::withBasicAuth($this->apiKey, $this->secretKey)
                 ->post("{$this->baseUrl}/payments", [
-                    'amount' => (int) ($payment->amount * 100),
+                    'amount' => Money::toMinorUnits($payment->amount),
                     'currency' => $payment->currency ?? 'SAR',
                     'description' => "Payment for invoice #{$payment->invoice->invoice_number}",
                     'metadata' => array_merge($metadata, [
@@ -112,7 +113,7 @@ class MoyasarGateway implements PaymentGatewayInterface
         try {
             $response = Http::withBasicAuth($this->apiKey, $this->secretKey)
                 ->post("{$this->baseUrl}/payments/{$transactionId}/refund", [
-                    'amount' => (int) ($amount * 100),
+                    'amount' => Money::toMinorUnits($amount),
                     'reason' => $reason,
                 ]);
 
