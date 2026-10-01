@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Security;
 
-use App\Domain\Learning\Models\Material;
 use App\Domain\Academics\Models\AcademicYear;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\People\Models\Student;
@@ -169,6 +168,33 @@ class PublicUploadsAreRelocatedTest extends TestCase
         $this->artisan('uploads:relocate')->assertSuccessful();
 
         $this->assertTrue(Storage::disk('local')->exists(self::OLD_PATH));
+    }
+
+    public function test_a_soft_deleted_upload_is_still_moved(): void
+    {
+        $this->documentStoredOn(self::OLD_PATH);
+
+        $schoolId = School::factory()->create()->id;
+
+        DB::table('materials')->insert([
+            'school_id' => $schoolId,
+            'offering_id' => $this->offeringId($schoolId),
+            'title' => 'Withdrawn',
+            'file_path' => 'materials/withdrawn.pdf',
+            'created_at' => now(),
+            'updated_at' => now(),
+            'deleted_at' => now(),
+        ]);
+        Storage::disk('public')->put('materials/withdrawn.pdf', 'the withdrawn material');
+
+        $this->artisan('uploads:relocate')->assertSuccessful();
+
+        // A soft-deleted row's file is still in the document root and still
+        // executable. Soft deletes hide a row, not the bytes it points at.
+        $this->assertTrue(
+            Storage::disk('local')->exists('materials/withdrawn.pdf'),
+            'A soft-deleted upload was left in the document root.',
+        );
     }
 
     // ------------------------------------------------------------------

@@ -365,14 +365,39 @@ executable but are *documents*, so a `.html` file on the application's own origi
 is a phishing page that satisfies every same-origin check a browser makes. SVG is
 excluded for the same reason — it can carry script.
 
-**Existing uploads on the public disk were not moved.** The delete paths in all
-three controllers now remove from *both* disks, so a pre-existing file is cleaned
-up the next time it is replaced or deleted rather than sitting in the document
-root forever. Nothing in the codebase links these files — the three show pages
-render metadata and never a URL — so moving them off the public disk broke no
-link. A command to sweep `storage/app/public/{documents,materials,submissions}`
-into `storage/app/private` is the remaining step and is **not** done here; until
-it is, files uploaded before this change are still reachable.
+**Existing uploads on the public disk had to be moved too.** The change above
+closes the hole for new uploads and leaves it open for everything already
+uploaded, which on the day it ships is the majority of a school's documents. The
+delete paths in all three controllers remove from *both* disks, so a pre-existing
+file is cleaned up the next time it is replaced or deleted — but that is a
+per-file, per-lifecycle fix and it reaches nothing that is simply never touched.
+`php artisan uploads:relocate` does the sweep.
+
+The design point that makes it safe to run against production: **the stored path
+does not change.** A row says `documents/abc.pdf` and the controller chooses the
+disk, so relocating the file to the same relative path on the private disk leaves
+every row valid, every screen working, and every link already emailed to
+somebody still resolving to the same record. There is no data migration and
+nothing to roll back but the file move itself. The sweep streams each file rather
+than reading it into memory, and it reads rows with `withoutSchoolScope()` and
+`withTrashed()` — a console command has no tenant context and the tenant scope's
+answer to that is "no rows", so a sweep that quietly saw zero documents would
+report success and leave every school's files exposed; a soft-deleted row's file
+is still in the document root and still executable. Rows are read
+`chunkById(200)`, so a school with a large archive does not load it all at once.
+When a file exists on both disks the private copy is kept and the public copy
+deleted, because a file replaced after the disk change means the private copy is
+the newer one. A file that cannot be read is reported as an error and left in
+place rather than being counted as relocated, since it is still exposed.
+
+Run it once with `--dry-run` to see the counts first. Evidence:
+`PublicUploadsAreRelocatedTest` — 9 cases: the file lands on the private disk
+and leaves the public one; the stored path is unchanged; documents, materials and
+submissions are all swept; a dry run moves nothing; an existing private copy is
+not overwritten but the stale public one is removed; a soft-deleted upload is
+still moved; and a row pointing at a missing file is left alone. One of them
+asserts the tenant scope hides the row from ordinary queries, so the
+`withoutSchoolScope()` call is doing necessary work rather than being decorative.
 
 Also removed: `StoreMaterialRequest`, `UpdateMaterialRequest`,
 `StoreDocumentRequest` and `UpdateDocumentRequest`. They were dead — no

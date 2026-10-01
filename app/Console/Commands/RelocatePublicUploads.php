@@ -8,6 +8,7 @@ use App\Domain\Documents\Models\Document;
 use App\Domain\Learning\Models\Material;
 use App\Domain\Learning\Models\Submission;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -36,12 +37,12 @@ class RelocatePublicUploads extends Command
     protected $signature = 'uploads:relocate
                             {--dry-run : Report what would move without touching anything}';
 
-    protected $description = "Move uploaded files off the public disk, where the web server will serve them";
+    protected $description = 'Move uploaded files off the public disk, where the web server will serve them';
 
     /**
      * The models whose uploads used to land on the public disk.
      *
-     * @var list<class-string<\Illuminate\Database\Eloquent\Model>>
+     * @var list<class-string<Model>>
      */
     private const MODELS = [
         Document::class,
@@ -56,13 +57,14 @@ class RelocatePublicUploads extends Command
         $moved = 0;
         $removedDuplicates = 0;
         $missing = 0;
+        $unreadable = 0;
 
         foreach (self::MODELS as $model) {
             $model::withoutSchoolScope()
                 ->withTrashed()
                 ->whereNotNull('file_path')
                 ->where('file_path', '!=', '')
-                ->chunkById(200, function ($rows) use (&$moved, &$removedDuplicates, &$missing, $dryRun): void {
+                ->chunkById(200, function ($rows) use (&$moved, &$removedDuplicates, &$missing, &$unreadable, $dryRun): void {
                     foreach ($rows as $row) {
                         $path = (string) $row->file_path;
 
@@ -82,8 +84,10 @@ class RelocatePublicUploads extends Command
                             continue;
                         }
 
-                        if (! $dryRun) {
-                            $this->moveToPrivateDisk($path);
+                        if (! $dryRun && ! $this->moveToPrivateDisk($path)) {
+                            $unreadable++;
+
+                            continue;
                         }
 
                         $moved++;
@@ -91,7 +95,7 @@ class RelocatePublicUploads extends Command
                 });
         }
 
-        $this->report($moved, $removedDuplicates, $missing, $dryRun);
+        $this->report($moved, $removedDuplicates, $missing, $unreadable, $dryRun);
 
         return self::SUCCESS;
     }
@@ -102,18 +106,24 @@ class RelocatePublicUploads extends Command
      * A 10 MB upload is within the size limit the app accepts, and a command that
      * loads one into memory per row is a command that can be made to run out of
      * it by a directory full of large files.
+     *
+     * Returns false when the file could not be read. The public copy is left in
+     * place in that case, so reporting the row as relocated would be a lie — the
+     * file is still exactly where it was, still inside the document root.
      */
-    private function moveToPrivateDisk(string $path): void
+    private function moveToPrivateDisk(string $path): bool
     {
         $stream = Storage::disk('public')->readStream($path);
 
-        if ($stream === false) {
-            return;
+        if ($stream === null) {
+            return false;
         }
 
         Storage::disk('local')->writeStream($path, $stream);
 
         Storage::disk('public')->delete($path);
+
+        return true;
     }
 
     private function removePublicCopy(string $path, bool $dryRun): void
@@ -123,12 +133,19 @@ class RelocatePublicUploads extends Command
         }
     }
 
-    private function report(int $moved, int $removedDuplicates, int $missing, bool $dryRun): void
+    private function report(int $moved, int $removedDuplicates, int $missing, int $unreadable, bool $dryRun): void
     {
         $prefix = $dryRun ? 'Would relocate' : 'Relocated';
 
         $this->line("{$prefix} {$moved} file(s) to private storage.");
         $this->line("Removed {$removedDuplicates} stale public copy/copies already present in private storage.");
+
+        if ($unreadable > 0) {
+            $this->error(
+                "{$unreadable} file(s) could not be read and are STILL in the document root. "
+                .'Check their permissions and run the command again.',
+            );
+        }
 
         if ($missing > 0) {
             // Said out loud because a row pointing at nothing is a record of a
