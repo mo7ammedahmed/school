@@ -1,41 +1,17 @@
-﻿import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { createInertiaApp, router } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { LocaleProvider } from '@/lib/i18n/locale-context';
-import type { Locale } from '@/lib/i18n/copy';
+import { InertiaRoot, resolvePage, type RootProps } from '@/root';
 import {
-    ThemeProvider,
     applyTheme,
     getContrastingColor,
     normalisePalettes,
     readStoredMode,
     setServerPersistence,
-    type RawThemeModes,
-    type ThemeMode,
 } from '@/lib/theme';
 import '../css/app.css';
 
-type AppearanceProps = {
-    theme?: ThemeMode;
-    primary_color?: string | null;
-    secondary_color?: string | null;
-    accent_color?: string | null;
-    logo_path?: string | null;
-    favicon_path?: string | null;
-};
-
-type RootProps = {
-    appearance?: AppearanceProps;
-    themeModes?: RawThemeModes | null;
-    /** The school's website colours, derived from its few chosen colours. */
-    themeConfig?: Record<string, string> | null;
-    auth?: { user?: unknown | null };
-};
-
-function initialLocale(props: unknown): Locale {
-    const shared = (props as { locale?: string }).locale;
-    return shared === 'ar' ? 'ar' : 'en';
-}
+/** The branding block of the shared props, spelled once — in `@/root`. */
+type AppearanceProps = NonNullable<RootProps['appearance']>;
 
 /**
  * Plain `<form method="POST">` elements across the dashboard do not carry a
@@ -110,14 +86,8 @@ function applyAppearanceFromProps(props: RootProps): void {
 }
 
 createInertiaApp({
-    // Test files live next to the pages they cover, and every file matched by
-    // this glob becomes a lazily-loaded page — so a `.test.tsx` here would be
-    // bundled for production and drag the test libraries in with it.
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.tsx`,
-            import.meta.glob(['./Pages/**/*.tsx', '!./Pages/**/*.test.tsx']),
-        ) as never,
+    resolve: resolvePage,
+
     setup({ el, App, props }) {
         installCsrfTokens();
 
@@ -128,20 +98,26 @@ createInertiaApp({
             applyAppearanceFromProps(event.detail.page.props as RootProps);
         });
 
-        createRoot(el).render(
-            <LocaleProvider initialLocale={initialLocale(props.initialPage.props)}>
-                <ThemeProvider
-                    initialMode={initialProps.appearance?.theme ?? 'system'}
-                    palettes={normalisePalettes(initialProps.themeModes)}
-                    website={initialProps.themeConfig}
-                >
-                    <App {...props} />
-                </ThemeProvider>
-            </LocaleProvider>,
+        const tree = (
+            <InertiaRoot pageProps={initialProps}>
+                <App {...props} />
+            </InertiaRoot>
         );
+
+        // With the SSR server running, Laravel hands over markup that React
+        // already produced. Hydrating reuses it; mounting would throw it away
+        // and re-render the page in the browser, which is the flash SSR exists
+        // to remove. Without SSR the attribute is absent and this is a mount.
+        if (el.hasAttribute('data-server-rendered')) {
+            hydrateRoot(el, tree);
+        } else {
+            createRoot(el).render(tree);
+        }
     },
+
     progress: {
         color: '#046A38',
     },
+
     serverHead: true,
 });

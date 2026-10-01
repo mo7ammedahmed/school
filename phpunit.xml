@@ -31,6 +31,12 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
+        <!-- The suite renders client-side only: SSR needs the Node server from
+             `npm run build && php artisan inertia:start-ssr`, and a test that
+             silently falls back would prove nothing about the server anyway.
+             The SSR entry is rendered for real, without a DOM, by
+             resources/js/ssr-render.test.tsx. -->
+        <env name="INERTIA_SSR_ENABLED" value="false"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

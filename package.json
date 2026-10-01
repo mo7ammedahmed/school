@@ -3,7 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && vite build --ssr",
+        "build:ssr": "vite build --ssr",
         "dev": "vite",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --deny-warnings resources/js",

@@ -11,6 +11,10 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.tsx',
             ],
+            // The Server-Side Rendering entry point. `vite build --ssr` compiles
+            // it to bootstrap/ssr/ssr.js, which is what `inertia:start-ssr` runs
+            // and what Inertia looks for before it tries the SSR server at all.
+            ssr: 'resources/js/ssr.tsx',
             refresh: true,
         }),
 
