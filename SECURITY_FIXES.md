@@ -449,6 +449,41 @@ write paths, which is exactly the shape that let finding 15 exist. Consolidating
 them is a UI decision about which screen owns branding, not a security fix, so it
 is left here.
 
+### An upload cannot be downloaded. This is a real gap and the hardening made it total.
+
+Worth stating plainly because it is a consequence of finding 12, and it is not a
+hypothetical: **no route in the application returns the bytes of an uploaded
+document, material or submission.** The only `download` response in the codebase is
+a generated `.ics` calendar and a generated timetable PDF — both built on the fly,
+neither reading a stored upload.
+
+The feature was already write-only before the disk change: the three show pages
+declare `file_path` in their prop types and never render it, so no screen ever
+offered a link. What the public disk provided was an *accidental* back door — a
+predictable `/storage/documents/<hash>.pdf` that worked for anyone who could
+derive or observe the path. Finding 12 removed that, which is the correct outcome
+and the entire point of the change. The consequence is that the access path is now
+gone entirely rather than merely unintended.
+
+**This was not fixed here, deliberately.** All three policies already define a
+`view` ability, so *who may see the record* is settled and a download route could
+reuse it. What is not settled is *who may get the file* — for a submission that
+means the student, their guardians, the assigned teacher, or any staff member in
+the school, and those are different privacy answers. Guessing wrong in a school
+product creates a data-exposure route, which is a worse mistake than an incomplete
+feature. The options are:
+
+- a `download` route per model, authorized by the existing `view` policy, serving
+  `Storage::disk('local')->download()`;
+- the same, with a narrower ability for submissions specifically, so a guardian can
+  read their own child's work without that generalising to every submission;
+- or leaving it as is, on the grounds that these records are metadata for now and
+  the file is an archive rather than something the product serves.
+
+Whichever is chosen, the stored name is a random hash, so a download response needs
+a filename derived from the record (its title plus the stored extension) — serving
+`abc1234f.pdf` to a user would be the wrong default.
+
 **One upload path was checked and found sound, recorded so it is not re-litigated.**
 `SchoolSettingsController::store()` takes a logo on `image|max:2048`, and `image`
 looks like it should admit SVG — an SVG can carry script, and the file is served
