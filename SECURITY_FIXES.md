@@ -77,6 +77,19 @@ user case with a 403 — which the refusal assertions would have accepted as a
 pass while the policy was never consulted. Both permissions are now granted, and
 the allow-case assertion is what makes that class of mistake loud.
 
+**The policy-discovery guard that came out of this pass.** `PolicyDiscoveryTest`
+enumerates the models each route binds, resolves each through the real
+`Gate::getPolicyFor`, and requires a policy or a written exception. Written red
+at three: `AdmissionApplication`, `InterfaceTranslation` and `School` are bound
+and unpolicied — each is a shared queue or a super-admin screen where the route
+gate is the whole decision, and each is now named with that reason. The same
+test asserts the thin `App\Models\*` aliases resolve to the same policy as their
+domain parents, which caught `App\Models\Classroom`: a compatibility alias onto
+the `rooms` table whose explicit `manage-classrooms` permission the seeder
+derives from `manage-rooms`, so the two answer identically today. No route binds
+it; it is recorded as the one documented exception, and consolidating the alias
+belongs with the model-layer consolidation rather than this phase.
+
 **One divergence in this pass was not a one-way fix.** `InvoiceController` and
 `InvoicePolicy` disagreed about all three write abilities, so which layer won was
 decided per ability from the evidence: `update` follows the controller and its
