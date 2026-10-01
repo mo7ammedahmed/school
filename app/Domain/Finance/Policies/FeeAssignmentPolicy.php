@@ -14,7 +14,7 @@ class FeeAssignmentPolicy
 
     public function view(User $user, FeeAssignment $model): bool
     {
-        return $user->hasPermissionTo('manage-fee-assignments') ||
+        return $user->hasPermissionTo('manage-fee-assignments') &&
             $model->school_id === session('school_id');
     }
 

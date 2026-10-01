@@ -14,7 +14,7 @@ class ClassroomPolicy
 
     public function view(User $user, Classroom $model): bool
     {
-        return $user->hasPermissionTo('manage-classrooms') ||
+        return $user->hasPermissionTo('manage-classrooms') &&
             $model->school_id === session('school_id');
     }
 

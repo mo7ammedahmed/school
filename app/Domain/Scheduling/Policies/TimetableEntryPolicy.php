@@ -16,7 +16,7 @@ class TimetableEntryPolicy
     // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, TimetableEntry $model): bool
     {
-        return $user->checkPermissionTo('manage-timetable-entries') ||
+        return $user->checkPermissionTo('manage-timetable-entries') &&
             (int) $model->school_id === (int) session('school_id');
     }
 

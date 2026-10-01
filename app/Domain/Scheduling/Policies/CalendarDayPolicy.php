@@ -16,7 +16,7 @@ class CalendarDayPolicy
     // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, CalendarDay $model): bool
     {
-        return $user->checkPermissionTo('manage-calendar') ||
+        return $user->checkPermissionTo('manage-calendar') &&
             (int) $model->school_id === (int) session('school_id');
     }
 

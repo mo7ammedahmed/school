@@ -14,7 +14,7 @@ class InvoicePolicy
 
     public function view(User $user, Invoice $invoice): bool
     {
-        return $user->hasPermissionTo('manage-invoices') ||
+        return $user->hasPermissionTo('manage-invoices') &&
             $invoice->school_id === session('school_id');
     }
 

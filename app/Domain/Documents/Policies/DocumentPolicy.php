@@ -14,7 +14,7 @@ class DocumentPolicy
 
     public function view(User $user, Document $document): bool
     {
-        return $user->hasPermissionTo('manage-documents') ||
+        return $user->hasPermissionTo('manage-documents') &&
             $document->school_id === session('school_id');
     }
 

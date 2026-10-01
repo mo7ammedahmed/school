@@ -14,7 +14,7 @@ class QuizPolicy
 
     public function view(User $user, Quiz $quiz): bool
     {
-        return $user->hasPermissionTo('manage-quizzes') ||
+        return $user->hasPermissionTo('manage-quizzes') &&
             $quiz->school_id === session('school_id');
     }
 

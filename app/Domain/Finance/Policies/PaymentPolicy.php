@@ -14,7 +14,7 @@ class PaymentPolicy
 
     public function view(User $user, Payment $payment): bool
     {
-        return $user->hasPermissionTo('manage-payments') ||
+        return $user->hasPermissionTo('manage-payments') &&
             $payment->school_id === session('school_id');
     }
 

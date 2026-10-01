@@ -14,7 +14,7 @@ class SubjectPolicy
 
     public function view(User $user, Subject $subject): bool
     {
-        return $user->hasPermissionTo('manage-subjects') ||
+        return $user->hasPermissionTo('manage-subjects') &&
             $subject->school_id === session('school_id');
     }
 

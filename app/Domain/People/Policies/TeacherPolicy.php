@@ -14,7 +14,7 @@ class TeacherPolicy
 
     public function view(User $user, TeacherProfile $teacher): bool
     {
-        return $user->hasPermissionTo('manage-teachers') ||
+        return $user->hasPermissionTo('manage-teachers') &&
             $teacher->school_id === session('school_id');
     }
 

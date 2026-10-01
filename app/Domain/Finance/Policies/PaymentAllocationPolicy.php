@@ -14,7 +14,7 @@ class PaymentAllocationPolicy
 
     public function view(User $user, PaymentAllocation $model): bool
     {
-        return $user->hasPermissionTo('manage-payment-allocations') ||
+        return $user->hasPermissionTo('manage-payment-allocations') &&
             $model->school_id === session('school_id');
     }
 

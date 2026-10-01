@@ -14,7 +14,7 @@ class GradingCategoryPolicy
 
     public function view(User $user, GradingCategory $gradingCategory): bool
     {
-        return $user->hasPermissionTo('manage-grading-categories') ||
+        return $user->hasPermissionTo('manage-grading-categories') &&
             $gradingCategory->school_id === session('school_id');
     }
 

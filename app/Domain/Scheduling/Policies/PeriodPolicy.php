@@ -16,7 +16,7 @@ class PeriodPolicy
     // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, Period $model): bool
     {
-        return $user->checkPermissionTo('manage-periods') ||
+        return $user->checkPermissionTo('manage-periods') &&
             (int) $model->school_id === (int) session('school_id');
     }
 

@@ -14,7 +14,7 @@ class SubmissionPolicy
 
     public function view(User $user, Submission $submission): bool
     {
-        return $user->hasPermissionTo('manage-submissions') ||
+        return $user->hasPermissionTo('manage-submissions') &&
             $submission->school_id === session('school_id');
     }
 

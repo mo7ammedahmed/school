@@ -14,7 +14,7 @@ class MaterialPolicy
 
     public function view(User $user, Material $material): bool
     {
-        return $user->hasPermissionTo('manage-materials') ||
+        return $user->hasPermissionTo('manage-materials') &&
             $material->school_id === session('school_id');
     }
 

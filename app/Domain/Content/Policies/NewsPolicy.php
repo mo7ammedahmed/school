@@ -14,7 +14,7 @@ class NewsPolicy
 
     public function view(User $user, News $model): bool
     {
-        return $user->hasPermissionTo('manage-news') ||
+        return $user->hasPermissionTo('manage-news') &&
             $model->school_id === session('school_id');
     }
 

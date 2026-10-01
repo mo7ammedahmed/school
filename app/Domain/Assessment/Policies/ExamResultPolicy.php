@@ -14,7 +14,7 @@ class ExamResultPolicy
 
     public function view(User $user, ExamResult $examResult): bool
     {
-        return $user->hasPermissionTo('manage-exam-results') ||
+        return $user->hasPermissionTo('manage-exam-results') &&
             $examResult->school_id === session('school_id');
     }
 

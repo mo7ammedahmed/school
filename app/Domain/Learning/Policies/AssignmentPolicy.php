@@ -14,7 +14,7 @@ class AssignmentPolicy
 
     public function view(User $user, Assignment $assignment): bool
     {
-        return $user->hasPermissionTo('manage-assignments') ||
+        return $user->hasPermissionTo('manage-assignments') &&
             $assignment->school_id === session('school_id');
     }
 

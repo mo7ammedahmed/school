@@ -14,7 +14,7 @@ class EnrollmentPolicy
 
     public function view(User $user, Enrollment $enrollment): bool
     {
-        return $user->hasPermissionTo('manage-enrollments') ||
+        return $user->hasPermissionTo('manage-enrollments') &&
             $enrollment->school_id === session('school_id');
     }
 

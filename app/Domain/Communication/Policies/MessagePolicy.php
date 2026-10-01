@@ -14,7 +14,7 @@ class MessagePolicy
 
     public function view(User $user, Message $message): bool
     {
-        return $user->hasPermissionTo('manage-messages') ||
+        return $user->hasPermissionTo('manage-messages') &&
             $message->school_id === session('school_id');
     }
 

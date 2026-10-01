@@ -14,7 +14,7 @@ class GradingScalePolicy
 
     public function view(User $user, GradingScale $gradingScale): bool
     {
-        return $user->hasPermissionTo('manage-grading-scales') ||
+        return $user->hasPermissionTo('manage-grading-scales') &&
             $gradingScale->school_id === session('school_id');
     }
 

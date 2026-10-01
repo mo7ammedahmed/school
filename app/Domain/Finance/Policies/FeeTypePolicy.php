@@ -14,7 +14,7 @@ class FeeTypePolicy
 
     public function view(User $user, FeeType $model): bool
     {
-        return $user->hasPermissionTo('manage-fee-types') ||
+        return $user->hasPermissionTo('manage-fee-types') &&
             $model->school_id === session('school_id');
     }
 

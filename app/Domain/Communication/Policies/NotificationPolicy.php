@@ -14,7 +14,7 @@ class NotificationPolicy
 
     public function view(User $user, Notification $notification): bool
     {
-        return $user->hasPermissionTo('manage-notifications') ||
+        return $user->hasPermissionTo('manage-notifications') &&
             $notification->school_id === session('school_id');
     }
 

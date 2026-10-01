@@ -14,7 +14,7 @@ class OfferingPolicy
 
     public function view(User $user, Offering $offering): bool
     {
-        return $user->hasPermissionTo('manage-offerings') ||
+        return $user->hasPermissionTo('manage-offerings') &&
             $offering->school_id === session('school_id');
     }
 

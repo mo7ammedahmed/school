@@ -14,7 +14,7 @@ class WebhookEventPolicy
 
     public function view(User $user, WebhookEvent $model): bool
     {
-        return $user->hasPermissionTo('manage-webhook-events') ||
+        return $user->hasPermissionTo('manage-webhook-events') &&
             $model->school_id === session('school_id');
     }
 

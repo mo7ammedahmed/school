@@ -14,7 +14,7 @@ class SectionPolicy
 
     public function view(User $user, Section $section): bool
     {
-        return $user->hasPermissionTo('manage-sections') ||
+        return $user->hasPermissionTo('manage-sections') &&
             $section->school_id === session('school_id');
     }
 

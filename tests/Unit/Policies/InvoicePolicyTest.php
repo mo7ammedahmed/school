@@ -31,8 +31,35 @@ class InvoicePolicyTest extends TestCase
             'school_id' => $school->id,
         ]);
 
+        $this->app['session']->put('school_id', $school->id);
+
         $policy = new InvoicePolicy;
         $this->assertTrue($policy->view($user, $invoice));
+    }
+
+    /**
+     * The permission is necessary but not sufficient: it is conjoined with the
+     * tenant, so a caller whose session points at another school is refused
+     * even holding `manage-invoices`.
+     *
+     * This case passed before the disjunction was corrected, because the
+     * permission alone satisfied the `||`. It is here to keep the conjunction
+     * from being "simplified" back.
+     */
+    public function test_the_permission_alone_does_not_open_another_schools_invoice(): void
+    {
+        $user = User::factory()->create();
+        $user->givePermissionTo('manage-invoices');
+        $schoolA = School::factory()->create();
+        $schoolB = School::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'school_id' => $schoolB->id,
+        ]);
+
+        $this->app['session']->put('school_id', $schoolA->id);
+
+        $policy = new InvoicePolicy;
+        $this->assertFalse($policy->view($user, $invoice));
     }
 
     public function test_user_without_permission_cannot_view_other_school_invoice(): void
@@ -59,6 +86,8 @@ class InvoicePolicyTest extends TestCase
             'school_id' => $school->id,
             'status' => 'paid',
         ]);
+
+        $this->app['session']->put('school_id', $school->id);
 
         $policy = new InvoicePolicy;
         $this->assertFalse($policy->update($user, $invoice));

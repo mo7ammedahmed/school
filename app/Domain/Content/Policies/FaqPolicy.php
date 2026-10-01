@@ -14,7 +14,7 @@ class FaqPolicy
 
     public function view(User $user, Faq $model): bool
     {
-        return $user->hasPermissionTo('manage-faqs') ||
+        return $user->hasPermissionTo('manage-faqs') &&
             $model->school_id === session('school_id');
     }
 

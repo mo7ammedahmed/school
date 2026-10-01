@@ -14,7 +14,7 @@ class EventPolicy
 
     public function view(User $user, Event $model): bool
     {
-        return $user->hasPermissionTo('manage-events') ||
+        return $user->hasPermissionTo('manage-events') &&
             $model->school_id === session('school_id');
     }
 

@@ -23,7 +23,7 @@ class GuardianPolicy
 
     public function view(User $user, Guardian $model): bool
     {
-        return $user->hasPermissionTo('manage-guardians') ||
+        return $user->hasPermissionTo('manage-guardians') &&
             $model->school_id === session('school_id');
     }
 

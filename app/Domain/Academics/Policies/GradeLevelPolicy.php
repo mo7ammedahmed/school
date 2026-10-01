@@ -14,7 +14,7 @@ class GradeLevelPolicy
 
     public function view(User $user, GradeLevel $gradeLevel): bool
     {
-        return $user->hasPermissionTo('manage-grade-levels') ||
+        return $user->hasPermissionTo('manage-grade-levels') &&
             $gradeLevel->school_id === session('school_id');
     }
 

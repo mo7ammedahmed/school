@@ -14,7 +14,7 @@ class AttendanceRecordPolicy
 
     public function view(User $user, AttendanceRecord $attendanceRecord): bool
     {
-        return $user->hasPermissionTo('manage-attendance-records') ||
+        return $user->hasPermissionTo('manage-attendance-records') &&
             $attendanceRecord->school_id === session('school_id');
     }
 

@@ -14,7 +14,7 @@ class UserMembershipPolicy
 
     public function view(User $user, UserMembership $model): bool
     {
-        return $user->hasPermissionTo('manage-memberships') ||
+        return $user->hasPermissionTo('manage-memberships') &&
             $model->school_id === session('school_id');
     }
 

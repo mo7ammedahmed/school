@@ -14,7 +14,7 @@ class AnnouncementPolicy
 
     public function view(User $user, Announcement $announcement): bool
     {
-        return $user->hasPermissionTo('manage-announcements') ||
+        return $user->hasPermissionTo('manage-announcements') &&
             $announcement->school_id === session('school_id');
     }
 

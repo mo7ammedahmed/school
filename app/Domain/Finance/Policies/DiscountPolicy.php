@@ -14,7 +14,7 @@ class DiscountPolicy
 
     public function view(User $user, Discount $discount): bool
     {
-        return $user->hasPermissionTo('manage-discounts') ||
+        return $user->hasPermissionTo('manage-discounts') &&
             $discount->school_id === session('school_id');
     }
 

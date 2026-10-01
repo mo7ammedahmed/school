@@ -14,7 +14,7 @@ class DocumentCategoryPolicy
 
     public function view(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermissionTo('manage-document-categories') ||
+        return $user->hasPermissionTo('manage-document-categories') &&
             $documentCategory->school_id === session('school_id');
     }
 

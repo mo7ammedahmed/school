@@ -14,7 +14,7 @@ class ReportCardPolicy
 
     public function view(User $user, ReportCard $reportCard): bool
     {
-        return $user->hasPermissionTo('manage-report-cards') ||
+        return $user->hasPermissionTo('manage-report-cards') &&
             $reportCard->school_id === session('school_id');
     }
 

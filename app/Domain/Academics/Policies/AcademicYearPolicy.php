@@ -14,7 +14,7 @@ class AcademicYearPolicy
 
     public function view(User $user, AcademicYear $academicYear): bool
     {
-        return $user->hasPermissionTo('manage-academic-years') ||
+        return $user->hasPermissionTo('manage-academic-years') &&
             $academicYear->school_id === session('school_id');
     }
 

@@ -14,7 +14,7 @@ class ContactLeadPolicy
 
     public function view(User $user, ContactLead $model): bool
     {
-        return $user->hasPermissionTo('manage-contact-leads') ||
+        return $user->hasPermissionTo('manage-contact-leads') &&
             $model->school_id === session('school_id');
     }
 

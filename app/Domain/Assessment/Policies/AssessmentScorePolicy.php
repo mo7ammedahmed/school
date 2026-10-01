@@ -14,7 +14,7 @@ class AssessmentScorePolicy
 
     public function view(User $user, AssessmentScore $assessmentScore): bool
     {
-        return $user->hasPermissionTo('manage-assessment-scores') ||
+        return $user->hasPermissionTo('manage-assessment-scores') &&
             $assessmentScore->school_id === session('school_id');
     }
 

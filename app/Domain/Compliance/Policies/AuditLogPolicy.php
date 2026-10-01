@@ -14,7 +14,7 @@ class AuditLogPolicy
 
     public function view(User $user, AuditLog $model): bool
     {
-        return $user->hasPermissionTo('view-audit-logs') ||
+        return $user->hasPermissionTo('view-audit-logs') &&
             $model->school_id === session('school_id');
     }
 

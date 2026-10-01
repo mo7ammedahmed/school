@@ -16,7 +16,7 @@ class RoomPolicy
     // hasPermissionTo() throws and would surface as a 500.
     public function view(User $user, Room $model): bool
     {
-        return $user->checkPermissionTo('manage-rooms') ||
+        return $user->checkPermissionTo('manage-rooms') &&
             (int) $model->school_id === (int) session('school_id');
     }
 

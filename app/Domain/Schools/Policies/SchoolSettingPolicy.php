@@ -14,7 +14,7 @@ class SchoolSettingPolicy
 
     public function view(User $user, SchoolSetting $model): bool
     {
-        return $user->hasPermissionTo('manage-school-settings') ||
+        return $user->hasPermissionTo('manage-school-settings') &&
             $model->school_id === session('school_id');
     }
 

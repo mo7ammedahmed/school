@@ -14,7 +14,7 @@ class AssessmentPolicy
 
     public function view(User $user, Assessment $assessment): bool
     {
-        return $user->hasPermissionTo('manage-assessments') ||
+        return $user->hasPermissionTo('manage-assessments') &&
             $assessment->school_id === session('school_id');
     }
 

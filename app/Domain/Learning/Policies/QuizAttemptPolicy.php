@@ -14,7 +14,7 @@ class QuizAttemptPolicy
 
     public function view(User $user, QuizAttempt $quizAttempt): bool
     {
-        return $user->hasPermissionTo('manage-quiz-attempts') ||
+        return $user->hasPermissionTo('manage-quiz-attempts') &&
             $quizAttempt->school_id === session('school_id');
     }
 

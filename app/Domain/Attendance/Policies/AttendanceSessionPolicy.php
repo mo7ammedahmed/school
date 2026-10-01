@@ -14,7 +14,7 @@ class AttendanceSessionPolicy
 
     public function view(User $user, AttendanceSession $attendanceSession): bool
     {
-        return $user->hasPermissionTo('manage-attendance-sessions') ||
+        return $user->hasPermissionTo('manage-attendance-sessions') &&
             $attendanceSession->school_id === session('school_id');
     }
 

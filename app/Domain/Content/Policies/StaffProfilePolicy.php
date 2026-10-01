@@ -14,7 +14,7 @@ class StaffProfilePolicy
 
     public function view(User $user, StaffProfile $model): bool
     {
-        return $user->hasPermissionTo('manage-staff-profiles') ||
+        return $user->hasPermissionTo('manage-staff-profiles') &&
             $model->school_id === session('school_id');
     }
 

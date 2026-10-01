@@ -14,7 +14,7 @@ class RefundPolicy
 
     public function view(User $user, Refund $refund): bool
     {
-        return $user->hasPermissionTo('manage-refunds') ||
+        return $user->hasPermissionTo('manage-refunds') &&
             $refund->school_id === session('school_id');
     }
 

@@ -14,7 +14,7 @@ class InvoiceLinePolicy
 
     public function view(User $user, InvoiceLine $model): bool
     {
-        return $user->hasPermissionTo('manage-invoice-lines') ||
+        return $user->hasPermissionTo('manage-invoice-lines') &&
             $model->school_id === session('school_id');
     }
 

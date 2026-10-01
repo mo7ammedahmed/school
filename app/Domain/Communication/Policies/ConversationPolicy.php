@@ -14,7 +14,7 @@ class ConversationPolicy
 
     public function view(User $user, Conversation $conversation): bool
     {
-        return $user->hasPermissionTo('manage-conversations') ||
+        return $user->hasPermissionTo('manage-conversations') &&
             $conversation->school_id === session('school_id');
     }
 

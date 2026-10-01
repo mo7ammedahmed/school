@@ -14,7 +14,7 @@ class SemesterPolicy
 
     public function view(User $user, Semester $semester): bool
     {
-        return $user->hasPermissionTo('manage-semesters') ||
+        return $user->hasPermissionTo('manage-semesters') &&
             $semester->school_id === session('school_id');
     }
 
