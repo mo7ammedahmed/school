@@ -33,3 +33,7 @@ Thumbs.db
 /.kilo
 /graphify-out
 /.github
+
+**/caddy
+frankenphp
+frankenphp-worker.php
