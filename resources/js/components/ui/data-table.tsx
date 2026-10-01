@@ -1,12 +1,37 @@
 import * as React from 'react';
 import { flexRender, useTable, type RowData, type SortingState } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { router, usePage } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
 import { tableFeatureSet, type ColumnDef } from '@/lib/table';
+import { Pagination } from '@/components/ui/pagination';
+import { useLocale } from '@/lib/i18n/locale-context';
+import { t } from '@/lib/i18n/copy';
+
+/**
+ * The fields of a Laravel paginator that this component needs.
+ *
+ * Exported because a page that receives one should say so. Six screens used to
+ * declare their list prop as `{ data: T[] }` — the shape they needed — which
+ * type-checked while hiding the fact that the prop was a paginator with counts
+ * and a pager attached.
+ */
+export interface Paginator<TData> {
+    data: TData[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
+function isPaginator<TData extends RowData>(data: TData[] | Paginator<TData>): data is Paginator<TData> {
+    return !Array.isArray(data) && typeof (data as Paginator<TData>)?.last_page === 'number';
+}
 
 interface DataTableProps<TData extends RowData> {
     columns: ColumnDef<TData, any>[];
-    data: TData[] | { data: TData[] };
+    data: TData[] | Paginator<TData>;
     className?: string;
     emptyMessage?: string;
     loading?: boolean;
@@ -24,9 +49,43 @@ export function DataTable<TData extends RowData>({
     onRowClick,
 }: DataTableProps<TData>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
+    const { locale } = useLocale();
 
     // Accept both plain arrays and Laravel paginator payloads ({ data: [...] }).
+    const page = isPaginator(data) ? data : null;
     const rows = Array.isArray(data) ? data : data?.data ?? [];
+
+    /**
+     * Paging keeps whatever is already in the address bar.
+     *
+     * The list on screen was narrowed by whatever query produced it, so the
+     * next page has to be asked for under the same conditions. Dropping them
+     * turns "page 2" into a different question than the one that was on screen —
+     * the mistake a hand-written pager makes, and the reason the filters are
+     * read back off the current URL rather than passed down as props that every
+     * one of the forty-odd call sites would have to remember to forward.
+     */
+    const { url: currentUrl } = usePage();
+    const goToPage = React.useCallback(
+        (target: number) => {
+            const [pathname, search = ''] = currentUrl.split('?');
+            const params = new URLSearchParams(search);
+
+            // Page one is the absence of the parameter. `page=1` is a
+            // different URL for the same list, and links that accumulate it are
+            // how a canonical URL ends up with seven variants of itself.
+            if (target <= 1) {
+                params.delete('page');
+            } else {
+                params.set('page', String(target));
+            }
+
+            const query = params.toString();
+
+            router.get(pathname + (query === '' ? '' : `?${query}`), {}, { preserveScroll: true, preserveState: true });
+        },
+        [currentUrl]
+    );
 
     const table = useTable({
         features: tableFeatureSet,
@@ -36,13 +95,12 @@ export function DataTable<TData extends RowData>({
         onSortingChange: setSorting,
     });
 
+    const totalRows = page?.total ?? rows.length;
+    const showPager = page !== null && !loading && page.last_page > 1;
+
     return (
-        <div
-            className={cn(
-                'overflow-hidden rounded-xl border border-border/80 bg-card shadow-[var(--shadow-sm)]',
-                className
-            )}
-        >
+        <div className={cn('space-y-4', className)}>
+            <div className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-[var(--shadow-sm)]">
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border/80">
                     <thead className="bg-muted/50">
@@ -133,6 +191,34 @@ export function DataTable<TData extends RowData>({
                     </tbody>
                 </table>
             </div>
+            </div>
+
+            {/*
+              The pager sits here, next to the code that decides what one page
+              is, rather than on each screen. A list that is cut at fifteen rows
+              and gives no sign of it reads as a complete list, so the count is
+              shown whether or not there is anywhere to page to.
+            */}
+            {page !== null && !loading && totalRows > 0 && (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                        {t(locale, 'common.showingRange', {
+                            from: page.from ?? 0,
+                            to: page.to ?? 0,
+                            total: totalRows,
+                        })}
+                    </p>
+                    {showPager && (
+                        <Pagination
+                            pageCount={page.last_page}
+                            currentPage={page.current_page}
+                            previousLabel={t(locale, 'common.previous')}
+                            nextLabel={t(locale, 'common.next')}
+                            onPageChange={goToPage}
+                        />
+                    )}
+                </div>
+            )}
         </div>
     );
 }

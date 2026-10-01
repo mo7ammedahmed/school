@@ -3,7 +3,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
-import { Pagination } from '@/components/ui/pagination';
 import { formatCurrency } from '@/lib/utils';
 import { type ColumnDef } from '@/lib/table';
 import { Link, router } from '@inertiajs/react';
@@ -47,13 +46,7 @@ const channelLabel = (channels: Record<string, boolean>) => {
         .join(' · ');
 };
 
-export default function FinanceInvoicesIndex({
-    invoices,
-    filters,
-}: {
-    invoices: InvoicePage;
-    filters?: { status?: string; search?: string };
-}) {
+export default function FinanceInvoicesIndex({ invoices }: { invoices: InvoicePage }) {
     const { locale } = useLocale();
 
     const send = (invoice: Invoice) => {
@@ -62,27 +55,6 @@ export default function FinanceInvoicesIndex({
 
     const issue = (invoice: Invoice) => {
         router.post(`/finance/invoices/${invoice.id}/issue`, {}, { preserveScroll: true });
-    };
-
-    /**
-     * Paging keeps the filters.
-     *
-     * The rows on screen were narrowed by `status` and `search`, and a pager
-     * that drops them turns "page 2" into a different question than the one the
-     * accountant asked. Empty filters are left out of the query entirely rather
-     * than sent as blanks, so the URL stays the one the filters themselves
-     * would have produced.
-     */
-    const goToPage = (page: number) => {
-        router.get(
-            '/finance/invoices',
-            {
-                ...(filters?.status ? { status: filters.status } : {}),
-                ...(filters?.search ? { search: filters.search } : {}),
-                page,
-            },
-            { preserveScroll: true, preserveState: true }
-        );
     };
 
     const columns: ColumnDef<Invoice, any>[] = [
@@ -205,28 +177,9 @@ export default function FinanceInvoicesIndex({
 
             <DataTable
                 columns={columns}
-                data={invoices.data}
+                data={invoices}
                 emptyMessage={t(locale, 'finance.invoices.empty')}
             />
-
-            <Pagination
-                className="mt-4"
-                pageCount={invoices.last_page}
-                currentPage={invoices.current_page}
-                previousLabel={t(locale, 'common.previous')}
-                nextLabel={t(locale, 'common.next')}
-                onPageChange={goToPage}
-            />
-
-            {invoices.total > 0 && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                    {t(locale, 'common.showingRange', {
-                        from: invoices.from ?? 0,
-                        to: invoices.to ?? 0,
-                        total: invoices.total,
-                    })}
-                </p>
-            )}
         </AppShell>
     );
 }

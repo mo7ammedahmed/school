@@ -1,7 +1,7 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type Paginator } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
@@ -19,7 +19,7 @@ type AssessmentRow = {
     is_published: boolean;
 };
 
-export default function AssessmentsIndex({ assessments }: { assessments: { data: AssessmentRow[] } }) {
+export default function AssessmentsIndex({ assessments }: { assessments: Paginator<AssessmentRow> }) {
     const columns: ColumnDef<AssessmentRow>[] = [
         {
             accessorKey: 'name',

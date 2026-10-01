@@ -1,7 +1,7 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type Paginator } from '@/components/ui/data-table';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
@@ -16,7 +16,7 @@ type FeeStructure = {
     grade_level: { name_en: string | null; name_ar: string | null } | null;
 };
 
-export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStructures: { data: FeeStructure[] } }) {
+export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStructures: Paginator<FeeStructure> }) {
     const bilingual = useBilingual();
 
     const columns: ColumnDef<FeeStructure>[] = [

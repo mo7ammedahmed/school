@@ -17,19 +17,20 @@ import StudentsIndex from './index';
  * rather than trying to slice rows the browser was never sent.
  */
 const h = vi.hoisted(() => ({
-    gets: [] as { url: string; params: Record<string, unknown> }[],
+    gets: [] as { url: string }[],
+    url: '/students',
 }));
 
 vi.mock('@inertiajs/react', () => ({
     Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
     router: {
-        get: (url: string, params: Record<string, unknown>) => h.gets.push({ url, params }),
+        get: (url: string) => h.gets.push({ url }),
         post: () => {},
         visit: () => {},
         reload: () => {},
     },
     usePage: () => ({
-        url: '/students',
+        url: h.url,
         component: 'students/index',
         props: {
             locale: 'en',
@@ -66,6 +67,7 @@ function page(currentPage: number, lastPage: number, total: number, rowCount: nu
 describe('students list pagination', () => {
     beforeEach(() => {
         h.gets.length = 0;
+        h.url = '/students';
     });
 
     it('offers a way to reach the students after the first fifteen', () => {
@@ -76,8 +78,7 @@ describe('students list pagination', () => {
         fireEvent.click(screen.getByRole('button', { name: '2' }));
 
         expect(h.gets).toHaveLength(1);
-        expect(h.gets[0].url).toBe('/students');
-        expect(h.gets[0].params.page).toBe(2);
+        expect(h.gets[0].url).toBe('/students?page=2');
     });
 
     it('says how many students there are, so a truncated list is visible', () => {

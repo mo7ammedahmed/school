@@ -1,7 +1,7 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type Paginator } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
@@ -17,7 +17,7 @@ type Announcement = {
     is_published: boolean;
 };
 
-export default function AnnouncementsIndex({ announcements }: { announcements: { data: Announcement[] } }) {
+export default function AnnouncementsIndex({ announcements }: { announcements: Paginator<Announcement> }) {
     const columns: ColumnDef<any>[] = [
         {
             accessorKey: 'title',

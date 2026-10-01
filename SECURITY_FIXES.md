@@ -294,8 +294,7 @@ frontend pass, not a header edit.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
-| 7 | `Finance\InvoiceController::index` answered `->get()` and mapped every row in the school. The ledger is the largest table in the product, so this returns the school's entire invoice history to the browser and holds all of it in memory to build the response | Confirmed | `->paginate(15)->withQueryString()`, mapping one page. `withQueryString()` so a filtered ledger's page links keep their filter — without it, page two of a filtered list is page two of the whole list under the same filter bar | `InvoiceListIsPaginatedTest` — 8 cases: a 60-row table yields at most 15 rows, a total is reported, page two is disjoint from page one, the total counts only this school, the `status` and `search` filters still bind the later page *and* the total, a page past the end is empty rather than a 500, and no page leaks another school's invoice. Written red at 8 of 8 |
-| 8 | The same map cast `total_amount` and `balance_due` to `float`. The columns are decimals, and a float cannot hold most decimal fractions exactly — `(float) '1150.07'` is not `1150.07` — so the browser was handed figures that are not the figures in the database | Confirmed | Both are cast to `string`, at the column's own scale. `formatCurrency` accepts `number \| string` and parses at the moment it renders, so the value is in binary floating point only for the `Intl` call that prints it | `InvoiceTest::test_the_list_carries_money_as_a_decimal_string` — the payload value must be a string and must equal the stored column. Deliberately asserted against the column rather than a literal: the contract is that the stored decimal is handed through untouched, not that this code picks a scale |
+| 7 | `Finance\InvoiceController::index` answered `->get()` and mapped every row in the school. The ledger is the largest table in the product, so this returns the school's entire invoice history to the browser and holds all of it in memory to build the response | Confirmed | `->paginate(15)->withQueryString()`, mapping one page. `withQueryString()` so a filtered ledger's page links keep their filter — without it, page two of a filtered list is page two of the whole list under the same filter bar | `InvoiceListIsPaginatedTest` — 8 cases: a 60-row table yields at most 15 rows, a total is reported, page two is disjoint from page one, the total counts only this school, the `status` and `search` filters still bind the later page *and* the total, a page past the end is empty rather than a 500, and no page leaks another school's invoice. Written red at 8 of 8 || 8 | The same map cast `total_amount` and `balance_due` to `float`. The columns are decimals, and a float cannot hold most decimal fractions exactly — `(float) '1150.07'` is not `1150.07` — so the browser was handed figures that are not the figures in the database | Confirmed | Both are cast to `string`, at the column's own scale. `formatCurrency` accepts `number \| string` and parses at the moment it renders, so the value is in binary floating point only for the `Intl` call that prints it | `InvoiceTest::test_the_list_carries_money_as_a_decimal_string` — the payload value must be a string and must equal the stored column. Deliberately asserted against the column rather than a literal: the contract is that the stored decimal is handed through untouched, not that this code picks a scale |
 
 **Why the pager had to arrive with a UI, not just a `paginate()`.** The shared
 `DataTable` accepts a paginator payload and renders its rows, and nothing else —
@@ -306,5 +305,23 @@ is now on the page, carrying the filters, with a count of what is being shown.
 The same gap exists on the students list, which is already paginated on the
 server and already shows no pager; it is recorded here rather than fixed in this
 commit, which is about the ledger.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 9 | The missing pager was not two screens, it was the shared component. `DataTable` accepted a paginator, rendered its `data`, and had no pager — so of the ~45 lists the controllers paginate at 15, every screen that had not hand-written its own pager showed fifteen rows of a longer list with nothing to indicate the rest existed | Confirmed | The pager moved into `DataTable`, beside the code that decides what one page is. It renders only for a paginator payload: a plain array gets no pager, one page gets no pager, an empty result gets no count. Page requests are built from the current URL's own query string, so a filter survives paging without every call site having to forward it | `data-table.test.tsx` — 8 cases: a paginator offers its later pages, the total is reported, an array gets no pager, a single page gets no pager, an empty result gets neither pager nor count, an existing filter survives paging, page one is the *absence* of `?page=` rather than `?page=1`, and the current page is marked `aria-current="page"`. Written red at 8 of 8 |
+| 10 | Six screens declared their list prop as `{ data: T[] }` — the shape they needed rather than the shape they were sent. It type-checked, so the under-declaration was invisible, and it is the same misreading that hid finding 9 | Confirmed | `Paginator<T>` is exported from `DataTable` and those six props now declare it. The screens that typed their list as a bare array and were handed a paginator are not caught by this, and are not claimed to be | `tsc --noEmit` — the six were the type errors this change surfaced |
+
+**Why the pager belongs in the component and not on each screen.** Forty-odd call
+sites had the same defect and the fix that scales is one component, not forty
+edits each with its own idea of what a page link looks like. Paging reads the
+current query string back out of the URL instead of taking filter props: that is
+the only version of this that cannot be forgotten at a call site, and it is the
+mistake a hand-written pager makes — page two of the *unfiltered* list, under a
+filter bar that still shows the old filter.
+
+This is a behaviour change on every screen that passes a paginator, and it is the
+one commit here that touches many pages at once. It was verified by rendering the
+component rather than by reading forty screens: 8 component cases, the full
+frontend suite, `tsc`, lint, and a production build.
 
 

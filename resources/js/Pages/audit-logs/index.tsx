@@ -1,6 +1,6 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, type Paginator } from '@/components/ui/data-table';
 import { type ColumnDef } from '@/lib/table';
 
 type AuditLogRow = {
@@ -13,7 +13,7 @@ type AuditLogRow = {
     created_at: string | null;
 };
 
-export default function AuditLogsIndex({ auditLogs }: { auditLogs: { data: AuditLogRow[] } }) {
+export default function AuditLogsIndex({ auditLogs }: { auditLogs: Paginator<AuditLogRow> }) {
     const columns: ColumnDef<AuditLogRow>[] = [
         {
             id: 'user',
