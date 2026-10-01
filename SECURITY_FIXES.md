@@ -87,8 +87,8 @@ phase.
 ## Phase 4 — Tenant isolation (in progress)
 
 Verified by `tests/Feature/Security/TenantIsolationTest.php`, a cross-tenant
-matrix that asserts the *required* behaviour and started fully red. Findings 1–4
-are fixed; 5–7 are named work still to do.
+matrix that asserts the *required* behaviour and started fully red. Findings 1–5
+are fixed; 6–7 are named work still to do.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
@@ -96,16 +96,20 @@ are fixed; 5–7 are named work still to do.
 | 2 | `EnrollmentController` listed every school's enrolments, offered every school's students/sections/years in the form, and accepted foreign ids in `exists:` rules — a school could enrol its pupil into a stranger's section | Confirmed | `forSchool()` on list and form queries; `Rule::exists(...)->where('school_id', …)` on both rule sets; `school_id` stamped from the tenant context (`2af16b0`) | `TenantIsolationTest` (list, form, two foreign-FK cases) |
 | 3 | The admissions review queue asked platform-wide questions with one school's id: the reviewer picker listed every school's staff, `assign` accepted any user on the platform, and `bulkUpdate` validated and updated foreign application ids — writing status and event rows onto a stranger's application | Confirmed | Queue resolves the id through `schoolId()`; reviewer candidates must hold an active membership in this school; application ids are scoped by rule and the service takes the school id, filtering both of its queries (`1b6be3c`) | `TenantIsolationTest` (bulk write refused whole-request, foreign reviewer refused, reviewer picker) |
 | 4 | `DiscountController` listed and offered platform-wide rows and stamped `school_id` from the raw session | Confirmed | `forSchool()` on list and pickers; stamp from the tenant context (`1b6be3c`) | `TenantIsolationTest` (list, open, edit, delete) |
-| 5 | 63 models carry `school_id`; only 13 carry `BelongsToSchool`, so the rest can still be queried across schools by an omission | Partly fixed | `TenantContext` + `TenantScope` + auto-stamp + `withoutSchoolScope()` are live on the 13 (`2af16b0`, `1f058bc`); the remaining models are the rollout | Global scope is asserted live by the whole suite; no per-model test yet |
+| 5 | 63 models carry `school_id`; only 13 carried `BelongsToSchool`, so the rest could be queried across schools by an omission | Fixed | Rollout complete: `TenantContext`, fail-closed `TenantScope`, auto-stamp and `withoutSchoolScope()` are live on every school-owned model (`2af16b0`, `1f058bc`, `85b99ca`, `1a436b6`, `597c4c9`, `b9e9725`). Three deliberate exclusions, each with its reason recorded: `UserMembership` (the resolver cannot depend on its own answer), `AuditLog` (platform and support actions too), `WebsiteThemePreset` (no `school_id` by design) | The whole suite runs against the live scope; the rollout exposed and fixed real unscoped services: the timetable conflict detector, the settings stores used outside requests, invoice delivery, and settlement |
 | 6 | 181 `exists:` rules across controllers and form requests are unscoped, so a foreign id validates | Open | Scoped on the screens fixed above; the rest to be swept, rule by rule | — |
-| 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Open | Tenant-aware binding is the mechanism; the remaining `ensureOwned` call sites should be deleted as each model joins the trait | — |
+| 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Open, no longer reachable | Every model those checks guarded is now tenant-bound, so a foreign id 404s at the route before the check runs; the remaining call sites are dead code to delete, not a live disagreement | The isolation matrix and the suite exercise the binding path |
 
 **Open from Phase 4**
 
-- **The trait rollout is the next commit series.** The remaining school-owned
-  models need `BelongsToSchool` one batch at a time, because each addition can
-  expose a query somewhere that was relying on seeing every school's rows —
-  which is the finding, not a reason to hold back the scope.
+- **Two public entry points had to pin their own tenant, and that shape is
+  worth remembering.** Route model binding runs before route middleware, so the
+  signed `/pay/{invoice}` links cannot type-hint the model: the middleware
+  resolves the invoice unscoped (the signature is the access proof), pins its
+  school, and the controller's scoped lookup finds it. A webhook names its
+  payment in metadata and does the same — one deliberate `withoutSchoolScope()`
+  lookup to identify the school, then everything inside that school. Both are
+  the pattern for any future unauthenticated route with a tenant row.
 - **`App\Models` aliases duplicate the domain layer.** Thirty thin subclasses
   exist so old type hints resolve; the policy map knows both names. Consolidating
   them removes the second name from every `Gate` lookup, but it touches most
