@@ -193,6 +193,6 @@ class PolicyDiscoveryTest extends TestCase
     {
         sort($values);
 
-        return array_values($values);
+        return $values;
     }
 }
