@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
 
 export default function OnboardingFeeStructure() {
-    const { data, setData, post, processing } = useForm({
+    const { data, setData } = useForm({
         fee_name: '',
         amount: '',
         grade_level_id: '',
@@ -21,7 +21,7 @@ export default function OnboardingFeeStructure() {
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/onboarding/fee-structure');
+        router.visit('/onboarding/payment-gateway');
     };
 
     // Initialize Shepherd tour
@@ -206,7 +206,7 @@ export default function OnboardingFeeStructure() {
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/onboarding/students"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                             </Button>
-                            <Button type="submit" disabled={processing}>
+                            <Button type="submit">
                                 Continue<ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </div>

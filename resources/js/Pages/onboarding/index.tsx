@@ -6,16 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 
 export default function OnboardingIndex() {
-    const { data, setData, post, processing } = useForm({
+    const { data, setData } = useForm({
         school_name: '',
     });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/onboarding/school-information');
+        router.visit('/onboarding/school-information');
     };
 
     return (
@@ -48,7 +48,7 @@ export default function OnboardingIndex() {
                             />
                         </div>
 
-                        <Button type="submit" disabled={processing} className="w-full">
+                        <Button type="submit" className="w-full">
                             Continue<ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                     </form>

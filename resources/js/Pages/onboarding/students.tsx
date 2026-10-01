@@ -7,18 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
 
 export default function OnboardingStudents() {
-    const { data, setData, post, processing } = useForm({
+    const { data, setData } = useForm({
         count: '',
     });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        post('/onboarding/students');
+        router.visit('/onboarding/fee-structure');
     };
 
     // Initialize Shepherd tour
@@ -127,7 +127,7 @@ export default function OnboardingStudents() {
                             <Button type="button" variant="outline" asChild>
                                 <Link href="/onboarding/teachers"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                             </Button>
-                            <Button type="submit" disabled={processing}>
+                            <Button type="submit">
                                 Continue<ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </div>

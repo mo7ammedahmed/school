@@ -167,26 +167,24 @@ Route::middleware('auth')->group(function () {
 });
 
 // Onboarding
+//
+// A walkthrough, not a write path: each step renders a form and its Shepherd
+// tour explains what the real screen will ask for, but nothing here provisions
+// anything. The nine POST routes that used to sit under it named `store*`
+// methods that were never written, so every submit was a 500 — and no screen
+// linked to the wizard at all. Provisioning has a real, tested path: Settings
+// → Schools (POST /schools), which creates the membership too.
 Route::middleware('auth')->prefix('onboarding')->name('onboarding.')->group(function () {
     Route::get('/', [OnboardingController::class, 'index'])->name('index');
     Route::get('/school-information', [OnboardingController::class, 'schoolInformation'])->name('school-information');
-    Route::post('/school-information', [OnboardingController::class, 'storeSchoolInformation']);
     Route::get('/create-school', [OnboardingController::class, 'createSchool'])->name('create-school');
-    Route::post('/create-school', [OnboardingController::class, 'storeCreateSchool']);
     Route::get('/academic-year', [OnboardingController::class, 'academicYear'])->name('academic-year');
-    Route::post('/academic-year', [OnboardingController::class, 'storeAcademicYear']);
     Route::get('/grades', [OnboardingController::class, 'grades'])->name('grades');
-    Route::post('/grades', [OnboardingController::class, 'storeGrades']);
     Route::get('/subjects', [OnboardingController::class, 'subjects'])->name('subjects');
-    Route::post('/subjects', [OnboardingController::class, 'storeSubjects']);
     Route::get('/teachers', [OnboardingController::class, 'teachers'])->name('teachers');
-    Route::post('/teachers', [OnboardingController::class, 'storeTeachers']);
     Route::get('/students', [OnboardingController::class, 'students'])->name('students');
-    Route::post('/students', [OnboardingController::class, 'storeStudents']);
     Route::get('/fee-structure', [OnboardingController::class, 'feeStructure'])->name('fee-structure');
-    Route::post('/fee-structure', [OnboardingController::class, 'storeFeeStructure']);
     Route::get('/payment-gateway', [OnboardingController::class, 'paymentGateway'])->name('payment-gateway');
-    Route::post('/payment-gateway', [OnboardingController::class, 'storePaymentGateway']);
     Route::get('/finish', [OnboardingController::class, 'finish'])->name('finish');
 });
 
