@@ -419,10 +419,35 @@ and what to keep, given `old_values`/`new_values` can hold personal data), and i
 is recorded here rather than started. The provenance gap is the part that made
 the existing entries worthless, and that is now closed.
 
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 14 | The assessment import is an upload surface the upload work never reached. It has no web-root problem — the file is parsed and discarded, never stored — which is presumably why it was never looked at. `extractText()` calls `ZipArchive::getFromName('word/document.xml')`, which inflates a whole zip member into memory. `max:8192` bounds the *compressed* upload, and a zip entry's decompressed size is unrelated to the size of the file carrying it: repetitive text compresses about a thousandfold, so a .docx of a few kilobytes that passes the upload limit can demand hundreds of megabytes. `loadXML()` then holds that string and a DOM tree built from it at once. One crafted file, from anyone who can reach the import screen | Confirmed | The member's **declared** size is read from the archive's own directory and refused above 4 MB, *before* the member is read — measuring after reading is the expensive part. A member that cannot be described is refused rather than read, matching the existing "no readable body" path. `loadXML()` runs with no entity flags, so this is a resource-exhaustion fix and is not an XXE fix | `DocxImportIsBoundedTest` — 5 cases: a document that expands past the ceiling is refused, the refusal explains itself (it is rendered back to the teacher on the import screen), a normal question paper is still read, a zip with no document body is still refused clearly, and a non-zip file is refused. The first case asserts the crafted archive is itself under the 8 KB upload limit, so it demonstrates the gap rather than merely tripping the existing one |
+
+**Why the cap is checked against the declared size rather than the file's real
+length.** The only way to learn a member's true length is to inflate it, which is
+precisely the allocation being refused; the zip's central directory carries the
+size up front, so it can be consulted for free. The number is a ceiling rather than
+a working limit — four megabytes of document XML is a thousand questions' worth of
+text several times over.
+
+**One upload path was checked and found sound, recorded so it is not re-litigated.**
+`SchoolSettingsController::store()` takes a logo on `image|max:2048`, and `image`
+looks like it should admit SVG — an SVG can carry script, and the file is served
+from the application's own origin. It does not: since Laravel 11 `validateImage()`
+lists nine raster types and adds `svg` only for an explicit `image:allow_svg`,
+which this rule does not pass. The sibling `AppearanceSettingsController` already
+named its four types explicitly. Both logo paths are safe, and no change was made
+to either.
+
 Also removed: `StoreMaterialRequest`, `UpdateMaterialRequest`,
 `StoreDocumentRequest` and `UpdateDocumentRequest`. They were dead — no
 controller, route or test referenced them — and each declared `'file' => 'file|
 max:10240'`. Leaving them in place meant that "tidy up the controllers by using
 the Form Requests" reintroduced the vulnerability exactly.
+
+The same reasoning retired `resources/js/layouts/app-shell.tsx.backup` and
+`resources/js/Pages/dashboard.tsx.backup`: tracked, unreferenced, and 191 and 157
+lines behind the live files respectively. A stale copy of a file is not neutral —
+it is the version somebody reads when they need to know what the code does.
 
 

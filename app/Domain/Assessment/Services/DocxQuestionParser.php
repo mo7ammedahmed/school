@@ -44,6 +44,24 @@ class DocxQuestionParser
 
     private const string POINTS = '/^\s*Points?\s*[:\-]\s*(\d+(?:[.,]\d+)?)\s*$/iu';
 
+    /**
+     * The largest `word/document.xml` this parser will read, in bytes.
+     *
+     * A .docx is a zip archive, and a zip entry's decompressed size is unrelated
+     * to the size of the file that carries it — repetitive text compresses by
+     * three orders of magnitude. The upload limit bounds the compressed file, so
+     * it bounds nothing here: `getFromName()` would allocate whatever the member
+     * claims, and `loadXML()` then holds that string and a DOM tree built from it
+     * at the same time.
+     *
+     * Four megabytes of document XML is far beyond any real question paper (a
+     * thousand questions runs to a few hundred kilobytes), so this is a ceiling
+     * rather than a working limit. The entry's *declared* size is checked before
+     * the member is read, because reading it in order to measure it is the
+     * expensive part.
+     */
+    public const int MAX_DOCUMENT_XML_BYTES = 4194304;
+
     private const string TITLE = '/^\s*Title\s*[:\-]\s*(.+)$/iu';
 
     private const string DESCRIPTION = '/^\s*Description\s*[:\-]\s*(.+)$/iu';
@@ -60,7 +78,7 @@ class DocxQuestionParser
             throw new RuntimeException('The file is not a readable .docx document.');
         }
 
-        $xml = $zip->getFromName('word/document.xml');
+        $xml = $this->readDocumentBody($zip, $path);
         $zip->close();
 
         if ($xml === false || $xml === '') {
@@ -68,6 +86,45 @@ class DocxQuestionParser
         }
 
         return $this->paragraphsToText($xml);
+    }
+
+    /**
+     * Read `word/document.xml` out of the archive, refusing a member that claims
+     * to be larger than this parser will hold.
+     *
+     * The size is taken from the archive's own directory rather than from the
+     * bytes, because a member has to be inflated before its real length is known
+     * — measuring after reading would already have spent the memory this is
+     * refusing to spend.
+     */
+    private function readDocumentBody(ZipArchive $zip, string $path): string|false
+    {
+        $index = $zip->locateName('word/document.xml');
+
+        if ($index === false) {
+            return false;
+        }
+
+        $stat = $zip->statIndex($index);
+
+        // An entry we just located that cannot be described is an inconsistent
+        // archive. Fail closed rather than read a member of unknown size — the
+        // caller's "no readable body" message covers this case honestly.
+        if ($stat === false) {
+            return false;
+        }
+
+        $declaredSize = (int) $stat['size'];
+
+        if ($declaredSize > self::MAX_DOCUMENT_XML_BYTES) {
+            throw new RuntimeException(sprintf(
+                'This document is too large to import: its content expands to about %s MB when read. '
+                .'Split the question paper into smaller files, or remove any embedded images and try again.',
+                round($declaredSize / 1048576, 1),
+            ));
+        }
+
+        return $zip->getFromIndex($index);
     }
 
     /**
