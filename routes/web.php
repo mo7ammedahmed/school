@@ -332,6 +332,13 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
 
     // Learning
     Route::resource('materials', MaterialController::class)->middleware('permission:manage-materials');
+
+    // See the note on `documents.download`. The permission is repeated rather than
+    // inherited: `->middleware()` on the resource call above applies to the
+    // resource's own routes, not to a separately registered one beside it.
+    Route::get('/materials/{material}/download', [MaterialController::class, 'download'])
+        ->middleware('permission:manage-materials')
+        ->name('materials.download');
     Route::resource('assignments', AssignmentController::class)->middleware('permission:manage-assignments');
     Route::get('/assignments/{assignment}/submissions', [SubmissionController::class, 'index'])
         ->middleware('permission:manage-assignments')
@@ -340,6 +347,12 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         ->middleware('permission:submit-assignments')
         ->name('my-assignments');
     Route::resource('submissions', SubmissionController::class)->middleware('permission:manage-submissions');
+
+    // See the note on `documents.download` — and `materials.download` for why the
+    // permission is repeated here rather than inherited from the resource.
+    Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])
+        ->middleware('permission:manage-submissions')
+        ->name('submissions.download');
     Route::resource('quizzes', QuizController::class)->middleware('permission:manage-quizzes');
     Route::get('/my-quizzes/{quiz}/attempt', [QuizController::class, 'attempt'])
         ->middleware('permission:take-quizzes')
@@ -419,6 +432,13 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         // answered it first and the pair was unreachable — as was
         // /documents/categories, which had no method and no screen either.
         Route::resource('documents', DocumentController::class);
+
+        // Uploads live on the private disk with nothing in the web root linking to
+        // them, so this is the only way to get one back. It carries the group's
+        // `manage-documents` gate and authorizes the record's own `view` policy, so
+        // the audience is exactly the people who can already open the document page.
+        Route::get('/documents/{document}/download', [DocumentController::class, 'download'])
+            ->name('documents.download');
     });
 
     // Content management (admin)

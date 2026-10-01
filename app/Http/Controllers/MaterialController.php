@@ -8,15 +8,19 @@ use App\Domain\Academics\Models\Offering;
 use App\Domain\Academics\Models\Section;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\Learning\Models\Material;
+use App\Http\Controllers\Concerns\ServesStoredAttachment;
 use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
+    use ServesStoredAttachment;
+
     public function index(): Response
     {
         $schoolId = session('school_id');
@@ -70,6 +74,17 @@ class MaterialController extends Controller
         ]);
 
         return redirect()->route('materials.index')->with('success', 'Material uploaded successfully.');
+    }
+
+    /**
+     * Hand back the lesson plan itself. `view` is the ability the record's page
+     * already asks for, so this grants no one new access.
+     */
+    public function download(Material $material): StreamedResponse
+    {
+        $this->authorize('view', $material);
+
+        return $this->downloadAttachment($material->file_path, $material->title);
     }
 
     public function show(Material $material): Response

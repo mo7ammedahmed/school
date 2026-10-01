@@ -2,10 +2,10 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function SubmissionsShow({ submission }: { submission: { id: number; assignment: { title: string; description: string }; student: { first_name: string; last_name: string; email: string }; content: string; file_path: string; file_type: string; file_size: string; submitted_at: string; score: number; feedback: string } }) {
+export default function SubmissionsShow({ submission }: { submission: { id: number; assignment: { title: string; description: string }; student: { first_name: string; last_name: string; email: string }; content: string; file_path: string | null; file_type: string; file_size: string; submitted_at: string; score: number; feedback: string } }) {
     return (
         <AppShell
             title="Submission Details"
@@ -24,6 +24,15 @@ export default function SubmissionsShow({ submission }: { submission: { id: numb
                         <Button variant="outline" asChild>
                             <Link href="/submissions"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                         </Button>
+                        {/* A submission can be text only, so the button is
+                            conditional rather than always present. */}
+                        {submission.file_path && (
+                            <Button variant="outline" asChild>
+                                <a href={`/submissions/${submission.id}/download`}>
+                                    <Download className="mr-2 h-4 w-4" />Download
+                                </a>
+                            </Button>
+                        )}
                         <Button asChild>
                             <Link href={`/submissions/${submission.id}/edit`}>Grade</Link>
                         </Button>

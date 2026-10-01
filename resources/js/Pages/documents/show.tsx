@@ -2,10 +2,10 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function DocumentsShow({ document }: { document: { id: number; title: string; classification: string; file_path: string; file_size: string; description: string; uploadedBy: { id: number; name: string } | null; created_at: string } }) {
+export default function DocumentsShow({ document }: { document: { id: number; title: string; classification: string; file_path: string | null; file_size: string; description: string; uploadedBy: { id: number; name: string } | null; created_at: string } }) {
     return (
         <AppShell
             title="Document Details"
@@ -23,6 +23,16 @@ export default function DocumentsShow({ document }: { document: { id: number; ti
                         <Button variant="outline" asChild>
                             <Link href="/documents"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                         </Button>
+                        {/* The file is on the private disk, so this is the only way
+                            to get it. It downloads rather than navigating, so the
+                            record stays on screen. */}
+                        {document.file_path && (
+                            <Button variant="outline" asChild>
+                                <a href={`/documents/${document.id}/download`}>
+                                    <Download className="mr-2 h-4 w-4" />Download
+                                </a>
+                            </Button>
+                        )}
                         <Button asChild>
                             <Link href={`/documents/${document.id}/edit`}>Edit</Link>
                         </Button>

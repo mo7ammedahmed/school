@@ -2,10 +2,10 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function MaterialsShow({ material }: {    material: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_path: string; description: string; file_size: number; uploaded_at: string } }) {
+export default function MaterialsShow({ material }: {    material: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_path: string | null; description: string; file_size: number; uploaded_at: string } }) {
     return (
         <AppShell
             title="Material Details"
@@ -23,6 +23,15 @@ export default function MaterialsShow({ material }: {    material: { id: number;
                         <Button variant="outline" asChild>
                             <Link href="/materials"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
                         </Button>
+                        {/* The file is on the private disk, so this is the only way
+                            to get it. */}
+                        {material.file_path && (
+                            <Button variant="outline" asChild>
+                                <a href={`/materials/${material.id}/download`}>
+                                    <Download className="mr-2 h-4 w-4" />Download
+                                </a>
+                            </Button>
+                        )}
                         <Button asChild>
                             <Link href={`/materials/${material.id}/edit`}>Edit</Link>
                         </Button>

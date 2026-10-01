@@ -7,14 +7,18 @@ namespace App\Http\Controllers;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\Submission;
 use App\Domain\People\Models\Student;
+use App\Http\Controllers\Concerns\ServesStoredAttachment;
 use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubmissionController extends Controller
 {
+    use ServesStoredAttachment;
+
     public function index(): Response
     {
         $submissions = Submission::where('school_id', session('school_id'))
@@ -64,6 +68,17 @@ class SubmissionController extends Controller
         ]);
 
         return redirect()->route('submissions.show', $submission)->with('success', 'Submission created successfully.');
+    }
+
+    /**
+     * Hand back the submitted work itself. `view` is the ability the record's page
+     * already asks for, so this grants no one new access.
+     */
+    public function download(Submission $submission): StreamedResponse
+    {
+        $this->authorize('view', $submission);
+
+        return $this->downloadAttachment($submission->file_path, $submission->content ?? 'submission');
     }
 
     public function show(Submission $submission): Response

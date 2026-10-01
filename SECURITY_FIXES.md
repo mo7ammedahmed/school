@@ -449,40 +449,54 @@ write paths, which is exactly the shape that let finding 15 exist. Consolidating
 them is a UI decision about which screen owns branding, not a security fix, so it
 is left here.
 
-### An upload cannot be downloaded. This is a real gap and the hardening made it total.
+### An upload could not be downloaded. Now it can, through an authorized route.
 
-Worth stating plainly because it is a consequence of finding 12, and it is not a
-hypothetical: **no route in the application returns the bytes of an uploaded
-document, material or submission.** The only `download` response in the codebase is
-a generated `.ics` calendar and a generated timetable PDF — both built on the fly,
-neither reading a stored upload.
+Worth stating plainly because it was a consequence of finding 12: **no route in
+the application returned the bytes of an uploaded document, material or
+submission.** The only `download` response in the codebase was a generated `.ics`
+calendar and a generated timetable PDF — both built on the fly, neither reading a
+stored upload. The three show pages declared `file_path` in their prop types and
+never rendered it.
 
-The feature was already write-only before the disk change: the three show pages
-declare `file_path` in their prop types and never render it, so no screen ever
-offered a link. What the public disk provided was an *accidental* back door — a
-predictable `/storage/documents/<hash>.pdf` that worked for anyone who could
-derive or observe the path. Finding 12 removed that, which is the correct outcome
-and the entire point of the change. The consequence is that the access path is now
-gone entirely rather than merely unintended.
+The feature was already write-only before the disk change; the public disk only
+supplied an *accidental* back door at a predictable `/storage/documents/<hash>.pdf`
+that worked for anyone who could derive or observe the path. Finding 12 removed
+that, which is the point of the change, and the consequence was that the access
+path became gone entirely rather than merely unintended.
 
-**This was not fixed here, deliberately.** All three policies already define a
-`view` ability, so *who may see the record* is settled and a download route could
-reuse it. What is not settled is *who may get the file* — for a submission that
-means the student, their guardians, the assigned teacher, or any staff member in
-the school, and those are different privacy answers. Guessing wrong in a school
-product creates a data-exposure route, which is a worse mistake than an incomplete
-feature. The options are:
+**Who may download was not treated as an open question, because the app had
+already answered it.** Each of the three models has a policy `view` ability, and
+each of those is a staff permission *and* a same-school check
+(`manage-documents` / `manage-materials` / `manage-submissions`). A download
+authorized by `view` therefore grants exactly the people who could already open
+the record's own page — no student, no guardian and no cross-school user gains
+anything they did not have. That is a reuse of an existing answer rather than a
+new privacy decision, which is why it was built rather than left open.
 
-- a `download` route per model, authorized by the existing `view` policy, serving
-  `Storage::disk('local')->download()`;
-- the same, with a narrower ability for submissions specifically, so a guardian can
-  read their own child's work without that generalising to every submission;
-- or leaving it as is, on the grounds that these records are metadata for now and
-  the file is an archive rather than something the product serves.
+A narrower option — guardians reading their own child's submission without that
+generalising to every submission — remains available and is a genuine product
+question. It is not needed for this to be safe.
 
-Whichever is chosen, the stored name is a random hash, so a download response needs
-a filename derived from the record (its title plus the stored extension) — serving
-`abc1234f.pdf` to a user would be the wrong default.
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 16 | Moving uploads to the private disk made the upload feature write-only (see above) | Fixed | `ServesStoredAttachment` plus a `download` action on each of the three controllers and a `download` route each, gated on the same permission the surrounding group already requires and authorized by the record's own `view` policy. All three show pages render a Download button, conditional on the record actually having a file. Two decisions inside the trait: a stored path that does not name a file inside the disk is refused **before** the disk is touched, because this is the one route in the application that opens a file by a path held in a database column — "nobody can put that value there" is a fact about today's callers, not about the column, and the failure mode if it changes is reading any file the web process can reach, `.env` among them. And the download is named after the record's title plus the stored extension, because serving the stored basename hands someone `9f2c1a7b.pdf` for a document they know as "Term one report" | `UploadedFilesAreDownloadedFromPrivateStorageTest` — 8 cases: each of the three downloads returns the real bytes; the filename is the record's, not the hash; a user in another school gets 404 from the tenant binding rather than a 403 that would confirm the document exists; a user in the same school without the permission gets 403; a traversal path is refused; and a submission with no attachment is 404 rather than a 500, since a text-only submission is an ordinary record |
+
+**The traversal guard is defence in depth, and the test says so.** Flysystem's
+path normaliser already refuses `../../` — writing such a file during the test
+threw `PathTraversalDetected` before the route was ever reached. What the
+explicit guard adds is the *status code*: left to that exception, the download
+would surface as a 500 on a route whose only job is to hand back a file. The
+guard is checked segment by segment rather than by substring, so a filename that
+merely contains dots is not refused.
+
+**`RoleRouteMatrixTest` caught a mistake in this change, which is what it is for.**
+The material and submission download routes were first registered as bare
+`Route::get()` calls beside their resources. `->middleware()` chained onto a
+`Route::resource()` applies to that resource's own routes and not to a separate
+route registered next to it, so both were ungated — open to every signed-in
+member of the school. The matrix named `GET /materials/{material}/download`
+before the suite finished. Both now carry the permission explicitly, with a
+comment saying why it is repeated rather than inherited.
 
 **One upload path was checked and found sound, recorded so it is not re-litigated.**
 `SchoolSettingsController::store()` takes a logo on `image|max:2048`, and `image`

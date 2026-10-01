@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ServesStoredAttachment;
 use App\Models\Document;
 use App\Validation\AllowedAttachment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
+    use ServesStoredAttachment;
+
     public function index(): Response
     {
         $documents = Document::where('school_id', session('school_id'))
@@ -64,6 +68,20 @@ class DocumentController extends Controller
         $document->load('uploadedBy');
 
         return inertia('documents/show', ['document' => $document]);
+    }
+
+    /**
+     * Hand back the file itself.
+     *
+     * `view` is the ability the record's own page already asks for, so this grants
+     * no one who could not already read the document — see `ServesStoredAttachment`
+     * for why the path is checked before it is opened.
+     */
+    public function download(Document $document): StreamedResponse
+    {
+        $this->authorize('view', $document);
+
+        return $this->downloadAttachment($document->file_path, $document->title);
     }
 
     public function edit(Document $document): Response
