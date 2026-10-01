@@ -110,10 +110,14 @@ a check in name only.
 2. **No backup tooling.** See Backups and restore above.
 3. **No health endpoint beyond Laravel’s \/up\.** Confirmed: \ootstrap/app.php\ has \health: '/up'\.
 4. **No S3 private disk configured.** \config/filesystems.php\ defines exactly three disks: \local\, \public\, \s3\. No \private\ disk exists (Decision 5 requires private storage for student documents; only \s3\ is configured).
-5. **Four dead routes** that name controller methods which do not exist and 500:
-   - \subjects.offerings\ → \SubjectController@offerings\ (missing)
-   - \my-grades\ → \ReportCardController@myGrades\ (missing)
-   - \inance.my-fees\ → \FinanceController@myFees\ (missing)
-   - \inance.fee-assignments.index\ → \FeeStructureController@assignments\ (missing)
+5. **The route table is checked as a table.** `RouteIntegrityTest` fails the
+   build when a route names a controller method that does not exist, or when an
+   earlier route answers a named route's URI first. It found 27 and 3 of those
+   respectively; the 26 endpoints with no screen behind them were retired and
+   the verification notice gained the method it named (see `SECURITY_FIXES.md`,
+   Phase 5). Two known gaps remain in that area: the verification *link* route
+   (`verification.verify`) is not registered because nothing sends a
+   verification mail yet, and the onboarding wizard is a walkthrough with no
+   write path — provisioning is `POST /schools`.
 6. **\docs/architecture.md\ claims domains \Analytics\ and \Integrations\ that do not exist under \pp/Domain\ and omits \Localization\ which does.**
 7. **CI has never run on GitHub Actions from this machine.**

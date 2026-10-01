@@ -8,7 +8,9 @@ Verified at the end of Phase 3: `phpunit` 538 tests / 3727 assertions, PHPStan
 level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean.
 At the Phase 4 checkpoint below: `phpunit` 560 tests / 3781 assertions, PHPStan
 level 5 clean, Pint clean (646 files); the frontend gates are untouched by this
-phase.
+phase. At the Phase 5 checkpoint: `phpunit` 564 tests / 3786 assertions, PHPStan
+level 5 clean, Pint clean (647 files), `tsc --noEmit` clean, `oxlint` 0 warnings,
+Vitest 17 passed.
 
 ## Phase 1 — Authorization (complete)
 
@@ -24,12 +26,11 @@ phase.
 
 **Open from Phase 1**
 
-- **Four dead routes** name controller methods that do not exist, so any role
-  that passes the gate gets a 500: `subjects.offerings`, `my-grades`,
-  `finance.my-fees`, `finance.fee-assignments.index`. They are named with
-  reasons in `RoleRouteMatrixTest::EXCLUDED_GATES` and in `docs/DEPLOY.md`, so
-  they cannot be forgotten — but each one still needs deciding: implement the
-  screen or retire the route.
+- **Four dead routes** named controller methods that do not exist, so any role
+  that passes the gate got a 500: `subjects.offerings`, `my-grades`,
+  `finance.my-fees`, `finance.fee-assignments.index`. Closed in Phase 5: all
+  four are retired with their reasons, and `RoleRouteMatrixTest` no longer
+  carries an exclusion list, so it exercises every gate again.
 - **Controller-level `authorize()` is thin** (four controllers, twelve call
   sites). Route groups are the enforcement layer now, and every guarded model
   has a mapped policy; the follow-up is to consult policies in show/edit and
@@ -84,7 +85,25 @@ phase.
 | 5 | Switching school put a new tenant in the session without regenerating its id; enabling or disabling 2FA did the same for a security-posture change | Confirmed | `regenerate()` on school selection and on both 2FA transitions (`ebb29c0`) | `SessionHardeningTest` (school switch); the 2FA transitions are covered by review, not a case |
 | 6 | The only 2FA test asserted the challenge page answers 200 for a visitor with no sign-in in progress — the behaviour that had to change | Confirmed | Rewritten to the pending state; the enforcement cases moved to `TwoFactorEnforcementTest` | `TwoFactorTest` |
 
-## Phase 4 — Tenant isolation (in progress)
+**Open from Phase 3**
+
+- **Recovery codes are never shown.** They are generated, hashed and counted,
+  and the settings screen displays only how many remain — so a user who loses
+  their authenticator cannot actually use one. The follow-up is to display the
+  set once, when it is generated.
+- **An administrator changing another user's roles or memberships does not end
+  that user's sessions.** Only the user's own school switch and 2FA transitions
+  regenerate their session. Invalidating on role change needs either a sweep of
+  the session store or an auth-version column.
+- **The limiter is per identity and address.** A distributed attempt across many
+  addresses is not covered by it; that is what an edge/WAF rate limit is for.
+- **The challenge redirect tells an attacker the password was right** for a
+  two-factor account. That is inherent to a two-step flow and matches common
+  practice; the alternative is a generic "continue" page that reveals nothing,
+  at the cost of a worse experience for the overwhelming majority who are
+  legitimate.
+
+## Phase 4 — Tenant isolation (complete)
 
 Verified by `tests/Feature/Security/TenantIsolationTest.php`, a cross-tenant
 matrix that asserts the *required* behaviour and started fully red, and by
@@ -126,20 +145,61 @@ All seven findings are fixed; what remains below them are follow-ups, not holes.
   "who is in this school" is a membership question, never a role question. The
   decision and its consequences are recorded as Decision 18.
 
-**Open from Phase 3**
+## Phase 5 — Routing bugs (complete)
 
-- **Recovery codes are never shown.** They are generated, hashed and counted,
-  and the settings screen displays only how many remain — so a user who loses
-  their authenticator cannot actually use one. The follow-up is to display the
-  set once, when it is generated.
-- **An administrator changing another user's roles or memberships does not end
-  that user's sessions.** Only the user's own school switch and 2FA transitions
-  regenerate their session. Invalidating on role change needs either a sweep of
-  the session store or an auth-version column.
-- **The limiter is per identity and address.** A distributed attempt across many
-  addresses is not covered by it; that is what an edge/WAF rate limit is for.
-- **The challenge redirect tells an attacker the password was right** for a
-  two-factor account. That is inherent to a two-step flow and matches common
-  practice; the alternative is a generic "continue" page that reveals nothing,
-  at the cost of a worse experience for the overwhelming majority who are
-  legitimate.
+Every earlier phase met this defect one route at a time: a route that names a
+controller method nobody wrote is a 500 for every role that passes its gate,
+and the authorization matrix had four such routes in an exclusion list instead
+of proving them. So the table itself is now checked as a table, by
+`tests/Feature/Security/RouteIntegrityTest.php`, written red (`02e8ebd`) and
+running against every registered route at build time: a `uses` string naming a
+missing method fails, and a named route that an earlier route answers first
+fails too.
+
+It found 27 routes naming missing methods — the four known ones and 23 more —
+and three routes shadowed by an earlier registration. The decisions below are
+per finding, all made from the call sites: nothing in the frontend or in PHP
+linked to any retired endpoint.
+
+| # | Finding | Status | Change | Tests |
+|---|---------|--------|--------|-------|
+| 1 | 27 routes named controller methods that do not exist (`onboarding.*` × 9, `roles.*` × 6 + `permissions.index`, `reports.export`, `teachers.destroy`/`schedule`, `academic-years.destroy`, `subjects.offerings`, `my-grades`, `finance.my-fees`, `finance.fee-assignments.index`, `documents.categories`, `enrollments.waitlist`, `verification.notice`) | Confirmed | `verification.notice` gained the method it named; the other 26 were retired with a reason each (`11b123d`), because no screen calls them | `RouteIntegrityTest` (table-wide), `RoleRouteMatrixTest` (no exclusions left) |
+| 2 | The verification notice also sat in the `guest` group, so the signed-in unverified user it is for was redirected to the dashboard | Confirmed | Route moved into the authenticated group; `VerifyEmailController::create()` renders `auth/verify-email` with the session status (`db6bb0f`) | `VerifyEmailTest` — unverified user answered 200, guest redirected to `/login` |
+| 3 | Three routes were shadowed by an earlier route: `GET|POST /documents/upload`, `GET /documents/categories` and `GET /enrollments/waitlist` were all answered by the resource show route with the literal segment as the id | Confirmed | Deleted; `/documents/create` and `POST /documents` are the upload screen the UI already posts to (`11b123d`) | `RouteIntegrityTest` — every named route must match itself first |
+| 4 | The onboarding wizard's nine POST routes were unnamed, unlinked and unimplemented: every Continue button was a 500 | Confirmed | Write path retired; the steps navigate and their forms are illustrative (`6c98e5c`). Provisioning stays on `POST /schools`, which creates the school **and** the creator's membership | `RouteIntegrityTest`; frontend gates |
+| 5 | Retiring `finance.my-fees` left `App\Http\Controllers\FinanceController` with no route at all, and its three methods duplicate screens other controllers serve | Confirmed | Deleted (`334448e`) | full suite, PHPStan |
+
+What was retired, and what stands in for it:
+
+- **`my-grades` / `finance.my-fees`** — the student portal (`student.grades`,
+  `student.fees`) and the guardian portal (`guardian.children.*`) serve both,
+  and the sidebar links to those.
+- **`roles.*` and `/permissions`** — the roles screen is read-only by design
+  ("Roles are assigned to users from the Settings → Users screen"), so it keeps
+  one `roles.index` route.
+- **`reports.export`** — the reports index is a hard-coded list of three names;
+  there is no report to export yet.
+- **`teachers.destroy` / `teachers.schedule`** — the staff list links to show
+  and edit only, and a teacher's timetable is read from the timetable screens.
+- **`academic-years.destroy`** — no delete action in the UI, and a year
+  cascades into its sections.
+- **`subjects.offerings`, `finance.fee-assignments.index`** — no screen, and
+  the permission strings stay seeded because `OfferingPolicy` and
+  `FeeAssignmentPolicy` still check them.
+
+**Open from Phase 5**
+
+- **The verification link has no route.** `VerifyEmailController@__invoke`
+  reads the signed URL a verification mail carries, but nothing sends that
+  mail, so only the notice half of the flow exists. Wiring `verification.verify`
+  belongs with a registration flow.
+- **A real onboarding provisioning flow is still unwritten.** The wizard is now
+  honest about being a walkthrough. If it should create the school, its year,
+  grades, subjects and fee structure, it should call the existing domain
+  actions (`CreateAcademicYear`, and the model paths the settings screens use)
+  with tests, not the `store*` methods that never existed.
+- **Retired permissions have no screen.** `manage-offerings` and
+  `manage-fee-assignments` are checked only by policies for models no screen
+  exposes, and `view-own-grades` / `view-own-fees` are checked by nothing now
+  that the portals are the only self-service routes. They stay seeded until the
+  screens exist or the policies are retired with them.

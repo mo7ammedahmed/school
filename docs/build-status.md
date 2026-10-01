@@ -51,9 +51,14 @@
 - [x] Configure HandleInertiaRequests middleware
 
 ## Phase 5: Onboarding Wizard
-- [x] Onboarding routes
+- [x] Onboarding routes — a walkthrough: each step renders a form and navigates
+  to the next. There is no write path (the nine `store*` endpoints never had
+  methods), so provisioning is Settings → Schools (`POST /schools`), which
+  creates the school and the creator's membership.
 - [x] Onboarding pages
 - [x] Shepherd.js integration
+- [ ] Provisioning wizard — creating the school, its year, grades, subjects and
+  fee structure from the wizard, if it is wanted
 
 ## Phase 6: Academic Structure
 - [x] Academic years, semesters, grade levels, sections, subjects, offerings
