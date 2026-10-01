@@ -109,6 +109,7 @@ use App\Domain\Scheduling\Policies\PeriodPolicy;
 use App\Domain\Scheduling\Policies\RoomPolicy;
 use App\Domain\Scheduling\Policies\TimetableEntryPolicy;
 use App\Domain\Schools\Support\TenantContext;
+use App\Domain\Schools\Validation\TenantAwareValidator;
 use App\Http\Middleware\ApplySiteMetadata;
 use App\Models\Classroom;
 use App\Models\Enrollment as AppEnrollment;
@@ -127,6 +128,7 @@ use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Head\ErrorPages;
 use Laravel\Head\Facades\Head;
@@ -160,6 +162,11 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+
+        // Every string `exists:` / `unique:` rule against a school-owned table
+        // is validated inside the active tenant; see TenantAwareValidator for
+        // why this is a factory-level concern rather than a per-rule edit.
+        Validator::resolver(fn ($translator, $data, $rules, $messages, $attributes) => new TenantAwareValidator($translator, $data, $rules, $messages, $attributes));
 
         $this->registerPolicies();
         $this->registerHeadDefaults();
