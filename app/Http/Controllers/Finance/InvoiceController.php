@@ -117,8 +117,6 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): InertiaResponse
     {
-        $this->ensureOwned($invoice);
-
         $invoice->load(['student', 'lines', 'payments']);
 
         return Inertia::render('finance/invoices/show', [
@@ -144,8 +142,6 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice): InertiaResponse
     {
-        $this->ensureOwned($invoice);
-
         $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
 
         return Inertia::render('finance/invoices/edit', [
@@ -156,8 +152,6 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice): RedirectResponse
     {
-        $this->ensureOwned($invoice);
-
         $this->abortIfLocked($invoice, 'Issued invoices cannot be edited. Void it and raise a new one instead.');
 
         $validated = $request->validate([
@@ -199,8 +193,6 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice): RedirectResponse
     {
-        $this->ensureOwned($invoice);
-
         abort_if((float) $invoice->amount_paid > 0, 403, 'Invoices with payments cannot be deleted.');
 
         $invoice->delete();
@@ -213,8 +205,6 @@ class InvoiceController extends Controller
      */
     public function issue(Invoice $invoice, IssueInvoice $issueInvoice): RedirectResponse
     {
-        $this->ensureOwned($invoice);
-
         abort_if($invoice->isPaid(), 403, 'This invoice is already settled.');
 
         $issueInvoice->execute($invoice);
@@ -230,8 +220,6 @@ class InvoiceController extends Controller
      */
     public function send(Invoice $invoice): RedirectResponse
     {
-        $this->ensureOwned($invoice);
-
         $kind = $invoice->sent_at === null
             ? InvoiceMail::KIND_ISSUED
             : InvoiceMail::KIND_REMINDER;
@@ -252,8 +240,6 @@ class InvoiceController extends Controller
 
     public function pdf(Invoice $invoice): Response
     {
-        $this->ensureOwned($invoice);
-
         return InvoicePdf::download($invoice);
     }
 

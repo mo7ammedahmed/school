@@ -54,8 +54,6 @@ class SectionController extends Controller
 
     public function show(Section $section): Response
     {
-        $this->ensureOwned($section);
-
         $section->load('gradeLevel', 'academicYear');
 
         return inertia('sections/show', ['section' => $section]);
@@ -63,8 +61,6 @@ class SectionController extends Controller
 
     public function edit(Section $section): Response
     {
-        $this->ensureOwned($section);
-
         return inertia('sections/edit', [
             'section' => $section,
             'gradeLevels' => $this->gradeLevels(),
@@ -74,8 +70,6 @@ class SectionController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
-        $this->ensureOwned($section);
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -91,8 +85,6 @@ class SectionController extends Controller
 
     public function destroy(Section $section): RedirectResponse
     {
-        $this->ensureOwned($section);
-
         $section->delete();
 
         return redirect()->route('sections.index')->with('success', 'Section deleted successfully.');

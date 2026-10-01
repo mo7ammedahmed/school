@@ -135,7 +135,8 @@
 - [ ] Performance optimization
 - [x] Tenant isolation: every public page filters by one resolved school through
   `PublicController::schoolId()` and the fail-closed `forSchool()` scope; the
-  signed-in app goes through `Controller::schoolId()`/`ensureOwned()`
+  signed-in app goes through `TenantContext` and the `BelongsToSchool` global
+  scope (queries, route bindings, `exists:`/`unique:` validation)
 - [x] Security headers (CSP, frame options, HSTS in production), two-factor
   authentication, rate limits on the public contact form and application journey
 - [ ] Security follow-ups: the CSP still allows `'unsafe-inline'`/`'unsafe-eval'`

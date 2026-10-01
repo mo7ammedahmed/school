@@ -71,10 +71,6 @@ class MessageController extends Controller
 
     public function show(Conversation $conversation): Response
     {
-        if ((int) $conversation->school_id !== (int) session('school_id')) {
-            abort(403);
-        }
-
         $conversation->load(['messages.sender']);
 
         return inertia('messages/show', ['conversation' => $conversation]);

@@ -59,8 +59,6 @@ class FeeStructureController extends Controller
 
     public function show(FeeStructure $feeStructure): Response
     {
-        $this->ensureOwned($feeStructure);
-
         $feeStructure->load('feeType', 'gradeLevel');
 
         return Inertia::render('finance/fee-structures/show', [
@@ -70,8 +68,6 @@ class FeeStructureController extends Controller
 
     public function edit(FeeStructure $feeStructure): Response
     {
-        $this->ensureOwned($feeStructure);
-
         return Inertia::render('finance/fee-structures/edit', [
             'feeStructure' => $feeStructure,
             'gradeLevels' => $this->gradeLevels(),
@@ -81,8 +77,6 @@ class FeeStructureController extends Controller
 
     public function update(UpdateFeeStructureRequest $request, FeeStructure $feeStructure): RedirectResponse
     {
-        $this->ensureOwned($feeStructure);
-
         $feeStructure->update($request->validated());
 
         return redirect()->route('finance.fee-structures.show', $feeStructure)->with('success', 'Fee structure updated successfully.');

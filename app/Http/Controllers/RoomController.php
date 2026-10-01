@@ -44,28 +44,16 @@ class RoomController extends Controller
 
     public function show(Room $room): Response
     {
-        if ($room->school_id !== session('school_id')) {
-            abort(403);
-        }
-
         return inertia('rooms/show', ['room' => $room]);
     }
 
     public function edit(Room $room): Response
     {
-        if ($room->school_id !== session('school_id')) {
-            abort(403);
-        }
-
         return inertia('rooms/edit', ['room' => $room]);
     }
 
     public function update(Request $request, Room $room): RedirectResponse
     {
-        if ($room->school_id !== session('school_id')) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -82,10 +70,6 @@ class RoomController extends Controller
 
     public function destroy(Room $room): RedirectResponse
     {
-        if ($room->school_id !== session('school_id')) {
-            abort(403);
-        }
-
         $room->delete();
 
         return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');

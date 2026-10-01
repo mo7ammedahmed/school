@@ -42,10 +42,12 @@
   them forgot, so `/news`, `/events` and `/` listed every school's rows and
   `/news/{post}` opened another school's article by id.
 - **Decision:** `SchoolResolver` answers "which school is this request about?"
-  and nothing else. The signed-in app asks the base controller
-  (`schoolId()` / `ensureOwned()`); public pages extend `PublicController` and
-  filter with `BelongsToSchool::forSchool()`. A null id scopes to nothing
-  (fail closed) rather than to everything.
+  and nothing else. The signed-in app pins that answer in `TenantContext`
+  (`school.context`, after membership is proven), and every model that carries
+  `BelongsToSchool` is scoped to it on every query and every route binding;
+  `Controller::schoolId()` reads the same context. Public pages extend
+  `PublicController` and filter with the same scope. A null id scopes to
+  nothing (fail closed) rather than to everything.
 - **Consequences:** A query missing `forSchool()` reads as unfinished at the call
   site. Public pages cannot fall back to an unscoped query by accident.
 

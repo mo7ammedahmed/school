@@ -55,22 +55,16 @@ class AcademicYearController extends Controller
 
     public function show(AcademicYear $academicYear): Response
     {
-        abort_unless((int) $academicYear->school_id === $this->schoolId(), 403);
-
         return inertia('academic-years/show', ['academicYear' => $academicYear]);
     }
 
     public function edit(AcademicYear $academicYear): Response
     {
-        abort_unless((int) $academicYear->school_id === $this->schoolId(), 403);
-
         return inertia('academic-years/edit', ['academicYear' => $academicYear]);
     }
 
     public function update(Request $request, AcademicYear $academicYear): RedirectResponse
     {
-        abort_unless((int) $academicYear->school_id === $this->schoolId(), 403);
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => [

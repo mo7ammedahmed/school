@@ -48,22 +48,16 @@ class GuardianController extends Controller
 
     public function show(Guardian $guardian): Response
     {
-        abort_unless((int) $guardian->school_id === $this->schoolId(), 403);
-
         return inertia('guardians/show', ['guardian' => $guardian]);
     }
 
     public function edit(Guardian $guardian): Response
     {
-        abort_unless((int) $guardian->school_id === $this->schoolId(), 403);
-
         return inertia('guardians/edit', ['guardian' => $guardian]);
     }
 
     public function update(Request $request, Guardian $guardian): RedirectResponse
     {
-        abort_unless((int) $guardian->school_id === $this->schoolId(), 403);
-
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -82,8 +76,6 @@ class GuardianController extends Controller
 
     public function destroy(Guardian $guardian): RedirectResponse
     {
-        abort_unless((int) $guardian->school_id === $this->schoolId(), 403);
-
         $guardian->delete();
 
         return redirect()->route('guardians.index')->with('success', 'Guardian deleted successfully.');

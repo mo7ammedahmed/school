@@ -39,22 +39,16 @@ class AnnouncementController extends Controller
 
     public function show(Announcement $announcement): Response
     {
-        $this->ensureOwned($announcement, 404);
-
         return inertia('announcements/show', ['announcement' => $announcement]);
     }
 
     public function edit(Announcement $announcement): Response
     {
-        $this->ensureOwned($announcement, 404);
-
         return inertia('announcements/edit', ['announcement' => $announcement]);
     }
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
     {
-        $this->ensureOwned($announcement, 404);
-
         $announcement->update($this->validated($request));
 
         return redirect()->route('announcements.show', $announcement)->with('success', 'Announcement updated successfully.');
@@ -62,8 +56,6 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement): RedirectResponse
     {
-        $this->ensureOwned($announcement, 404);
-
         $announcement->delete();
 
         return redirect()->route('announcements.index')->with('success', 'Announcement deleted successfully.');

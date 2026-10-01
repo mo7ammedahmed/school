@@ -48,22 +48,16 @@ class TeacherController extends Controller
 
     public function show(TeacherProfile $teacher): Response
     {
-        abort_unless((int) $teacher->school_id === $this->schoolId(), 403);
-
         return inertia('teachers/show', ['teacher' => $teacher]);
     }
 
     public function edit(TeacherProfile $teacher): Response
     {
-        abort_unless((int) $teacher->school_id === $this->schoolId(), 403);
-
         return inertia('teachers/edit', ['teacher' => $teacher]);
     }
 
     public function update(Request $request, TeacherProfile $teacher): RedirectResponse
     {
-        abort_unless((int) $teacher->school_id === $this->schoolId(), 403);
-
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',

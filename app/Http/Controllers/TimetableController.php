@@ -309,8 +309,6 @@ class TimetableController extends Controller
 
     public function show(TimetableEntry $timetable): InertiaResponse
     {
-        $this->ensureOwned($timetable);
-
         $timetable->load(['offering.subject', 'section', 'teacher', 'room', 'period']);
 
         return inertia('timetable/show', ['schedule' => $timetable]);
@@ -318,8 +316,6 @@ class TimetableController extends Controller
 
     public function edit(TimetableEntry $timetable): InertiaResponse
     {
-        $this->ensureOwned($timetable);
-
         return inertia('timetable/edit', [
             'schedule' => $timetable->load(['offering.subject', 'section', 'teacher', 'room']),
             ...$this->formOptions(),
@@ -328,8 +324,6 @@ class TimetableController extends Controller
 
     public function update(Request $request, TimetableEntry $timetable): RedirectResponse
     {
-        $this->ensureOwned($timetable);
-
         $schoolId = $this->schoolId();
         $validated = $request->validate($this->rules($schoolId));
 
@@ -361,8 +355,6 @@ class TimetableController extends Controller
 
     public function destroy(TimetableEntry $timetable): RedirectResponse
     {
-        $this->ensureOwned($timetable);
-
         $timetable->delete();
 
         return redirect()->route('timetable.index')->with('success', 'Schedule deleted successfully');
@@ -370,8 +362,6 @@ class TimetableController extends Controller
 
     public function publish(TimetableEntry $timetable): RedirectResponse
     {
-        $this->ensureOwned($timetable);
-
         $timetable->update(['is_published' => true]);
 
         return back()->with('success', 'Timetable entry published.');
@@ -379,8 +369,6 @@ class TimetableController extends Controller
 
     public function unpublish(TimetableEntry $timetable): RedirectResponse
     {
-        $this->ensureOwned($timetable);
-
         $timetable->update(['is_published' => false]);
 
         return back()->with('success', 'Timetable entry unpublished.');

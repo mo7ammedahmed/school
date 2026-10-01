@@ -338,12 +338,7 @@ class GradingSettingsController extends Controller
 
     public function showScale(Request $request, GradingScale $scale): Response
     {
-        // Ensure the scale belongs to the current school
         $school = $this->school($request);
-
-        if ($scale->school_id !== $school->id) {
-            abort(403);
-        }
 
         return inertia('settings/grading', [
             'school' => [
@@ -396,11 +391,6 @@ class GradingSettingsController extends Controller
     {
         $school = $this->school($request);
 
-        // Ensure the scale belongs to the current school
-        if ($scale->school_id !== $school->id) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:100',
             'description' => 'sometimes|nullable|string',
@@ -431,11 +421,6 @@ class GradingSettingsController extends Controller
     public function destroyScale(Request $request, GradingScale $scale): RedirectResponse
     {
         $school = $this->school($request);
-
-        // Ensure the scale belongs to the current school
-        if ($scale->school_id !== $school->id) {
-            abort(403);
-        }
 
         // If deleting the default scale, we need to set another one as default
         $wasDefault = $scale->is_default;
@@ -478,12 +463,7 @@ class GradingSettingsController extends Controller
 
     public function showCategory(Request $request, GradingCategory $category): Response
     {
-        // Ensure the category belongs to the current school
         $school = $this->school($request);
-
-        if ($category->school_id !== $school->id) {
-            abort(403);
-        }
 
         return inertia('settings/grading', [
             'school' => [
@@ -537,11 +517,6 @@ class GradingSettingsController extends Controller
     {
         $school = $this->school($request);
 
-        // Ensure the category belongs to the current school
-        if ($category->school_id !== $school->id) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:100',
             'code' => 'sometimes|nullable|string|max:20',
@@ -562,11 +537,6 @@ class GradingSettingsController extends Controller
     public function destroyCategory(Request $request, GradingCategory $category): RedirectResponse
     {
         $school = $this->school($request);
-
-        // Ensure the category belongs to the current school
-        if ($category->school_id !== $school->id) {
-            abort(403);
-        }
 
         $category->delete();
 

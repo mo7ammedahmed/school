@@ -94,8 +94,6 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): InertiaResponse
     {
-        $this->ensureOwned($payment);
-
         $payment->load('invoice.student');
 
         return Inertia::render('finance/payments/show', [
@@ -105,8 +103,6 @@ class PaymentController extends Controller
 
     public function edit(Payment $payment): InertiaResponse
     {
-        $this->ensureOwned($payment);
-
         return Inertia::render('finance/payments/edit', [
             'payment' => $payment,
             'invoices' => $this->invoices(),
@@ -116,8 +112,6 @@ class PaymentController extends Controller
 
     public function update(Request $request, Payment $payment): RedirectResponse
     {
-        $this->ensureOwned($payment);
-
         $validated = $request->validate([
             'student_id' => ['required', 'integer', $this->studentRule()],
             'invoice_id' => ['required', 'integer', $this->invoiceRule()],
@@ -145,8 +139,6 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment): RedirectResponse
     {
-        $this->ensureOwned($payment);
-
         $payment->delete();
 
         return redirect()->route('finance.payments.index')->with('success', 'Payment deleted successfully.');
@@ -157,8 +149,6 @@ class PaymentController extends Controller
      */
     public function review(Payment $payment): InertiaResponse
     {
-        $this->ensureOwned($payment);
-
         $payment->load('invoice');
 
         return Inertia::render('finance/payments/return', [
@@ -174,8 +164,6 @@ class PaymentController extends Controller
      */
     public function confirm(Request $request, Payment $payment): RedirectResponse
     {
-        $this->ensureOwned($payment);
-
         $validated = $request->validate([
             'reference_number' => 'nullable|string|max:255',
         ]);

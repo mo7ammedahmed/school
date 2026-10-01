@@ -67,8 +67,6 @@ class StudentController extends Controller
 
     public function show(Student $student): Response
     {
-        abort_unless((int) $student->school_id === $this->schoolId(), 403);
-
         $student->load('guardians');
 
         return inertia('students/show', ['student' => $student]);
@@ -76,8 +74,6 @@ class StudentController extends Controller
 
     public function edit(Student $student): Response
     {
-        abort_unless((int) $student->school_id === $this->schoolId(), 403);
-
         $guardians = Guardian::where('school_id', $this->schoolId())
             ->orderBy('first_name')
             ->get();
@@ -87,8 +83,6 @@ class StudentController extends Controller
 
     public function update(Request $request, Student $student): RedirectResponse
     {
-        abort_unless((int) $student->school_id === $this->schoolId(), 403);
-
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -120,8 +114,6 @@ class StudentController extends Controller
 
     public function destroy(Student $student): RedirectResponse
     {
-        abort_unless((int) $student->school_id === $this->schoolId(), 403);
-
         $student->delete();
 
         return redirect()->route('students.index')->with('success', 'Student deleted successfully.');

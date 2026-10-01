@@ -74,7 +74,6 @@ class ExamController extends Controller
 
     public function show(Exam $exam): Response
     {
-        $this->ensureOwned($exam);
         $exam->load(['offering.subject', 'offering.section', 'room']);
 
         return inertia('exams/show', ['exam' => $exam]);
@@ -82,7 +81,6 @@ class ExamController extends Controller
 
     public function edit(Exam $exam): Response
     {
-        $this->ensureOwned($exam);
         $schoolId = session('school_id');
         $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
@@ -96,7 +94,6 @@ class ExamController extends Controller
 
     public function update(Request $request, Exam $exam): RedirectResponse
     {
-        $this->ensureOwned($exam);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
@@ -128,7 +125,6 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam): RedirectResponse
     {
-        $this->ensureOwned($exam);
         $exam->delete();
 
         return redirect()->route('exams.index')->with('success', 'Exam deleted successfully.');
@@ -136,7 +132,6 @@ class ExamController extends Controller
 
     public function results(Exam $exam): Response
     {
-        $this->ensureOwned($exam);
         $results = ExamResult::where('school_id', session('school_id'))
             ->where('exam_id', $exam->id)
             ->with(['student'])

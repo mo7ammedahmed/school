@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -20,30 +20,23 @@ abstract class Controller extends BaseController
      * Every tenant table keys off this value, and eighteen controllers used to
      * carry their own private copy of the same three lines — which meant a
      * missing context was a silent `school_id = 0` in some pages and a 403 in
-     * others. There is one copy now, and a request with no school context is
-     * always refused rather than quietly asking the database about school zero.
+     * others. There is one answer now, `TenantContext`, pinned by
+     * `school.context` after membership is proven and read here; a request that
+     * arrives without it is a routing mistake, and is refused rather than
+     * quietly asking the database about school zero.
      *
-     * `school.context` is what puts the value in the session; anything reaching
-     * a controller without it is a routing mistake, not an empty list.
+     * Controllers do not have to prove ownership of a bound model any more:
+     * `BelongsToSchool` resolves route bindings inside this context, so a
+     * foreign id never reaches an action.
      */
     protected function schoolId(): int
     {
-        $schoolId = (int) session('school_id');
+        $schoolId = app(TenantContext::class)->id();
 
-        abort_if($schoolId === 0, 403, 'No school context is available for this request.');
+        if ($schoolId === null) {
+            abort(403, 'No school context is available for this request.');
+        }
 
         return $schoolId;
-    }
-
-    /**
-     * Refuses a record that belongs to another school.
-     *
-     * Tenant scoping on the query only covers reads; every route that takes a
-     * model off the URL still has to prove the record is the operator's, or one
-     * school can open another's invoice by guessing an id.
-     */
-    protected function ensureOwned(Model $model, int $status = 403): void
-    {
-        abort_unless((int) $model->getAttribute('school_id') === $this->schoolId(), $status);
     }
 }

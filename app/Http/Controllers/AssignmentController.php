@@ -68,7 +68,6 @@ class AssignmentController extends Controller
 
     public function show(Assignment $assignment): Response
     {
-        $this->ensureOwned($assignment);
         $assignment->load(['offering.subject', 'offering.section']);
 
         return inertia('assignments/show', ['assignment' => $assignment]);
@@ -76,7 +75,6 @@ class AssignmentController extends Controller
 
     public function edit(Assignment $assignment): Response
     {
-        $this->ensureOwned($assignment);
         $schoolId = session('school_id');
         $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
@@ -90,7 +88,6 @@ class AssignmentController extends Controller
 
     public function update(Request $request, Assignment $assignment): RedirectResponse
     {
-        $this->ensureOwned($assignment);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
@@ -118,7 +115,6 @@ class AssignmentController extends Controller
 
     public function destroy(Assignment $assignment): RedirectResponse
     {
-        $this->ensureOwned($assignment);
         $assignment->delete();
 
         return redirect()->route('assignments.index')->with('success', 'Assignment deleted successfully.');

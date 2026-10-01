@@ -6,8 +6,8 @@ here is marked fixed without a test that fails against the old behaviour.
 
 Verified at the end of Phase 3: `phpunit` 538 tests / 3727 assertions, PHPStan
 level 5 clean, Pint clean (634 files), `tsc --noEmit`, `oxlint` and Vitest clean.
-At the Phase 4 checkpoint below: `phpunit` 555 tests / 3774 assertions, PHPStan
-level 5 clean, Pint clean (643 files); the frontend gates are untouched by this
+At the Phase 4 checkpoint below: `phpunit` 560 tests / 3781 assertions, PHPStan
+level 5 clean, Pint clean (646 files); the frontend gates are untouched by this
 phase.
 
 ## Phase 1 — Authorization (complete)
@@ -90,7 +90,7 @@ Verified by `tests/Feature/Security/TenantIsolationTest.php`, a cross-tenant
 matrix that asserts the *required* behaviour and started fully red, and by
 `tests/Feature/Security/TenantValidationRuleScopeTest.php`, which proves the
 validation mechanism and scans the source for object rules that bypass it.
-Findings 1–6 are fixed; 7 is named work still to do.
+All seven findings are fixed; what remains below them are follow-ups, not holes.
 
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
@@ -100,10 +100,15 @@ Findings 1–6 are fixed; 7 is named work still to do.
 | 4 | `DiscountController` listed and offered platform-wide rows and stamped `school_id` from the raw session | Confirmed | `forSchool()` on list and pickers; stamp from the tenant context (`1b6be3c`) | `TenantIsolationTest` (list, open, edit, delete) |
 | 5 | 63 models carry `school_id`; only 13 carried `BelongsToSchool`, so the rest could be queried across schools by an omission | Fixed | Rollout complete: `TenantContext`, fail-closed `TenantScope`, auto-stamp and `withoutSchoolScope()` are live on every school-owned model (`2af16b0`, `1f058bc`, `85b99ca`, `1a436b6`, `597c4c9`, `b9e9725`). Three deliberate exclusions, each with its reason recorded: `UserMembership` (the resolver cannot depend on its own answer), `AuditLog` (platform and support actions too), `WebsiteThemePreset` (no `school_id` by design) | The whole suite runs against the live scope; the rollout exposed and fixed real unscoped services: the timetable conflict detector, the settings stores used outside requests, invoice delivery, and settlement |
 | 6 | 181 `exists:` rules across controllers, form requests and DTOs are unscoped, so a foreign id validates | Fixed | `TenantAwareValidator` is resolved by the validation factory and narrows every string `exists:`/`unique:` rule naming a table with a `school_id` column to the active tenant, fail-closed with no context (`7d3d6a9`). `Rule::exists()`/`Rule::unique()` objects bypass the validator, so the guard test scans the source and fails when one of them names a tenant table without its own filter, with a reasoned exemption list for deliberate crossings | `TenantValidationRuleScopeTest` — four runtime cases (foreign row refused, other school's unique value free, platform table untouched, no context accepts nothing) plus the source scan; the whole suite passes unchanged with the resolver live |
-| 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Open, no longer reachable | Every model those checks guarded is now tenant-bound, so a foreign id 404s at the route before the check runs; the remaining call sites are dead code to delete, not a live disagreement | The isolation matrix and the suite exercise the binding path |
+| 7 | Ownership checks answer 403 (`ensureOwned` and hand-rolled copies) while binding now 404s, so the two halves of the app disagree about what "not yours" means | Fixed | `Controller::ensureOwned` and every hand-rolled copy deleted — student, guardian, teacher, room, message and the grading scale/category screens. Every model they guarded is tenant-bound, so a foreign id is answered 404 at the route and the check was unreachable; `Controller::schoolId()` now reads the tenant context rather than the raw session | The whole suite passes without them; the isolation matrix exercises the binding path |
 
 **Open from Phase 4**
 
+- **Policies still compare the session directly** (`$model->school_id ===
+  session('school_id')` in every per-school policy). That is fail-closed — a
+  console or queued `authorize()` has no session, so it denies — but it is a
+  second tenant comparison next to `TenantContext`. Folding the policies onto
+  the context is the follow-up; it is a refactor, not a hole.
 - **Two public entry points had to pin their own tenant, and that shape is
   worth remembering.** Route model binding runs before route middleware, so the
   signed `/pay/{invoice}` links cannot type-hint the model: the middleware

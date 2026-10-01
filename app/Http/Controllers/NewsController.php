@@ -55,21 +55,16 @@ class NewsController extends Controller
 
     public function show(News $news): Response
     {
-        $this->ensureOwned($news);
-
         return inertia('news/show', ['article' => $news]);
     }
 
     public function edit(News $news): Response
     {
-        $this->ensureOwned($news);
-
         return inertia('news/edit', ['article' => $news]);
     }
 
     public function update(Request $request, News $news): RedirectResponse
     {
-        $this->ensureOwned($news);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -94,7 +89,6 @@ class NewsController extends Controller
 
     public function destroy(News $news): RedirectResponse
     {
-        $this->ensureOwned($news);
         $news->delete();
 
         return redirect()->route('content.news.index')->with('success', 'Article deleted successfully.');

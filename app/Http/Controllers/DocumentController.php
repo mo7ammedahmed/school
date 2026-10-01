@@ -53,8 +53,6 @@ class DocumentController extends Controller
 
     public function show(Document $document): Response
     {
-        abort_unless((int) $document->school_id === (int) session('school_id'), 404);
-
         $document->load('uploadedBy');
 
         return inertia('documents/show', ['document' => $document]);
@@ -62,8 +60,6 @@ class DocumentController extends Controller
 
     public function edit(Document $document): Response
     {
-        abort_unless((int) $document->school_id === (int) session('school_id'), 404);
-
         $document->load('uploadedBy');
 
         return inertia('documents/edit', ['document' => $document]);
@@ -71,8 +67,6 @@ class DocumentController extends Controller
 
     public function update(Request $request, Document $document): RedirectResponse
     {
-        abort_unless((int) $document->school_id === (int) session('school_id'), 404);
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'classification' => 'required|in:transcript,certificate,report,policy,form,other',
@@ -86,8 +80,6 @@ class DocumentController extends Controller
 
     public function destroy(Document $document): RedirectResponse
     {
-        abort_unless((int) $document->school_id === (int) session('school_id'), 404);
-
         if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
             Storage::disk('public')->delete($document->file_path);
         }

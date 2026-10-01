@@ -26,10 +26,11 @@ Key strengths include:
 
 - multi-school / multi-organization architecture
 - school-scoped data ownership through `school_id`. Tenancy has one owner per
-  request: `SchoolResolver` decides the school, `Controller::schoolId()` (with
-  `ensureOwned()`) covers the signed-in app, and public pages extend
-  `Public\PublicController` and filter with the `forSchool()` scope, which fails
-  closed when no school can be resolved
+  request: `SchoolResolver` decides the school, `TenantContext` carries it, and
+  the `BelongsToSchool` global scope covers the signed-in app — queries, route
+  bindings and `exists:`/`unique:` validation all read the same context. Public
+  pages extend `Public\PublicController` and filter with the `forSchool()`
+  scope, which fails closed when no school can be resolved
 - role-based access with Spatie Permission
 - Arabic/English bilingual support with RTL-aware layouts
 - educational domain modeling for academic and operational workflows

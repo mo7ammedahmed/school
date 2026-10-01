@@ -67,7 +67,6 @@ class QuizController extends Controller
 
     public function show(Quiz $quiz): Response
     {
-        $this->ensureOwned($quiz);
         $quiz->load(['offering.subject', 'offering.section']);
 
         return inertia('quizzes/show', ['quiz' => $quiz]);
@@ -75,7 +74,6 @@ class QuizController extends Controller
 
     public function edit(Quiz $quiz): Response
     {
-        $this->ensureOwned($quiz);
         $schoolId = session('school_id');
         $subjects = Subject::where('school_id', $schoolId)->orderBy('name_en')->get();
         $sections = Section::where('school_id', $schoolId)->orderBy('name_en')->get();
@@ -89,7 +87,6 @@ class QuizController extends Controller
 
     public function update(Request $request, Quiz $quiz): RedirectResponse
     {
-        $this->ensureOwned($quiz);
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
@@ -117,7 +114,6 @@ class QuizController extends Controller
 
     public function destroy(Quiz $quiz): RedirectResponse
     {
-        $this->ensureOwned($quiz);
         $quiz->delete();
 
         return redirect()->route('quizzes.index')->with('success', 'Quiz deleted successfully.');
@@ -125,7 +121,6 @@ class QuizController extends Controller
 
     public function attempt(Quiz $quiz): Response
     {
-        $this->ensureOwned($quiz);
         $quiz->load(['offering.subject', 'offering.section']);
 
         return inertia('quizzes/show', ['quiz' => $quiz]);

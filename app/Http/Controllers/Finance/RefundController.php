@@ -63,8 +63,6 @@ class RefundController extends Controller
 
     public function show(Refund $refund): Response
     {
-        $this->ensureOwned($refund);
-
         $refund->load('invoice.student');
 
         return Inertia::render('finance/refunds/show', [
@@ -74,8 +72,6 @@ class RefundController extends Controller
 
     public function edit(Refund $refund): Response
     {
-        $this->ensureOwned($refund);
-
         $invoices = Invoice::where('school_id', $this->schoolId())
             ->with('student')
             ->orderBy('created_at', 'desc')
@@ -89,8 +85,6 @@ class RefundController extends Controller
 
     public function update(Request $request, Refund $refund): RedirectResponse
     {
-        $this->ensureOwned($refund);
-
         $refund->update($this->validated($request));
 
         return redirect()->route('finance.refunds.index')->with('success', 'Refund updated successfully.');
@@ -98,8 +92,6 @@ class RefundController extends Controller
 
     public function destroy(Refund $refund): RedirectResponse
     {
-        $this->ensureOwned($refund);
-
         $refund->delete();
 
         return redirect()->route('finance.refunds.index')->with('success', 'Refund deleted successfully.');

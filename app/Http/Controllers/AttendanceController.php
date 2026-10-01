@@ -73,7 +73,6 @@ class AttendanceController extends Controller
 
     public function show(AttendanceRecord $attendance): Response
     {
-        $this->ensureOwned($attendance);
         $attendance->load(['student', 'attendanceSession']);
 
         return inertia('attendance/show', ['attendance' => $attendance]);
@@ -81,7 +80,6 @@ class AttendanceController extends Controller
 
     public function edit(AttendanceRecord $attendance): Response
     {
-        $this->ensureOwned($attendance);
         $schoolId = session('school_id');
         $students = Student::where('school_id', $schoolId)->orderBy('first_name')->get();
         $sessions = AttendanceSession::where('school_id', $schoolId)
@@ -108,7 +106,6 @@ class AttendanceController extends Controller
 
     public function update(Request $request, AttendanceRecord $attendance): RedirectResponse
     {
-        $this->ensureOwned($attendance);
         $validated = $request->validate([
             'attendance_session_id' => 'required|exists:attendance_sessions,id',
             'student_id' => 'required|exists:students,id',
@@ -128,7 +125,6 @@ class AttendanceController extends Controller
 
     public function destroy(AttendanceRecord $attendance): RedirectResponse
     {
-        $this->ensureOwned($attendance);
         $attendance->delete();
 
         return redirect()->route('attendance.index')->with('success', 'Attendance record deleted successfully.');

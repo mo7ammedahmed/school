@@ -55,8 +55,6 @@ class AssessmentController extends Controller
 
     public function show(Assessment $assessment): Response
     {
-        $this->ensureOwned($assessment);
-
         $assessment->load(['offering.subject', 'offering.section', 'gradingCategory']);
 
         return inertia('assessments/show', [
@@ -69,8 +67,6 @@ class AssessmentController extends Controller
 
     public function edit(Assessment $assessment): Response
     {
-        $this->ensureOwned($assessment);
-
         return inertia('assessments/edit', [
             'assessment' => [
                 ...$this->toRow($assessment),
@@ -86,8 +82,6 @@ class AssessmentController extends Controller
 
     public function update(Request $request, Assessment $assessment): RedirectResponse
     {
-        $this->ensureOwned($assessment);
-
         $validated = $request->validate($this->rules($this->schoolId()));
 
         $assessment->update([
@@ -102,8 +96,6 @@ class AssessmentController extends Controller
 
     public function destroy(Assessment $assessment): RedirectResponse
     {
-        $this->ensureOwned($assessment);
-
         $assessment->delete();
 
         return redirect()
@@ -116,8 +108,6 @@ class AssessmentController extends Controller
      */
     public function scores(Assessment $assessment): Response
     {
-        $this->ensureOwned($assessment);
-
         $assessment->load('offering.subject', 'offering.section');
 
         $scores = AssessmentScore::where('assessment_id', $assessment->id)

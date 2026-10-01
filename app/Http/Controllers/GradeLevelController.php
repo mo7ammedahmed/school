@@ -48,22 +48,16 @@ class GradeLevelController extends Controller
 
     public function show(GradeLevel $gradeLevel): Response
     {
-        $this->ensureOwned($gradeLevel);
-
         return inertia('grade-levels/show', ['gradeLevel' => $gradeLevel]);
     }
 
     public function edit(GradeLevel $gradeLevel): Response
     {
-        $this->ensureOwned($gradeLevel);
-
         return inertia('grade-levels/edit', ['gradeLevel' => $gradeLevel]);
     }
 
     public function update(Request $request, GradeLevel $gradeLevel): RedirectResponse
     {
-        $this->ensureOwned($gradeLevel);
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -83,8 +77,6 @@ class GradeLevelController extends Controller
 
     public function destroy(GradeLevel $gradeLevel): RedirectResponse
     {
-        $this->ensureOwned($gradeLevel);
-
         $gradeLevel->delete();
 
         return redirect()->route('grade-levels.index')->with('success', 'Grade level deleted successfully.');

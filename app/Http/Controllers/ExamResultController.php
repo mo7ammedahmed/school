@@ -57,7 +57,6 @@ class ExamResultController extends Controller
 
     public function show(ExamResult $result): Response
     {
-        $this->ensureOwned($result);
         $result->load(['exam', 'student']);
 
         return inertia('exam-results/show', ['result' => $result]);
@@ -65,7 +64,6 @@ class ExamResultController extends Controller
 
     public function edit(ExamResult $result): Response
     {
-        $this->ensureOwned($result);
         $schoolId = session('school_id');
         $exams = Exam::where('school_id', $schoolId)->orderBy('name')->get();
         $students = Student::where('school_id', $schoolId)->orderBy('first_name')->get();
@@ -79,7 +77,6 @@ class ExamResultController extends Controller
 
     public function update(Request $request, ExamResult $result): RedirectResponse
     {
-        $this->ensureOwned($result);
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'student_id' => 'required|exists:students,id',
@@ -101,7 +98,6 @@ class ExamResultController extends Controller
 
     public function destroy(ExamResult $result): RedirectResponse
     {
-        $this->ensureOwned($result);
         $result->delete();
 
         return redirect()->route('exam-results.index')->with('success', 'Exam result deleted successfully.');

@@ -39,8 +39,6 @@ class ContentPageController extends Controller
 
     public function edit(ContentPage $page): Response
     {
-        $this->ensureOwned($page);
-
         return inertia('content/pages/edit', [
             'page' => $page,
             'sectionTypes' => $this->sectionTypes(),
@@ -49,7 +47,6 @@ class ContentPageController extends Controller
 
     public function update(Request $request, ContentPage $page): RedirectResponse
     {
-        $this->ensureOwned($page);
         $page->update($this->validated($request, $page));
 
         return redirect()->route('content.pages.edit', $page)->with('success', 'Page updated successfully.');
@@ -57,7 +54,6 @@ class ContentPageController extends Controller
 
     public function destroy(ContentPage $page): RedirectResponse
     {
-        $this->ensureOwned($page);
         $page->delete();
 
         return redirect()->route('content.pages.index')->with('success', 'Page archived.');

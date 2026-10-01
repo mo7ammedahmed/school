@@ -53,8 +53,6 @@ class ReportCardController extends Controller
 
     public function show(ReportCard $reportCard): Response
     {
-        $this->ensureOwned($reportCard);
-
         $reportCard->load('student', 'academicYear');
 
         return inertia('report-cards/show', ['reportCard' => $reportCard]);
@@ -62,15 +60,11 @@ class ReportCardController extends Controller
 
     public function edit(ReportCard $reportCard): Response
     {
-        $this->ensureOwned($reportCard);
-
         return inertia('report-cards/edit', $this->formOptions() + ['reportCard' => $reportCard]);
     }
 
     public function update(Request $request, ReportCard $reportCard): RedirectResponse
     {
-        $this->ensureOwned($reportCard);
-
         $validated = $this->validated($request);
 
         $reportCard->update($validated + [
@@ -82,8 +76,6 @@ class ReportCardController extends Controller
 
     public function destroy(ReportCard $reportCard): RedirectResponse
     {
-        $this->ensureOwned($reportCard);
-
         $reportCard->delete();
 
         return redirect()->route('report-cards.index')->with('success', 'Report card deleted successfully.');

@@ -55,8 +55,6 @@ class SubjectController extends Controller
 
     public function show(Subject $subject): Response
     {
-        $this->ensureOwned($subject);
-
         $subject->load('gradeLevel');
 
         return inertia('subjects/show', ['subject' => $subject]);
@@ -64,8 +62,6 @@ class SubjectController extends Controller
 
     public function edit(Subject $subject): Response
     {
-        $this->ensureOwned($subject);
-
         return inertia('subjects/edit', [
             'subject' => $subject,
             'gradeLevels' => $this->gradeLevels(),
@@ -74,8 +70,6 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject): RedirectResponse
     {
-        $this->ensureOwned($subject);
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -96,8 +90,6 @@ class SubjectController extends Controller
 
     public function destroy(Subject $subject): RedirectResponse
     {
-        $this->ensureOwned($subject);
-
         $subject->delete();
 
         return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');

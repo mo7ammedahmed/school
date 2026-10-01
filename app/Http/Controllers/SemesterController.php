@@ -55,8 +55,6 @@ class SemesterController extends Controller
 
     public function show(Semester $semester): Response
     {
-        $this->ensureOwned($semester);
-
         $semester->load('academicYear');
 
         return inertia('semesters/show', ['semester' => $semester]);
@@ -64,8 +62,6 @@ class SemesterController extends Controller
 
     public function edit(Semester $semester): Response
     {
-        $this->ensureOwned($semester);
-
         return inertia('semesters/edit', [
             'semester' => $semester,
             'academicYears' => $this->academicYears(),
@@ -74,8 +70,6 @@ class SemesterController extends Controller
 
     public function update(Request $request, Semester $semester): RedirectResponse
     {
-        $this->ensureOwned($semester);
-
         $validated = $request->validate([
             'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
             'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
@@ -100,8 +94,6 @@ class SemesterController extends Controller
 
     public function destroy(Semester $semester): RedirectResponse
     {
-        $this->ensureOwned($semester);
-
         $semester->delete();
 
         return redirect()->route('semesters.index')->with('success', 'Semester deleted successfully.');
