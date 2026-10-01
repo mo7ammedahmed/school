@@ -20,6 +20,48 @@ make up
 - The \Makefile\ target \	est\ runs \endor/bin/phpunit\ **on the host** (not in the container).
 - The \	est-container\ target is a documented placeholder that prints an error and exits 1 — it will fail until a test stage is added to the Dockerfile or a \docker-compose.test.yml\ override is implemented.
 
+## Inertia SSR
+
+The pages are pre-rendered by a Node process, so a deployment needs three things beyond
+the usual PHP ones:
+
+1. **Node 22+ on the machine or worker that runs the SSR server.** Inertia's SSR server
+   will not start on an older Node.
+2. **Both bundles built.** `npm run build` is `vite build && vite build --ssr`: the second
+   pass compiles `resources/js/ssr.tsx` into `bootstrap/ssr/ssr.js`. A deployment that only
+   runs `vite build` ships no SSR bundle, and Inertia then renders in the browser without
+   saying anything — the application looks fine and never server-renders.
+3. **The SSR server running** as its own long-lived process:
+
+   ```bash
+   php artisan inertia:start-ssr          # listens on 127.0.0.1:13714
+   php artisan inertia:check-ssr          # health check, exits non-zero when unhealthy
+   ```
+
+**On Laravel Cloud:** turn on *Use Inertia SSR* in the app cluster's **Advanced** settings
+(the cluster needs Node, which the build image has), make sure the deploy build command is
+`npm run build` rather than `vite build`, and let the platform supervise the SSR process.
+Verify the result from outside: `curl -s https://<domain>/ | grep -o 'data-server-rendered="true"'`
+must print the flag. If it does not, the bundle or the process is missing — not the config.
+
+Relevant environment variables (Inertia's own defaults apply when unset):
+
+| Variable | Purpose |
+| --- | --- |
+| `INERTIA_SSR_ENABLED` | `true` by default; set `false` to render client-side only (the test suite does this in `phpunit.xml`). |
+| `INERTIA_SSR_URL` | Where the SSR server listens; `http://127.0.0.1:13714` by default. |
+| `INERTIA_SSR_TIMEOUT` | Bound on a slow or hung SSR server. **Set this in production** — Laravel's HTTP client otherwise waits its 30s default on the render request, and every page pays it while the SSR server is unresponsive. 5 is generous: a page renders in tens of milliseconds. |
+| `INERTIA_SSR_THROW_ON_ERROR` | Throws instead of silently falling back. Never in production; use it to make a broken SSR build loud during a smoke test. |
+
+Two operational notes:
+
+- **The SSR bundle is a build artifact of the frontend.** Any deploy that changes
+  `resources/js` must rebuild it, or the server keeps rendering the previous page while the
+  browser runs the new client code. `bootstrap/ssr/` is git-ignored for that reason.
+- **A failed render is not a failed request.** Inertia falls back to client-side rendering
+  and the page still answers 200. Watch `inertia:check-ssr` (and the `SsrRenderFailed`
+  event, if you wire it to logging) rather than assuming a green deploy means SSR worked.
+
 ## First deploy
 
 \\ash
