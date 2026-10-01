@@ -45,6 +45,12 @@ use Tests\TestCase;
  * instead of going untested. The routes with no gate at all are asserted against
  * an explicit list for the same reason — a new ungated screen is a finding, not
  * a pass.
+ *
+ * This matrix used to carry an exclusion list of four gates whose routes named
+ * controller methods that were never written, so it could not ask them
+ * anything. Those routes are retired (security Phase 5,
+ * {@see RouteIntegrityTest}) and the list is gone: every gate the group
+ * declares is exercised.
  */
 class RoleRouteMatrixTest extends TestCase
 {
@@ -71,33 +77,6 @@ class RoleRouteMatrixTest extends TestCase
         'accountant',
         'student',
         'guardian',
-    ];
-
-    /**
-     * Gates this matrix cannot exercise, each with the reason it cannot.
-     *
-     * All four are the same defect wearing different names: a route names a
-     * controller action that was never written, so the request reaches the
-     * controller and dies with a BadMethodCallException instead of answering the
-     * authorization question. That is a missing method, not a harness limit, and
-     * it is a 500 for every role that passes the gate — which is exactly the
-     * result an authorization matrix is not in a position to interpret. They are
-     * named here so the hole is visible, not so it is forgotten; each one is a
-     * screen nobody can open today.
-     *
-     * @var array<string, string>
-     */
-    private const EXCLUDED_GATES = [
-        'permission:manage-offerings' => 'GET /subjects/{subject}/offerings (routes/web.php:240) '
-            .'names SubjectController::offerings, and that method does not exist.',
-        'permission:view-own-grades' => 'GET /my-grades (routes/web.php:326) names '
-            .'ReportCardController::myGrades, and that method does not exist. A pupil\'s grade '
-            .'screen is a dead route.',
-        'permission:view-own-fees' => 'GET /finance/my-fees (routes/web.php:375) names '
-            .'FinanceController::myFees, and that method does not exist. A guardian\'s fee screen '
-            .'is a dead route.',
-        'permission:manage-fee-assignments' => 'GET /finance/fee-assignments (routes/web.php:356) '
-            .'names FeeStructureController::assignments, and that method does not exist.',
     ];
 
     /**
@@ -339,7 +318,7 @@ class RoleRouteMatrixTest extends TestCase
         foreach (self::protectedRoutes() as $route) {
             $key = implode(',', $route['gate']);
 
-            if ($key === '' || array_key_exists($key, self::EXCLUDED_GATES)) {
+            if ($key === '') {
                 continue;
             }
 
@@ -491,8 +470,7 @@ class RoleRouteMatrixTest extends TestCase
     }
 
     /**
-     * Every distinct permission string the protected group names, less the gates
-     * this matrix declares it cannot run.
+     * Every distinct permission string the protected group names.
      *
      * @return list<string>
      */

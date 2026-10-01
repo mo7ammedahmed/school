@@ -12,15 +12,18 @@ use Tests\TestCase;
  * Two routing defects are invisible at the call site and loud in production.
  *
  * A route pointing at a method that does not exist answers every allowed role
- * with a 500, and the authorization matrix cannot interpret that — it was
- * excluding four such routes instead of proving them. A route whose URI is
- * also matched by an earlier route never runs at all: `/documents/upload`
- * registered after `Route::resource('documents')` is answered by
- * `documents/{document}` with `document = "upload"`, which is a 404 for a page
- * that exists.
+ * with a 500, and the authorization matrix cannot interpret that — it used to
+ * exclude four such routes instead of proving them. A route whose URI is also
+ * matched by an earlier route never runs at all: `/documents/upload`
+ * registered after `Route::resource('documents')` was answered by
+ * `documents/{document}` with `document = "upload"`, a 404 for a page that
+ * exists.
  *
  * Both are properties of the route table, so they are checked here against the
- * real table rather than route by route by hand.
+ * real table rather than route by route by hand. This case was written red
+ * (`02e8ebd`) against 27 routes naming a missing method and three shadowed
+ * URIs; 26 of the 27 were retired as screens nobody calls, `verification.notice`
+ * gained the method it named, and the three shadowed URIs were deleted.
  */
 class RouteIntegrityTest extends TestCase
 {
