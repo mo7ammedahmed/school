@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\Content;
 
 use App\Domain\Content\Models\ContentPage;
-use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Schools\Models\School;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ContentPageTest extends TestCase
@@ -19,13 +16,10 @@ class ContentPageTest extends TestCase
 
     public function test_authorized_school_admin_can_create_a_draft_page(): void
     {
-        Permission::create(['name' => 'manage-content', 'guard_name' => 'web']);
-        $user = User::factory()->create();
-        $user->givePermissionTo('manage-content');
         $school = School::factory()->create();
-        UserMembership::factory()->create(['user_id' => $user->id, 'school_id' => $school->id, 'is_active' => true]);
+        $this->actingAsSchoolUser($school, ['manage-content']);
 
-        $response = $this->actingAs($user)->post('/content/pages', [
+        $response = $this->post('/content/pages', [
             'title' => 'Admissions',
             'title_ar' => 'القبول',
             'slug' => 'admissions',
@@ -49,11 +43,8 @@ class ContentPageTest extends TestCase
     {
         config(['services.nvidia.api_key' => 'nvapi-deployment-key']);
 
-        Permission::firstOrCreate(['name' => 'manage-content', 'guard_name' => 'web']);
-        $user = User::factory()->create();
-        $user->givePermissionTo('manage-content');
         $school = School::factory()->create();
-        UserMembership::factory()->create(['user_id' => $user->id, 'school_id' => $school->id, 'is_active' => true]);
+        $this->actingAsSchoolUser($school, ['manage-content']);
 
         Http::fake([
             'integrate.api.nvidia.com/*' => Http::response([
@@ -61,7 +52,7 @@ class ContentPageTest extends TestCase
             ]),
         ]);
 
-        $this->actingAs($user)->post('/content/pages', [
+        $this->post('/content/pages', [
             'title' => '',
             'title_ar' => 'القبول',
             'slug' => 'admissions-ar',
@@ -80,13 +71,10 @@ class ContentPageTest extends TestCase
 
     public function test_a_page_with_neither_title_is_still_rejected(): void
     {
-        Permission::firstOrCreate(['name' => 'manage-content', 'guard_name' => 'web']);
-        $user = User::factory()->create();
-        $user->givePermissionTo('manage-content');
         $school = School::factory()->create();
-        UserMembership::factory()->create(['user_id' => $user->id, 'school_id' => $school->id, 'is_active' => true]);
+        $this->actingAsSchoolUser($school, ['manage-content']);
 
-        $this->actingAs($user)->post('/content/pages', [
+        $this->post('/content/pages', [
             'title' => '',
             'title_ar' => '',
             'slug' => 'nameless',
@@ -94,6 +82,34 @@ class ContentPageTest extends TestCase
             'status' => 'draft',
             'robots' => 'index,follow',
         ])->assertSessionHasErrors('title');
+    }
+
+    /**
+     * The list screen links here, and both create and update redirect here: the
+     * editor is the one screen every content-page write ends on. It shares the
+     * `content/pages/create` component, which submits a PUT when it is handed a
+     * page, so the name it answers to is pinned here.
+     */
+    public function test_the_edit_screen_renders_the_page_form(): void
+    {
+        $school = School::factory()->create();
+        $this->actingAsSchoolUser($school, ['manage-content']);
+
+        $page = ContentPage::create([
+            'school_id' => $school->id,
+            'title' => 'About us',
+            'slug' => 'about-us',
+            'template' => 'standard',
+            'status' => 'draft',
+            'is_published' => false,
+            'robots' => 'index,follow',
+        ]);
+
+        $this->get("/content/pages/{$page->id}/edit")->assertOk()->assertInertia(fn ($inertia) => $inertia
+            ->component('content/pages/create')
+            ->where('page.id', $page->id)
+            ->where('page.slug', 'about-us')
+        );
     }
 
     public function test_published_pages_are_public_but_drafts_are_not(): void

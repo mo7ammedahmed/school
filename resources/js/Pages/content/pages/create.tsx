@@ -25,7 +25,10 @@ type ExistingPage = {
     robots: string;
 };
 
-export default function PageCreate({ sectionTypes, page }: { sectionTypes: SectionType[]; page?: ExistingPage }) {
+export default function PageForm({ sectionTypes, page }: { sectionTypes: SectionType[]; page?: ExistingPage }) {
+    // The same form serves `/content/pages/create` and `/content/pages/{id}/edit`.
+    const editing = page !== undefined;
+    const title = editing ? 'Edit Website Page' : 'New Website Page';
     const { data, setData, post, put, processing, errors } = useForm({
         title: page?.title ?? '',
         title_ar: page?.title_ar ?? '',
@@ -45,13 +48,13 @@ export default function PageCreate({ sectionTypes, page }: { sectionTypes: Secti
     const addSection = (type: string) => setData('sections', [...data.sections, { type, enabled: true, content: {}, settings: {} }]);
 
     return (
-        <AppShell title="New Website Page" breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Website Pages', href: '/content/pages' }, { label: 'New page' }]}>
-            <PageHeader title="New Website Page" description="Compose a public page from controlled content sections." />
+        <AppShell title={title} breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Website Pages', href: '/content/pages' }, { label: editing ? 'Edit page' : 'New page' }]}>
+            <PageHeader title={title} description="Compose a public page from controlled content sections." />
             <form
                 onSubmit={(event) => {
                     event.preventDefault();
 
-                    if (page) {
+                    if (editing) {
                         put(`/content/pages/${page.id}`);
 
                         return;
@@ -98,7 +101,7 @@ export default function PageCreate({ sectionTypes, page }: { sectionTypes: Secti
                         <textarea placeholder="Section description" value={section.content.description ?? ''} onChange={(event) => setData('sections', data.sections.map((item, itemIndex) => itemIndex === index ? { ...item, content: { ...item.content, description: event.target.value } } : item))} className="input min-h-24 w-full" />
                     </div>)}
                 </CardContent></Card>
-                <div className="flex gap-3"><Button type="button" variant="outline" asChild><Link href="/content/pages">Cancel</Link></Button><Button type="submit" disabled={processing}>{page ? 'Save changes' : 'Create page'}</Button></div>
+                <div className="flex gap-3"><Button type="button" variant="outline" asChild><Link href="/content/pages">Cancel</Link></Button><Button type="submit" disabled={processing}>{editing ? 'Save changes' : 'Create page'}</Button></div>
             </form>
         </AppShell>
     );

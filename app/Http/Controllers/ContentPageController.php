@@ -39,7 +39,10 @@ class ContentPageController extends Controller
 
     public function edit(ContentPage $page): Response
     {
-        return inertia('content/pages/edit', [
+        // One form for both jobs: `content/pages/create` already submits a PUT to
+        // the page when it is given one, and there is no `content/pages/edit`
+        // component for this name to resolve to.
+        return inertia('content/pages/create', [
             'page' => $page,
             'sectionTypes' => $this->sectionTypes(),
         ]);
