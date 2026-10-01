@@ -28,15 +28,7 @@ class GradeLevelController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'level' => [
-                'required', 'integer', 'min:1',
-                Rule::unique('grade_levels', 'level')->where('school_id', $this->schoolId()),
-            ],
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules());
 
         // A grade level always belongs to the school the user is working in.
         $validated['school_id'] = $this->schoolId();
@@ -58,17 +50,7 @@ class GradeLevelController extends Controller
 
     public function update(Request $request, GradeLevel $gradeLevel): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'level' => [
-                'required', 'integer', 'min:1',
-                Rule::unique('grade_levels', 'level')
-                    ->where('school_id', $this->schoolId())
-                    ->ignore($gradeLevel->id),
-            ],
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules($gradeLevel));
 
         $gradeLevel->update($validated);
 
@@ -80,5 +62,26 @@ class GradeLevelController extends Controller
         $gradeLevel->delete();
 
         return redirect()->route('grade-levels.index')->with('success', 'Grade level deleted successfully.');
+    }
+
+    /**
+     * One rule set for both writes, so a change to the shape of a grade level
+     * cannot reach the create form and miss the edit form.
+     *
+     * @return array<string, mixed>
+     */
+    private function rules(?GradeLevel $gradeLevel = null): array
+    {
+        return [
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
+            'level' => [
+                'required', 'integer', 'min:1',
+                Rule::unique('grade_levels', 'level')
+                    ->where('school_id', $this->schoolId())
+                    ->ignore($gradeLevel?->id),
+            ],
+            'description' => 'nullable|string',
+        ];
     }
 }

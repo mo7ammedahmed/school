@@ -29,16 +29,7 @@ class AcademicYearController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => [
-                'nullable', 'string', 'max:255', 'required_without:name_ar',
-                Rule::unique('academic_years', 'name_en')->where('school_id', $this->schoolId()),
-            ],
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'is_current' => 'required|boolean',
-        ]);
+        $validated = $request->validate($this->rules());
 
         DB::transaction(function () use ($validated) {
             if ($validated['is_current']) {
@@ -65,18 +56,7 @@ class AcademicYearController extends Controller
 
     public function update(Request $request, AcademicYear $academicYear): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => [
-                'nullable', 'string', 'max:255', 'required_without:name_ar',
-                Rule::unique('academic_years', 'name_en')
-                    ->where('school_id', $this->schoolId())
-                    ->ignore($academicYear->id),
-            ],
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'is_current' => 'required|boolean',
-        ]);
+        $validated = $request->validate($this->rules($academicYear));
 
         DB::transaction(function () use ($academicYear, $validated) {
             if ($validated['is_current']) {
@@ -90,5 +70,28 @@ class AcademicYearController extends Controller
         });
 
         return redirect()->route('academic-years.show', $academicYear)->with('success', 'Academic year updated successfully.');
+    }
+
+    /**
+     * One rule set for both writes. The two copies had already drifted apart
+     * once; the only difference that is meant to exist is that an update lets
+     * the year keep the name it already has.
+     *
+     * @return array<string, mixed>
+     */
+    private function rules(?AcademicYear $academicYear = null): array
+    {
+        return [
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => [
+                'nullable', 'string', 'max:255', 'required_without:name_ar',
+                Rule::unique('academic_years', 'name_en')
+                    ->where('school_id', $this->schoolId())
+                    ->ignore($academicYear?->id),
+            ],
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'is_current' => 'required|boolean',
+        ];
     }
 }

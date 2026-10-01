@@ -36,13 +36,7 @@ class SectionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
-            'academic_year_id' => ['required', 'integer', $this->academicYearRule()],
-            'capacity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validate($this->rules());
 
         // `school_id` is required by the table; the tenant scope supplies it.
         $validated['school_id'] = $this->schoolId();
@@ -70,13 +64,7 @@ class SectionController extends Controller
 
     public function update(Request $request, Section $section): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
-            'academic_year_id' => ['required', 'integer', $this->academicYearRule()],
-            'capacity' => 'required|integer|min:1',
-        ]);
+        $validated = $request->validate($this->rules());
 
         $section->update($validated);
 
@@ -104,6 +92,23 @@ class SectionController extends Controller
     private function academicYears(): Collection
     {
         return AcademicYear::where('school_id', $this->schoolId())->orderByDesc('start_date')->get();
+    }
+
+    /**
+     * One rule set for both writes: a section has no uniqueness rule to relax on
+     * update, so the create and update copies were byte-for-byte the same.
+     *
+     * @return array<string, mixed>
+     */
+    private function rules(): array
+    {
+        return [
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
+            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
+            'academic_year_id' => ['required', 'integer', $this->academicYearRule()],
+            'capacity' => 'required|integer|min:1',
+        ];
     }
 
     private function gradeLevelRule(): Exists

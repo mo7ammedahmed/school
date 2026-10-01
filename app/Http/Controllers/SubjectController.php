@@ -33,16 +33,7 @@ class SubjectController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'code' => [
-                'required', 'string', 'max:50',
-                Rule::unique('subjects', 'code')->where('school_id', $this->schoolId()),
-            ],
-            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules());
 
         // The table requires a tenant, and `grade_level_id` is a real column —
         // both used to be dropped on the floor here.
@@ -70,18 +61,7 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject): RedirectResponse
     {
-        $validated = $request->validate([
-            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
-            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
-            'code' => [
-                'required', 'string', 'max:50',
-                Rule::unique('subjects', 'code')
-                    ->where('school_id', $this->schoolId())
-                    ->ignore($subject->id),
-            ],
-            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->rules($subject));
 
         $subject->update($validated);
 
@@ -93,6 +73,28 @@ class SubjectController extends Controller
         $subject->delete();
 
         return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');
+    }
+
+    /**
+     * One rule set for both writes; an update only lets the subject keep the
+     * code it already has.
+     *
+     * @return array<string, mixed>
+     */
+    private function rules(?Subject $subject = null): array
+    {
+        return [
+            'name_ar' => ['nullable', 'string', 'max:255', 'required_without:name_en'],
+            'name_en' => ['nullable', 'string', 'max:255', 'required_without:name_ar'],
+            'code' => [
+                'required', 'string', 'max:50',
+                Rule::unique('subjects', 'code')
+                    ->where('school_id', $this->schoolId())
+                    ->ignore($subject?->id),
+            ],
+            'grade_level_id' => ['required', 'integer', $this->gradeLevelRule()],
+            'description' => 'nullable|string',
+        ];
     }
 
     /**
