@@ -44,7 +44,7 @@ class PaymentSettlementService
                 ],
             ]);
 
-            $this->markPaid($payment, $transaction->gateway_transaction_id, 'payment_settled');
+            $this->markPaid($payment, $transaction->gateway_transaction_id, 'payment_settled', $transaction);
         });
     }
 
@@ -58,20 +58,27 @@ class PaymentSettlementService
         $this->markPaid($payment, $reference, $action);
     }
 
-    private function markPaid(Payment $payment, ?string $reference, string $action): void
+    /**
+     * @param  GatewayTransaction|null  $transaction  The gateway charge this
+     *                                                settlement is reacting to,
+     *                                                when there was one. Null on the
+     *                                                manual path, and that absence
+     *                                                is recorded rather than guessed at.
+     */
+    private function markPaid(Payment $payment, ?string $reference, string $action, ?GatewayTransaction $transaction = null): void
     {
         // Settlement is always the payment's own school's work: the caller may
         // be a webhook with no session or a command with no request at all.
-        $this->tenants->runFor((int) $payment->school_id, function () use ($payment, $reference, $action): void {
-            $this->settleInTenant($payment, $reference, $action);
+        $this->tenants->runFor((int) $payment->school_id, function () use ($payment, $reference, $action, $transaction): void {
+            $this->settleInTenant($payment, $reference, $action, $transaction);
         });
     }
 
-    private function settleInTenant(Payment $payment, ?string $reference, string $action): void
+    private function settleInTenant(Payment $payment, ?string $reference, string $action, ?GatewayTransaction $transaction = null): void
     {
         $alreadySettled = false;
 
-        DB::transaction(function () use ($payment, $reference, $action, &$alreadySettled): void {
+        DB::transaction(function () use ($payment, $reference, $action, $transaction, &$alreadySettled): void {
             $locked = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->first();
 
             if ($locked === null) {
@@ -93,13 +100,20 @@ class PaymentSettlementService
             AuditLog::create([
                 'school_id' => $locked->school_id,
                 'user_id' => auth()->id(),
+                'ip_address' => $this->requestIp(),
+                'user_agent' => $this->requestUserAgent(),
                 'action' => $action,
                 'entity_type' => 'Payment',
                 'entity_id' => $locked->id,
-                'new_values' => [
+                // Nulls are dropped rather than stored, so "settled by hand" and
+                // "settled by a gateway" stay distinguishable in the log instead
+                // of both showing a `gateway: null` column.
+                'new_values' => array_filter([
                     'status' => 'paid',
                     'reference_number' => $reference,
-                ],
+                    'gateway' => $transaction?->gateway,
+                    'gateway_transaction_id' => $transaction?->gateway_transaction_id,
+                ], static fn (mixed $value): bool => $value !== null),
             ]);
         });
 
@@ -325,11 +339,33 @@ class PaymentSettlementService
             'response' => $status,
         ]);
 
-        $this->markPaid($lockedPayment, $transactionId, 'payment_settled');
+        $this->markPaid($lockedPayment, $transactionId, 'payment_settled', $transaction);
 
         $event->update(['status' => 'completed', 'error_message' => null]);
 
         return WebhookResult::settled();
+    }
+
+    /**
+     * Where the settlement came from.
+     *
+     * A gateway callback has no session, so `auth()->id()` is null there and the
+     * entry is correctly attributed to nobody. That must not become the absence
+     * of all provenance: an automated movement of money, recorded with no actor
+     * and no origin, cannot be traced to anything at all. The address is the one
+     * thing that connects the entry back to the delivery that caused it.
+     *
+     * Null outside a request — a command settling a payment has neither, and
+     * inventing one would be worse than recording nothing.
+     */
+    private function requestIp(): ?string
+    {
+        return app()->bound('request') ? request()->ip() : null;
+    }
+
+    private function requestUserAgent(): ?string
+    {
+        return app()->bound('request') ? request()->userAgent() : null;
     }
 
     /**

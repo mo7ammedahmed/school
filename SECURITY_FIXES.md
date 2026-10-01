@@ -352,6 +352,7 @@ beside `toMinorUnits()` when someone next touches it.
 | # | Finding | Status | Change | Tests |
 |---|---------|--------|--------|-------|
 | 12 | Materials, documents and submissions validated the upload as `'file' => 'file\|max:10240'` and stored it with `store(..., 'public')`. `file` asserts that a file arrived and nothing about what it is, so `shell.php` passed it exactly as readily as `lesson.docx`; the `public` disk is `storage/app/public`, which `storage:link` exposes **inside the document root** as `/storage/materials/<name>.php`. Any account holding `manage-materials`, `manage-documents` or `manage-submissions` could place a file where the web server will execute it | Confirmed — **the most serious finding in this phase** | Two independent changes, because either alone leaves a way in. (1) `Validation\AllowedAttachment` — an extension **and** MIME allowlist of office formats and images, which also refuses `report.pdf.php` and a `.docx` that is really PHP. (2) The private `local` disk. Applied to all four upload endpoints, including the anonymous `POST /apply/documents` | `UploadsAreTypedAndKeptOffTheWebRootTest` — 11 cases: `.php`, `.html` and `report.pdf.php` refused on each endpoint; nothing written to the public disk; the file is still written somewhere; and a real PDF/DOCX is still accepted, so the allowlist is not a rule that refuses everything. Written red at 8 of 11 |
+| 13 | The audit log was not evidence. `ip_address` and `user_agent` are columns in `audit_logs` that **no write site in the application ever populated**, so every row the system had ever written had them null. Worse, the gateway settlement path wrote `user_id => auth()->id()` — and that path is an unauthenticated webhook, so the single most audit-worthy event in a school, money arriving, was recorded with no actor, no origin, and no reference to the gateway transaction that caused it. The screen rendered a tidy table and answered none of the questions it existed to answer | Confirmed | `markPaid` now records the request's address and user agent, and the gateway charge it is reacting to (`gateway` and `gateway_transaction_id`) is threaded through from both gateway call sites. Nulls are dropped from `new_values` rather than stored, so a hand-confirmed payment stays distinguishable from a gateway one instead of both showing `gateway: null`. A `user_id` is still left null on the webhook path — fabricating an actor would be worse than recording none — so the address is what makes an automated settlement traceable at all | `SettlementIsAuditableTest` — 5 cases: the gateway settlement names the transaction and the gateway, a gateway settlement records where it came from while naming no user, a manual settlement names the user, the address and the client, and a manual one is not recorded as if a gateway had settled it. Written red at 4 of 5 |
 
 **Why both halves, and why the file name being random was not a defence.** The
 stored name is a Laravel random hash, which is obscurity rather than a control:
@@ -398,6 +399,25 @@ not overwritten but the stale public one is removed; a soft-deleted upload is
 still moved; and a row pointing at a missing file is left alone. One of them
 asserts the tenant scope hides the row from ordinary queries, so the
 `withoutSchoolScope()` call is doing necessary work rather than being decorative.
+
+**Why the audit log was treated as a finding rather than a feature request.**
+The screen, the seeded `view-audit-logs` permission and the nav link all present
+the log as complete, so its silence reads as "nothing happened" — the exact
+inference that makes an audit trail worth having, and the one it was
+manufacturing. An auditor asking who marked an invoice paid would have been told
+the truth and the wrong thing at the same time: an entry existed, and it was
+empty of everything that identifies a source.
+
+Two things this deliberately did **not** do. It did not make the webhook name a
+user, because there is no user and an invented one is a lie an auditor would
+rely on. And it did not widen the audit log to cover the rest of the application
+— the log records two action types in total (`AdmissionsController`,
+`PaymentSettlementService`), where the product has hundreds of state-changing
+actions, so most of what a school would want to audit is not recorded at all.
+That is a larger piece of work with a real design question in it (what to record,
+and what to keep, given `old_values`/`new_values` can hold personal data), and it
+is recorded here rather than started. The provenance gap is the part that made
+the existing entries worthless, and that is now closed.
 
 Also removed: `StoreMaterialRequest`, `UpdateMaterialRequest`,
 `StoreDocumentRequest` and `UpdateDocumentRequest`. They were dead — no
