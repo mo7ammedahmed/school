@@ -190,7 +190,6 @@ class RoleSeeder extends Seeder
             'manage-payment-allocations' => ['manage-payments'],
             'manage-memberships' => ['manage-users'],
             'manage-quiz-attempts' => ['manage-quizzes'],
-            'manage-school-settings' => ['manage-settings'],
             'manage-classrooms' => ['manage-rooms'],
         ];
 

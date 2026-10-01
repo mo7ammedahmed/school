@@ -84,7 +84,6 @@ class PermissionSeeder extends Seeder
             'manage-payment-allocations',
             'manage-memberships',
             'manage-quiz-attempts',
-            'manage-school-settings',
             'manage-classrooms',
         ];
 

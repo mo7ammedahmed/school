@@ -23,7 +23,7 @@ use Tests\TestCase;
  * reachable, through POST /translate/save, which authorises whatever bilingual
  * model the request names.
  *
- * These two cases are the guard. The first pins the twenty-two names this
+ * These two cases are the guard. The first pins the twenty-one names this
  * commit added; the second reads the policy sources and pins the *whole*
  * checked surface, so the twenty-third name fails the build rather than a
  * user's browser.
@@ -60,7 +60,6 @@ class PermissionNamesExistTest extends TestCase
             'manage-payment-allocations',
             'manage-memberships',
             'manage-quiz-attempts',
-            'manage-school-settings',
             'manage-classrooms',
         ];
 
