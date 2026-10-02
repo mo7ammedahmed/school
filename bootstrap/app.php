@@ -6,6 +6,7 @@ use App\Http\Middleware\ApplySiteMetadata;
 use App\Http\Middleware\EnsureSchoolContext;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PinPublicInvoiceTenant;
+use App\Http\Middleware\ReportSsrFallback;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -22,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            // First in the group, so it wraps HandleInertiaRequests and can read
+            // the HTML that middleware renders on the way out: an Inertia page
+            // that lost SSR is only visible in the finished response.
+            ReportSsrFallback::class,
+
             // Both read the session, so they must run after StartSession; the
             // locale decides which language the page titles are written in.
             SetLocale::class,

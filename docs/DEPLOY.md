@@ -52,6 +52,9 @@ Relevant environment variables (Inertia's own defaults apply when unset):
 | `INERTIA_SSR_URL` | Where the SSR server listens; `http://127.0.0.1:13714` by default. |
 | `INERTIA_SSR_TIMEOUT` | Bound on a slow or hung SSR server. **Set this in production** — Laravel's HTTP client otherwise waits its 30s default on the render request, and every page pays it while the SSR server is unresponsive. 5 is generous: a page renders in tens of milliseconds. |
 | `INERTIA_SSR_THROW_ON_ERROR` | Throws instead of silently falling back. Never in production; use it to make a broken SSR build loud during a smoke test. |
+| `LOG_SLACK_WEBHOOK_URL` | Set it and every SSR alert also lands in that Slack channel. Unset, the alert is the log file alone. |
+| `LOG_SSR_LEVEL` | Minimum level written to `storage/logs/ssr.log`; `warning` by default. |
+| `LOG_SSR_DAYS` | How many days of it to keep; 30 by default. |
 
 Two operational notes:
 
@@ -59,8 +62,21 @@ Two operational notes:
   `resources/js` must rebuild it, or the server keeps rendering the previous page while the
   browser runs the new client code. `bootstrap/ssr/` is git-ignored for that reason.
 - **A failed render is not a failed request.** Inertia falls back to client-side rendering
-  and the page still answers 200. Watch `inertia:check-ssr` (and the `SsrRenderFailed`
-  event, if you wire it to logging) rather than assuming a green deploy means SSR worked.
+  and the page still answers 200, so a green deploy is not evidence that SSR worked. Two
+  things watch for it instead:
+  - `App\Listeners\ReportSsrRenderFailure` listens for Inertia's `SsrRenderFailed` event
+    (the SSR server answered badly, or the request to it threw) and writes a `critical`
+    line to the `ssr` log channel — `storage/logs/ssr.log`, and Slack too when
+    `LOG_SLACK_WEBHOOK_URL` is set. A broken SSR server fails on every request, so one
+    alert stands for a five-minute window and counts the failures behind it
+    (`suppressed_since_last_alert`) instead of writing a line per page view.
+  - `App\Http\Middleware\ReportSsrFallback` reads the HTML that was actually sent. Inertia
+    *announces* a failure only when the SSR server answers or throws; a bundle no deploy
+    built returns nothing without a word, as does a body that is not JSON. That path leaves
+    a page that renders in the browser with a 200, and this middleware is what names it.
+
+  So the check after a deploy is `tail -f storage/logs/ssr.log` plus
+  `php artisan inertia:check-ssr`, not the absence of errors in the web log.
 
 ## First deploy
 

@@ -75,6 +75,29 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /*
+         * Losing SSR is silent by design in Inertia: the page still answers 200
+         * and simply renders in the browser. So the alert that says the render
+         * did not happen gets its own file — `tail -f storage/logs/ssr.log` is
+         * then the whole story — and Slack too whenever a webhook is set.
+         * Written by App\Listeners\ReportSsrRenderFailure.
+         */
+        'ssr' => [
+            'driver' => 'stack',
+            'channels' => env('LOG_SLACK_WEBHOOK_URL')
+                ? ['ssr_file', 'slack']
+                : ['ssr_file'],
+            'ignore_exceptions' => false,
+        ],
+
+        'ssr_file' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ssr.log'),
+            'level' => env('LOG_SSR_LEVEL', 'warning'),
+            'days' => (int) env('LOG_SSR_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
