@@ -21,7 +21,7 @@ export default function AttendanceShow({ attendance }: { attendance: { id: numbe
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/attendance"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/attendance"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/attendance/${attendance.id}/edit`}>Edit</Link>

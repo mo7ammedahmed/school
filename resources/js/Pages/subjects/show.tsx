@@ -21,7 +21,7 @@ export default function SubjectsShow({ subject }: { subject: { id: number; name:
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/subjects"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/subjects"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/subjects/${subject.id}/edit`}>Edit</Link>

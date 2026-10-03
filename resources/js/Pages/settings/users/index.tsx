@@ -73,7 +73,7 @@ export default function UsersIndex({ users }: { users: UserRow[] | Paginator<Use
                 description="Manage system users"
                 actions={
                     <Button asChild>
-                        <Link href="/settings/users/create"><Plus className="mr-2 h-4 w-4" />New User</Link>
+                        <Link href="/settings/users/create"><Plus className="me-2 h-4 w-4" />New User</Link>
                     </Button>
                 }
             />

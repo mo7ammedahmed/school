@@ -21,7 +21,7 @@ export default function TimetableShow({ schedule }: { schedule: { id: number; se
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/timetable"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/timetable"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/timetable/${schedule.id}/edit`}>Edit</Link>

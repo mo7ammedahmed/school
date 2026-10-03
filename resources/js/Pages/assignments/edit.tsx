@@ -22,7 +22,7 @@ export default function AssignmentsEdit({ assignment, subjects, sections }: { as
                 description={assignment.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/assignments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/assignments"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

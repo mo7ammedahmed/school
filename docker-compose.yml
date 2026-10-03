@@ -86,6 +86,13 @@ x-app-env: &app-env
   REDIS_HOST: redis
   REDIS_PORT: 6379
 
+  # The live lesson server. The app reaches it at http://mediamtx:8889 for the
+  # WHIP/WHEP URLs it hands to browsers — in local development that is
+  # http://localhost:8889, which is what MEDIA_WEBRTC_URL should be set to.
+  MEDIA_WEBRTC_URL: ${MEDIA_WEBRTC_URL:-http://localhost:8889}
+  MEDIA_API_URL: ${MEDIA_API_URL:-http://mediamtx:9997}
+  MEDIA_HOOK_SECRET: ${MEDIA_HOOK_SECRET:-}
+
   # Mailpit stands in for a real relay. MAIL_PORT 1025 is Mailpit's SMTP port
   # (the app's .env.example default of 2525 is Mailpit's *older* default and is
   # not what this image listens on).
@@ -185,6 +192,8 @@ services:
       redis:
         condition: service_healthy
       mailpit:
+        condition: service_started
+      mediamtx:
         condition: service_started
     healthcheck:
       test: ["CMD", "php", "-r", "exit(is_readable('/var/www/html/vendor/autoload.php') ? 0 : 1);"]
@@ -328,6 +337,43 @@ services:
         condition: service_healthy
       mysql:
         condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # mediamtx - the live lesson server
+  # ---------------------------------------------------------------------------
+  # Teachers publish over WHIP and students watch over WHEP against this one
+  # container; it records every stream to the shared recordings volume, which
+  # the app's finalize job reads. See docker/mediamtx/mediamtx.yml.
+  #
+  # The WebRTC UDP port must be reachable by browsers, which is why it is
+  # published directly rather than behind nginx. In production, restrict 8189
+  # to the addresses that need it — an open UDP port on a school server is an
+  # open relay for anyone who finds it.
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    restart: unless-stopped
+    volumes:
+      - ./docker/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+      # Host path, not the named volume: it is the same `./storage` bind mount
+      # the app container already has, so both processes see one directory.
+      - ./storage/app/recordings:/recordings
+    ports:
+      # The control API (recording status, publisher detection) stays on
+      # loopback: only the app calls it, and it exposes every stream's state.
+      - "127.0.0.1:9997:9997"
+      # WHIP / WHEP / HLS over HTTP. TLS is terminated by nginx in production.
+      - "8889:8889"
+      # WebRTC media. UDP, published on every interface: browsers connect to it
+      # directly and a loopback-only bind would break every viewer.
+      - "8189:8189/udp"
+    environment:
+      MTX_HOOK_SECRET: ${MEDIA_HOOK_SECRET:-}
+    healthcheck:
+      test: ["CMD", "/mediamtx", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ---------------------------------------------------------------------------
   # mailpit

@@ -35,8 +35,10 @@ use App\Http\Controllers\Finance\RefundController as FinanceRefundController;
 use App\Http\Controllers\GradeLevelController;
 use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\LiveSessionController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MediaHookController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\OnboardingController;
@@ -339,6 +341,26 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::get('/materials/{material}/download', [MaterialController::class, 'download'])
         ->middleware('permission:manage-materials')
         ->name('materials.download');
+
+    // Lesson video playback. Deliberately *not* behind `permission:manage-materials`:
+    // students with `view-own-lessons` watch published lesson videos of their own
+    // sections, and `MaterialPolicy::stream` is the gate that decides who reads
+    // which row. Every staff route above stays as staff-only as it was.
+    Route::get('/materials/{material}/stream', [MaterialController::class, 'stream'])
+        ->name('materials.stream');
+
+    // Live classroom: the teacher's studio and the oversight list. The policy
+    // decides who may start, watch and end a session; this middleware decides
+    // who may reach the screens at all.
+    Route::middleware('permission:manage-live-sessions')->group(function () {
+        Route::get('/live', [LiveSessionController::class, 'index'])->name('live.index');
+        Route::get('/live/create', [LiveSessionController::class, 'create'])->name('live.create');
+        Route::post('/live', [LiveSessionController::class, 'store'])->name('live.store');
+        Route::get('/live/{liveSession}', [LiveSessionController::class, 'show'])->name('live.show');
+        Route::post('/live/{liveSession}/start', [LiveSessionController::class, 'start'])->name('live.start');
+        Route::post('/live/{liveSession}/end', [LiveSessionController::class, 'end'])->name('live.end');
+        Route::delete('/live/{liveSession}', [LiveSessionController::class, 'destroy'])->name('live.destroy');
+    });
     Route::resource('assignments', AssignmentController::class)->middleware('permission:manage-assignments');
     Route::get('/assignments/{assignment}/submissions', [SubmissionController::class, 'index'])
         ->middleware('permission:manage-assignments')
@@ -553,6 +575,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
         Route::get('/attendance', [StudentPortalController::class, 'attendance'])->name('attendance');
         Route::get('/grades', [StudentPortalController::class, 'grades'])->name('grades');
         Route::get('/assignments', [StudentPortalController::class, 'assignments'])->name('assignments');
+        Route::get('/lessons', [StudentPortalController::class, 'lessons'])->name('lessons');
         Route::get('/fees', [StudentPortalController::class, 'fees'])->name('fees');
     });
 
@@ -588,6 +611,11 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
         ->middleware('throttle:60,1')
         ->name('payments.handle');
 });
+
+// MediaMTX hooks (no auth middleware). CSRF-exempt in bootstrap/app.php — the
+// live server cannot hold a token — and authenticated by the shared secret in
+// `config/media.php`: an unset secret refuses every call.
+Route::post('/media/hooks/not-ready', [MediaHookController::class, 'notReady'])->name('media.hooks.not-ready');
 
 // Platform/Super Admin routes
 Route::middleware(['auth', 'can:access-platform'])->prefix('platform')->name('platform.')->group(function () {

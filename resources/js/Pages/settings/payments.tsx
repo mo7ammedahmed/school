@@ -101,7 +101,7 @@ export default function SettingsPayments({
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/settings/payments/logs">
-                            <History className="mr-2 h-4 w-4" />
+                            <History className="me-2 h-4 w-4" />
                             Gateway logs
                         </Link>
                     </Button>
@@ -405,7 +405,7 @@ export default function SettingsPayments({
                             </div>
                             <Button variant="outline" className="mt-2 w-full justify-start" asChild>
                                 <Link href="/settings/payments/logs">
-                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    <ExternalLink className="me-2 h-4 w-4" />
                                     View logs
                                 </Link>
                             </Button>

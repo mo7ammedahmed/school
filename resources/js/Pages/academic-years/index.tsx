@@ -55,7 +55,7 @@ export default function AcademicYearsIndex({ academicYears }: { academicYears: {
                 description="Manage academic year periods"
                 actions={
                     <Button asChild>
-                        <Link href="/academic-years/create"><Plus className="mr-2 h-4 w-4" />New Academic Year</Link>
+                        <Link href="/academic-years/create"><Plus className="me-2 h-4 w-4" />New Academic Year</Link>
                     </Button>
                 }
             />

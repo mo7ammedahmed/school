@@ -67,7 +67,7 @@ export default function AssignmentsIndex({ assignments }: { assignments: { id: n
                 description="Manage assignments"
                 actions={
                     <Button asChild>
-                        <Link href="/assignments/create"><Plus className="mr-2 h-4 w-4" />New Assignment</Link>
+                        <Link href="/assignments/create"><Plus className="me-2 h-4 w-4" />New Assignment</Link>
                     </Button>
                 }
             />

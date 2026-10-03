@@ -21,7 +21,7 @@ export default function SectionsShow({ section }: { section: { id: number; name:
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/sections"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/sections"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/sections/${section.id}/edit`}>Edit</Link>

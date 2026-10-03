@@ -10,11 +10,14 @@ use App\Domain\Academics\Models\Subject;
 use App\Domain\Learning\Models\Material;
 use App\Http\Controllers\Concerns\ServesStoredAttachment;
 use App\Validation\AllowedAttachment;
+use App\Validation\VideoAttachment;
+use Illuminate\Validation\Rules\File;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
@@ -49,7 +52,7 @@ class MaterialController extends Controller
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
             'section_id' => 'required_without:offering_id|exists:sections,id',
             'offering_id' => 'nullable|exists:offerings,id',
-            'file' => ['required', AllowedAttachment::rule()],
+            'file' => ['required', $this->attachmentRule($request)],
             'description' => 'nullable|string',
         ]);
 
@@ -70,6 +73,7 @@ class MaterialController extends Controller
             'file_path' => $path,
             'file_type' => $file->extension() ?: $file->getClientOriginalExtension(),
             'file_size' => $file->getSize(),
+            'kind' => $this->kindOf($file->getClientOriginalExtension()),
             'is_published' => true,
         ]);
 
@@ -114,7 +118,7 @@ class MaterialController extends Controller
             'subject_id' => 'required_without:offering_id|exists:subjects,id',
             'section_id' => 'required_without:offering_id|exists:sections,id',
             'offering_id' => 'nullable|exists:offerings,id',
-            'file' => ['nullable', AllowedAttachment::rule()],
+            'file' => ['nullable', $this->attachmentRule($request)],
             'description' => 'nullable|string',
         ]);
 
@@ -134,6 +138,7 @@ class MaterialController extends Controller
             $data['file_path'] = $path;
             $data['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $data['file_size'] = $request->file('file')->getSize();
+            $data['kind'] = $this->kindOf($request->file('file')->getClientOriginalExtension());
         }
 
         $material->update($data);
@@ -148,6 +153,46 @@ class MaterialController extends Controller
         $material->delete();
 
         return redirect()->route('materials.index')->with('success', 'Material deleted successfully.');
+    }
+
+    /**
+     * Play a lesson video in place, with HTTP Range support.
+     *
+     * This route deliberately does not sit behind `permission:manage-materials`:
+     * students watch published lesson videos, and `MaterialPolicy` is the gate
+     * that decides who may read which row. Staff keep the same access they have
+     * on every other material route.
+     */
+    public function stream(Material $material): BinaryFileResponse
+    {
+        $this->authorize('stream', $material);
+
+        return $this->streamAttachment($material->file_path);
+    }
+
+    /**
+     * The validation rule for the incoming file, chosen by its extension.
+     *
+     * A lesson video is capped far higher than a document, so the rule is picked
+     * before validation rather than accepting the widest bound for everything.
+     * The client extension is only a *chooser* here — the rule itself still
+     * proves the contents match the claimed type.
+     */
+    private function attachmentRule(Request $request): File
+    {
+        $extension = strtolower((string) ($request->file('file')?->getClientOriginalExtension() ?? ''));
+
+        return in_array($extension, VideoAttachment::EXTENSIONS, true)
+            ? VideoAttachment::rule()
+            : AllowedAttachment::rule();
+    }
+
+    /**
+     * What the stored row is: a document, or a lesson video.
+     */
+    private function kindOf(?string $extension): string
+    {
+        return in_array(strtolower((string) $extension), VideoAttachment::EXTENSIONS, true) ? 'video' : 'file';
     }
 
     /**

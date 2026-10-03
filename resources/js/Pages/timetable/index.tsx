@@ -74,7 +74,7 @@ export default function TimetableIndex({ timetables }: { timetables: { id: numbe
                     <div className="flex flex-wrap items-center gap-2">
                         <TimetableViewSwitcher current="list" />
                         <Button asChild>
-                            <Link href="/timetable/create"><Plus className="mr-2 h-4 w-4" />Add Schedule</Link>
+                            <Link href="/timetable/create"><Plus className="me-2 h-4 w-4" />Add Schedule</Link>
                         </Button>
                     </div>
                 }

@@ -22,7 +22,7 @@ export default function ExamsEdit({ exam, subjects, sections }: { exam: { id: nu
                 description={exam.name}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/exams"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/exams"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

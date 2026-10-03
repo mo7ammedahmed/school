@@ -21,7 +21,7 @@ export default function DocumentsShow({ document }: { document: { id: number; ti
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/documents"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/documents"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         {/* The file is on the private disk, so this is the only way
                             to get it. It downloads rather than navigating, so the
@@ -29,7 +29,7 @@ export default function DocumentsShow({ document }: { document: { id: number; ti
                         {document.file_path && (
                             <Button variant="outline" asChild>
                                 <a href={`/documents/${document.id}/download`}>
-                                    <Download className="mr-2 h-4 w-4" />Download
+                                    <Download className="me-2 h-4 w-4" />Download
                                 </a>
                             </Button>
                         )}

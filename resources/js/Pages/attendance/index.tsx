@@ -60,7 +60,7 @@ export default function AttendanceIndex({ attendances }: { attendances: { id: nu
                 description="Track student attendance"
                 actions={
                     <Button asChild>
-                        <Link href="/attendance/create"><Plus className="mr-2 h-4 w-4" />Mark Attendance</Link>
+                        <Link href="/attendance/create"><Plus className="me-2 h-4 w-4" />Mark Attendance</Link>
                     </Button>
                 }
             />

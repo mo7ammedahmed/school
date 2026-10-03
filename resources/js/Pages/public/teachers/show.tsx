@@ -34,7 +34,7 @@ export default function TeachersShow({ teacher }: TeachersShowProps) {
                     <div className="max-w-6xl mx-auto">
                         <Button asChild variant="outline" className="mb-8">
                             <Link href="/faculty">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="me-2 h-4 w-4" />
                                 {t(locale, 'public.backToTeachers')}
                             </Link>
                         </Button>

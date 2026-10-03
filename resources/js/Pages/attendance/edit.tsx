@@ -30,7 +30,7 @@ export default function AttendanceEdit({
                 description={`Record #${attendance.id}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/attendance"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/attendance"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

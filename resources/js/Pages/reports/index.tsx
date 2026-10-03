@@ -25,7 +25,7 @@ export default function ReportsIndex() {
                 description="Generate and download reports"
                 actions={
                     <Button>
-                        <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="me-2 h-4 w-4" />
                         Generate Report
                     </Button>
                 }
@@ -34,10 +34,10 @@ export default function ReportsIndex() {
             <div className="mt-6 rounded-lg border bg-card">
                 <div className="flex items-center gap-4 border-b p-4">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             placeholder="Search reports..."
-                            className="pl-9"
+                            className="ps-9"
                         />
                     </div>
                 </div>
@@ -53,9 +53,9 @@ export default function ReportsIndex() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b">
-                                    <th className="px-4 py-3 text-left font-medium">Name</th>
-                                    <th className="px-4 py-3 text-left font-medium">Type</th>
-                                    <th className="px-4 py-3 text-left font-medium">Generated At</th>
+                                    <th className="px-4 py-3 text-start font-medium">Name</th>
+                                    <th className="px-4 py-3 text-start font-medium">Type</th>
+                                    <th className="px-4 py-3 text-start font-medium">Generated At</th>
                                 </tr>
                             </thead>
                             <tbody>

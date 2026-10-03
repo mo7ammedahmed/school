@@ -20,10 +20,10 @@ export default function MaterialsCreate({ subjects, sections }: { subjects: { id
         >
             <PageHeader
                 title="Upload Material"
-                description="Add a new learning material"
+                description="Add a document, or a lesson video students watch in the portal"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/materials"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/materials"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />
@@ -59,7 +59,13 @@ export default function MaterialsCreate({ subjects, sections }: { subjects: { id
                             </div>
                             <div>
                                 <Label htmlFor="file">File</Label>
-                                <FileInput id="file" name="file" required />
+                                <FileInput
+                                    id="file"
+                                    name="file"
+                                    required
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.png,.jpg,.jpeg,.webp,.mp4,.webm,.mov,.mkv"
+                                    hint="A document up to 10 MB, or a lesson video up to 512 MB. Videos play inside the student portal."
+                                />
                             </div>
                             <div>
                                 <Label htmlFor="description">Description</Label>

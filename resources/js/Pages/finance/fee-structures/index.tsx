@@ -70,7 +70,7 @@ export default function FinanceFeeStructuresIndex({ feeStructures }: { feeStruct
                 description="Configure fee structures by grade"
                 actions={
                     <Button asChild>
-                        <Link href="/finance/fee-structures/create"><Plus className="mr-2 h-4 w-4" />New Fee Structure</Link>
+                        <Link href="/finance/fee-structures/create"><Plus className="me-2 h-4 w-4" />New Fee Structure</Link>
                     </Button>
                 }
             />

@@ -22,7 +22,7 @@ export default function AssignmentsCreate({ subjects, sections }: { subjects: { 
                 description="Create a new assignment"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/assignments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/assignments"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

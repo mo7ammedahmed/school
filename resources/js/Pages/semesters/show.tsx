@@ -36,7 +36,7 @@ export default function SemestersShow({ semester }: { semester: Semester }) {
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <Link href="/semesters">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="me-2 h-4 w-4" />
                                 Back
                             </Link>
                         </Button>

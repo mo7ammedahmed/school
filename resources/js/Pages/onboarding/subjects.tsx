@@ -242,10 +242,10 @@ export default function OnboardingSubjects() {
 
                         <div className="flex justify-between">
                             <Button type="button" variant="outline" asChild>
-                                <Link href="/onboarding/grades"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                                <Link href="/onboarding/grades"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                             </Button>
                             <Button type="submit">
-                                Continue<ArrowRight className="ml-2 h-4 w-4" />
+                                Continue<ArrowRight className="ms-2 h-4 w-4" />
                             </Button>
                         </div>
                     </form>

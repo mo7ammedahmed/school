@@ -1,6 +1,4 @@
 import AppShell from '@/layouts/app-shell';
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +35,6 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
     const { auth } = usePage<App.PageProps>().props;
     const { locale } = useLocale();
     const roles = auth.user?.roles || [];
-    const grid = useRef<HTMLDivElement>(null);
 
     const tiles = [
         {
@@ -108,20 +105,6 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
         { label: 'Documents', meta: 'Policies & forms', href: '/documents', visible: canTeach(roles) },
     ].filter((item) => item.visible);
 
-    useEffect(() => {
-        if (!grid.current) return;
-        const ctx = gsap.context(() => {
-            gsap.from('[data-tile]', {
-                y: 18,
-                autoAlpha: 0,
-                duration: 0.55,
-                stagger: 0.07,
-                ease: 'power3.out',
-            });
-        }, grid);
-        return () => ctx.revert();
-    }, []);
-
     return (
         <AppShell
             title="Dashboard"
@@ -159,15 +142,15 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                 </div>
 
                 {/* Stat tiles */}
-                <div ref={grid} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {tiles.map((tile) => {
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {tiles.map((tile, index) => {
                         const Icon = tile.icon;
                         return (
                             <a
                                 key={tile.title}
                                 href={tile.href}
-                                data-tile
-                                className="group relative overflow-hidden rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-0.5 hover:border-border hover:shadow-[var(--shadow-md)]"
+                                className="group relative overflow-hidden rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-0.5 hover:border-border hover:shadow-[var(--shadow-md)] motion-safe:animate-tile-in"
+                                style={{ animationDelay: `${index * 70}ms` }}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">

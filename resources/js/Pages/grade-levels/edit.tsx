@@ -23,7 +23,7 @@ export default function GradeLevelsEdit({ gradeLevel }: { gradeLevel: { id: numb
                 description={gradeLevel.name}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/grade-levels"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/grade-levels"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

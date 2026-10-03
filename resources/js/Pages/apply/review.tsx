@@ -122,13 +122,13 @@ export default function ApplyReview({ collected = {} }: { collected?: Collected 
             <form onSubmit={submit} className="mt-6 flex justify-between">
                 <Button type="button" variant="outline" asChild>
                     <Link href="/apply/documents">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        <ArrowLeft className="me-2 h-4 w-4" />
                         Back
                     </Link>
                 </Button>
                 <Button type="submit" disabled={processing}>
                     Submit Application
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ms-2 h-4 w-4" />
                 </Button>
             </form>
         </AppShell>

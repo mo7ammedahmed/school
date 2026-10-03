@@ -49,7 +49,7 @@ export default function GradeLevelsIndex({ gradeLevels }: { gradeLevels: { id: n
                 description="Manage grade levels"
                 actions={
                     <Button asChild>
-                        <Link href="/grade-levels/create"><Plus className="mr-2 h-4 w-4" />New Grade Level</Link>
+                        <Link href="/grade-levels/create"><Plus className="me-2 h-4 w-4" />New Grade Level</Link>
                     </Button>
                 }
             />

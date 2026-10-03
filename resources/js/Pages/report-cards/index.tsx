@@ -77,7 +77,7 @@ export default function ReportCardsIndex({ reportCards }: { reportCards: Paginat
                 description="Manage student report cards"
                 actions={
                     <Button asChild>
-                        <Link href="/report-cards/create"><Plus className="mr-2 h-4 w-4" />New Report Card</Link>
+                        <Link href="/report-cards/create"><Plus className="me-2 h-4 w-4" />New Report Card</Link>
                     </Button>
                 }
             />

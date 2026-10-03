@@ -23,7 +23,7 @@ export default function SubjectsCreate({ gradeLevels }: { gradeLevels: { id: num
                 description="Create a new subject"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/subjects"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/subjects"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

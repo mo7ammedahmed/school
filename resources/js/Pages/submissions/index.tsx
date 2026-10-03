@@ -60,7 +60,7 @@ export default function SubmissionsIndex({ submissions }: { submissions: { id: n
                 description="Manage assignment submissions"
                 actions={
                     <Button asChild>
-                        <Link href="/submissions/create"><Plus className="mr-2 h-4 w-4" />New Submission</Link>
+                        <Link href="/submissions/create"><Plus className="me-2 h-4 w-4" />New Submission</Link>
                     </Button>
                 }
             />

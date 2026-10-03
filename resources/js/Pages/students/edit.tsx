@@ -24,7 +24,7 @@ export default function StudentsEdit({ student, guardians }: { student: { id: nu
                 description={`${s.first_name} ${s.last_name}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/students"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/students"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

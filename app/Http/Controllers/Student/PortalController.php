@@ -8,6 +8,8 @@ use App\Domain\Assessment\Models\ReportCard;
 use App\Domain\Attendance\Models\AttendanceRecord;
 use App\Domain\Finance\Models\Invoice;
 use App\Domain\Learning\Models\Assignment;
+use App\Domain\Learning\Models\LiveSession;
+use App\Domain\Learning\Models\Material;
 use App\Domain\People\Models\Student;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Http\Controllers\Controller;
@@ -105,6 +107,48 @@ class PortalController extends Controller
         ]);
     }
 
+    /**
+     * The pupil's lessons: live sessions running now, and recorded ones.
+     *
+     * Live rows are the sessions of the pupil's own sections that are `live`
+     * this moment; recorded rows are published materials of `kind` video or
+     * recording from the same sections. The pages themselves are the only
+     * student-facing surface for materials, which are otherwise staff documents.
+     */
+    public function lessons(Request $request)
+    {
+        $student = Student::where('user_id', $request->user()->id)
+            ->where('school_id', session('school_id'))
+            ->firstOrFail();
+
+        $enrolled = fn ($query) => $query->where('students.id', $student->id);
+
+        $liveSessions = LiveSession::query()
+            ->where('status', LiveSession::STATUS_LIVE)
+            ->whereHas('offering.section.students', $enrolled)
+            ->with(['offering.subject', 'offering.section'])
+            ->latest('started_at')
+            ->get();
+
+        $recordings = Material::query()
+            ->where('is_published', true)
+            ->whereIn('kind', ['video', 'recording'])
+            ->whereHas('offering.section.students', $enrolled)
+            ->with(['offering.subject', 'offering.section'])
+            ->latest()
+            ->limit(60)
+            ->get();
+
+        return inertia('student-portal/lessons', [
+            'student' => $student,
+            'liveSessions' => $liveSessions,
+            'recordings' => $recordings,
+            'media' => [
+                'configured' => (string) config('media.webrtc_url') !== '',
+            ],
+        ]);
+    }
+
     public function fees(Request $request)
     {
         $student = Student::where('user_id', $request->user()->id)
@@ -137,6 +181,7 @@ class PortalController extends Controller
     {
         $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
 
-        return $reportCard?->gpa ?? 0.0;
+        // `gpa` is a decimal column, so the driver hands it back as a string.
+        return (float) ($reportCard?->gpa ?? 0.0);
     }
 }

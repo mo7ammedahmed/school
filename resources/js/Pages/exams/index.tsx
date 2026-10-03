@@ -68,10 +68,10 @@ export default function ExamsIndex({ exams }: { exams: { id: number; name: strin
                 actions={
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/assessments/import"><FileUp className="mr-2 h-4 w-4" />Import from Word</Link>
+                            <Link href="/assessments/import"><FileUp className="me-2 h-4 w-4" />Import from Word</Link>
                         </Button>
                         <Button asChild>
-                            <Link href="/exams/create"><Plus className="mr-2 h-4 w-4" />New Exam</Link>
+                            <Link href="/exams/create"><Plus className="me-2 h-4 w-4" />New Exam</Link>
                         </Button>
                     </div>
                 }

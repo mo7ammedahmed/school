@@ -25,7 +25,7 @@ export default function SubjectsEdit({ subject, gradeLevels }: { subject: { id: 
                 description={s.name_en ?? s.name ?? ''}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/subjects"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/subjects"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

@@ -53,7 +53,7 @@ export default function SectionsIndex({ sections }: { sections: { id: number; na
                 description="Manage class sections"
                 actions={
                     <Button asChild>
-                        <Link href="/sections/create"><Plus className="mr-2 h-4 w-4" />New Section</Link>
+                        <Link href="/sections/create"><Plus className="me-2 h-4 w-4" />New Section</Link>
                     </Button>
                 }
             />

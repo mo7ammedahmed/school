@@ -23,7 +23,7 @@ export default function AcademicYearsCreate() {
                 description="Create a new academic year"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/academic-years"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/academic-years"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

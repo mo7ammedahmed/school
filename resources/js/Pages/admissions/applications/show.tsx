@@ -75,7 +75,7 @@ export default function AdmissionsApplicationsShow({ application }: { applicatio
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <Link href="/admissions/applications">
-                                <ArrowLeft className="mr-2 h-4 w-4" />Back
+                                <ArrowLeft className="me-2 h-4 w-4" />Back
                             </Link>
                         </Button>
                         {canDecide && (
@@ -88,7 +88,7 @@ export default function AdmissionsApplicationsShow({ application }: { applicatio
                                         decideForm.post(`/admissions/applications/${application.id}/decide`);
                                     }}
                                 >
-                                    <X className="mr-2 h-4 w-4" />Reject
+                                    <X className="me-2 h-4 w-4" />Reject
                                 </Button>
                                 <Button
                                     disabled={decideForm.processing}
@@ -97,7 +97,7 @@ export default function AdmissionsApplicationsShow({ application }: { applicatio
                                         decideForm.post(`/admissions/applications/${application.id}/decide`);
                                     }}
                                 >
-                                    <Check className="mr-2 h-4 w-4" />Approve
+                                    <Check className="me-2 h-4 w-4" />Approve
                                 </Button>
                             </>
                         )}
@@ -106,7 +106,7 @@ export default function AdmissionsApplicationsShow({ application }: { applicatio
                                 disabled={convertForm.processing}
                                 onClick={() => convertForm.post(`/admissions/applications/${application.id}/convert`)}
                             >
-                                <Repeat className="mr-2 h-4 w-4" />Convert to Student
+                                <Repeat className="me-2 h-4 w-4" />Convert to Student
                             </Button>
                         )}
                     </div>

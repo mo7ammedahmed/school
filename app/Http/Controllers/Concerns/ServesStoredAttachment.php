@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Concerns;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -39,6 +40,37 @@ trait ServesStoredAttachment
         abort_unless($storage->exists($path), 404);
 
         return $storage->download($path, $this->downloadName($path, $title));
+    }
+
+    /**
+     * Stream a stored file for in-page playback, with HTTP Range support.
+     *
+     * `download()` is the wrong tool for a video: it streams the whole body with
+     * no `Accept-Ranges`, so a player cannot seek and must buffer from the first
+     * byte every time. A {@see BinaryFileResponse} answers a `Range` request
+     * with `206 Partial Content`, which is exactly what `<video>` needs — and
+     * it needs a filesystem path, which is why this only works on a local disk.
+     * The private disk is local by design (Decision 5 keeps the abstraction for
+     * documents; a lesson video served from S3 would use a signed URL instead).
+     *
+     * The caller has already proven the right to read the record; this method
+     * only proves the path names a file inside the disk, the same guard the
+     * download path uses.
+     */
+    private function streamAttachment(?string $path): BinaryFileResponse
+    {
+        abort_if($path === null || trim($path) === '', 404);
+        abort_unless($this->staysInsideTheDisk($path), 404);
+
+        $storage = Storage::disk(self::DOWNLOAD_DISK);
+
+        abort_unless($storage->exists($path), 404);
+
+        $absolute = $storage->path($path);
+
+        abort_unless(is_file($absolute), 404);
+
+        return new BinaryFileResponse($absolute, 200, [], true, null, true, filemtime($absolute) ?: null);
     }
 
     /**

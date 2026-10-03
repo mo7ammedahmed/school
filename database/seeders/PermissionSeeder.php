@@ -85,6 +85,8 @@ class PermissionSeeder extends Seeder
             'manage-memberships',
             'manage-quiz-attempts',
             'manage-classrooms',
+            'manage-live-sessions',
+            'view-own-lessons',
         ];
 
         foreach ($permissions as $permission) {

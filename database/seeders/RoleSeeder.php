@@ -70,6 +70,7 @@ class RoleSeeder extends Seeder
             'manage-settings',
             'manage-content',
             'view-audit-logs',
+            'manage-live-sessions',
         ]));
         $registrar->syncPermissions($registrarPermissions);
 
@@ -135,6 +136,7 @@ class RoleSeeder extends Seeder
             'submit-assignments',
             'take-quizzes',
             'view-audit-logs',
+            'manage-live-sessions',
         ]));
         $accountant->syncPermissions($accountantPermissions);
 
@@ -146,6 +148,7 @@ class RoleSeeder extends Seeder
             'view-own-schedule',
             'submit-assignments',
             'take-quizzes',
+            'view-own-lessons',
         ]));
         $student->syncPermissions($studentPermissions);
 

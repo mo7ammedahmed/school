@@ -41,7 +41,7 @@ export default function EventsShow({ event }: EventsShowProps) {
                     <div className="max-w-6xl mx-auto">
                         <Button asChild variant="outline" className="mb-8">
                             <Link href="/events">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="me-2 h-4 w-4" />
                                 {t(locale, 'public.backToEvents')}
                             </Link>
                         </Button>

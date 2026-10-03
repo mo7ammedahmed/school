@@ -163,6 +163,7 @@ class PortalController extends Controller
     {
         $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
 
-        return $reportCard?->gpa ?? 0.0;
+        // `gpa` is a decimal column, so the driver hands it back as a string.
+        return (float) ($reportCard?->gpa ?? 0.0);
     }
 }

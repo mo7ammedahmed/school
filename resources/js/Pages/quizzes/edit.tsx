@@ -22,7 +22,7 @@ export default function QuizzesEdit({ quiz, subjects, sections }: { quiz: { id: 
                 description={quiz.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/quizzes"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/quizzes"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

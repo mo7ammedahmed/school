@@ -29,10 +29,10 @@ function AccordionItem({
         <div className="rounded-lg border border-gray-200 dark:border-gray-700">
             <button
                 onClick={onClick}
-                className="flex w-full items-center justify-between p-4 text-left font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex w-full items-center justify-between p-4 text-start font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
             >
                 <span className="text-gray-900 dark:text-white">{question}</span>
-                <span className="ml-4 flex-shrink-0 text-gray-500 dark:text-gray-400">{isOpen ? '−' : '+'}</span>
+                <span className="ms-4 flex-shrink-0 text-gray-500 dark:text-gray-400">{isOpen ? '−' : '+'}</span>
             </button>
             {isOpen && (
                 <div className="border-t border-gray-200 dark:border-gray-700 p-4">

@@ -23,7 +23,7 @@ export default function ExamResultsCreate({ exams, students }: { exams: { id: nu
                 description="Record a new exam result"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/exam-results"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/exam-results"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

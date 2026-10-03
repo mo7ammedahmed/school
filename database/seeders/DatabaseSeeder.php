@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
      *  7. Finance (fee types/structures, invoices, payments, refunds, gateway)
      *  8. Content & admissions (public site + admissions pipeline)
      *  9. Portal user links (students/guardians -> user accounts)
+     * 10. Shared Arabic interface dictionary (one dictionary, every school)
      */
     public function run(): void
     {
@@ -32,6 +33,7 @@ class DatabaseSeeder extends Seeder
             OperationsSeeder::class,
             FinanceSeeder::class,
             ContentSeeder::class,
+            InterfaceTranslationSeeder::class,
         ]);
     }
 }

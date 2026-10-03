@@ -28,7 +28,7 @@ export default function AttendanceCreate({
                 description="Record a student against an attendance session"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/attendance"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/attendance"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

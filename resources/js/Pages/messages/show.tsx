@@ -31,7 +31,7 @@ export default function MessagesShow({
                 description={`${conversation.messages.length} message${conversation.messages.length === 1 ? '' : 's'}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/messages"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/messages"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

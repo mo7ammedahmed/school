@@ -22,7 +22,7 @@ export default function GuardiansCreate() {
                 description="Register a new guardian"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/guardians"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/guardians"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

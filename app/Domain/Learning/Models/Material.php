@@ -33,6 +33,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'file_path',
     'file_type',
     'file_size',
+    'kind',
+    'duration_seconds',
+    'thumbnail_path',
+    'source_live_session_id',
     'is_published',
 ])]
 #[Appends(['subject', 'section', 'uploaded_at'])]
@@ -65,10 +69,31 @@ class Material extends Model
         return $this->belongsTo(Offering::class);
     }
 
+    public function sourceLiveSession(): BelongsTo
+    {
+        return $this->belongsTo(LiveSession::class, 'source_live_session_id');
+    }
+
+    /**
+     * Whether the row is a lesson video the in-platform player can open.
+     *
+     * Documents have a `file_path` too, and serving one through a `<video>`
+     * element is not a security problem but not a feature either: the stream
+     * endpoint only accepts these kinds so a PDF cannot be turned into an
+     * embedded player page by guessing a URL.
+     */
+    public function isStreamable(): bool
+    {
+        return in_array($this->kind, ['video', 'recording'], true)
+            && $this->file_path !== null
+            && $this->file_path !== '';
+    }
+
     protected function casts(): array
     {
         return [
             'is_published' => 'boolean',
+            'duration_seconds' => 'integer',
         ];
     }
 }

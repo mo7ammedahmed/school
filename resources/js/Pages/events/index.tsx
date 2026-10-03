@@ -62,7 +62,7 @@ export default function EventsIndex({ events }: { events: { id: number; title: s
                 description="Manage school events"
                 actions={
                     <Button asChild>
-                        <Link href="/content/events/create"><Plus className="mr-2 h-4 w-4" />New Event</Link>
+                        <Link href="/content/events/create"><Plus className="me-2 h-4 w-4" />New Event</Link>
                     </Button>
                 }
             />

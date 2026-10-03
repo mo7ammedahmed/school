@@ -22,7 +22,7 @@ export default function ExamsCreate({ subjects, sections }: { subjects: { id: nu
                 description="Schedule a new exam"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/exams"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/exams"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

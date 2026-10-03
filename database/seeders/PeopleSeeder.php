@@ -11,6 +11,7 @@ use App\Domain\People\Models\GuardianRelationship;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,11 @@ class PeopleSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->first();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
+
         $academicYear = AcademicYear::where('school_id', $school->id)->where('is_current', true)->first();
 
         $guardian1 = Guardian::firstOrCreate(

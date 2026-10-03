@@ -22,7 +22,7 @@ export default function DocumentsEdit({ document }: { document: { id: number; ti
                 description={document.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/documents"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/documents"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

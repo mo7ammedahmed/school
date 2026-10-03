@@ -23,7 +23,7 @@ export default function ExamResultsEdit({ result, exams, students }: { result: {
                 description={`Result #${result.id}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/exam-results"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/exam-results"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

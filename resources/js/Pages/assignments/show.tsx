@@ -21,7 +21,7 @@ export default function AssignmentsShow({ assignment }: { assignment: { id: numb
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/assignments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/assignments"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/assignments/${assignment.id}/edit`}>Edit</Link>

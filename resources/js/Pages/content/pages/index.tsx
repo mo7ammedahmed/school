@@ -30,7 +30,7 @@ export default function PagesIndex({ pages }: { pages: { data: Page[] } }) {
             <PageHeader
                 title="Website Pages"
                 description="Manage structured, school-scoped public pages."
-                actions={<Button asChild><Link href="/content/pages/create"><Plus className="mr-2 h-4 w-4" />New page</Link></Button>}
+                actions={<Button asChild><Link href="/content/pages/create"><Plus className="me-2 h-4 w-4" />New page</Link></Button>}
             />
             <DataTable columns={columns} data={pages.data} />
         </AppShell>

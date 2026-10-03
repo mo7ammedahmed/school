@@ -69,7 +69,7 @@ export default function TeachersIndex({ teachers }: { teachers: { id: number; fi
                 description="Manage teaching staff"
                 actions={
                     <Button asChild>
-                        <Link href="/teachers/create"><Plus className="mr-2 h-4 w-4" />New Teacher</Link>
+                        <Link href="/teachers/create"><Plus className="me-2 h-4 w-4" />New Teacher</Link>
                     </Button>
                 }
             />

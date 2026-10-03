@@ -18,6 +18,7 @@ use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Finance\Models\Refund;
 use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -33,6 +34,11 @@ class FinanceSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->firstOrFail();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
+
         $year = AcademicYear::where('school_id', $school->id)->where('is_current', true)->first();
         $gradeLevels = GradeLevel::where('school_id', $school->id)->orderBy('level')->get();
         $students = Student::where('school_id', $school->id)->orderBy('id')->get();
@@ -232,7 +238,9 @@ class FinanceSeeder extends Seeder
                             'currency' => 'SAR',
                             'amount' => $paid,
                             'payload' => null,
-                            'response' => json_encode(['source' => 'seeder', 'settled_at' => now()->toIso8601String()]),
+                            // The column is cast to `array`, so handing it JSON
+                            // encodes it twice and reads back as a string.
+                            'response' => ['source' => 'seeder', 'settled_at' => now()->toIso8601String()],
                         ]
                     );
                 }

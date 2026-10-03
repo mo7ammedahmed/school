@@ -109,10 +109,10 @@ export default function OnboardingCreateSchool() {
 
                         <div className="flex justify-between">
                             <Button type="button" variant="outline" asChild>
-                                <Link href="/onboarding/school-information"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                                <Link href="/onboarding/school-information"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                             </Button>
                             <Button type="submit">
-                                Create School<ArrowRight className="ml-2 h-4 w-4" />
+                                Create School<ArrowRight className="ms-2 h-4 w-4" />
                             </Button>
                         </div>
                     </form>

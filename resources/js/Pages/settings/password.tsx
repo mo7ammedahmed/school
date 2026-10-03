@@ -34,7 +34,7 @@ export default function Password({ errors }: { errors?: Record<string, string> }
                 description="Update your password"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/school"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/settings/school"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

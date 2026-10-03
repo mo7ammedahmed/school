@@ -35,7 +35,7 @@ export default function FinanceFeeStructuresShow({ feeStructure }: { feeStructur
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/finance/fee-structures"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/finance/fee-structures"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/finance/fee-structures/${feeStructure.id}/edit`}>Edit</Link>

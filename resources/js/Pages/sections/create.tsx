@@ -23,7 +23,7 @@ export default function SectionsCreate({ gradeLevels, academicYears }: { gradeLe
                 description="Create a new section"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/sections"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/sections"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

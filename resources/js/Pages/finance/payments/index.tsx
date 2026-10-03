@@ -70,7 +70,7 @@ export default function FinancePaymentsIndex({ payments }: { payments: { id: num
                 description="Track all payments"
                 actions={
                     <Button asChild>
-                        <Link href="/finance/payments/create"><Plus className="mr-2 h-4 w-4" />New Payment</Link>
+                        <Link href="/finance/payments/create"><Plus className="me-2 h-4 w-4" />New Payment</Link>
                     </Button>
                 }
             />

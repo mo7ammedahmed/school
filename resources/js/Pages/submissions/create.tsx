@@ -23,7 +23,7 @@ export default function SubmissionsCreate({ assignments, students }: { assignmen
                 description="Submit an assignment"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/submissions"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/submissions"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

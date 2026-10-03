@@ -114,7 +114,12 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         libicu-dev \
         libzip-dev \
-        libxml2-dev; \
+        libxml2-dev \
+        # ffmpeg/ffprobe: the live-recording finalize job remuxes MediaMTX's
+        # fMP4 into a faststart MP4 (so browsers can seek) and reads durations
+        # from uploaded lesson videos. Both are runtime tools, not build ones.
+        ffmpeg \
+        curl; \
     \
     # pdo_mysql - required by config/database.php:64, which branches on
     #            extension_loaded('pdo_mysql') before setting MYSQL_ATTR_SSL_CA.

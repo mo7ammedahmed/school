@@ -21,7 +21,7 @@ export default function GuardiansShow({ guardian }: { guardian: { id: number; fi
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/guardians"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/guardians"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/guardians/${guardian.id}/edit`}>Edit</Link>

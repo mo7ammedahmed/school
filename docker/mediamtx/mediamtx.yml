@@ -1,0 +1,78 @@
+# =============================================================================
+# MediaMTX — the live lesson server
+#
+# One process serves both directions of a lesson: teachers publish over WHIP,
+# students watch over WHEP, and every published stream is recorded to the
+# shared volume the app reads. No per-minute service, no vendor.
+#
+# The app never talks to this server except through the browser and the
+# `notReady` hook below. See config/media.php for the app side.
+# =============================================================================
+
+logLevel: info
+logDestinations: [stdout]
+
+# WHIP/WHEP/HLS share one HTTP port. nginx terminates TLS in front of it in
+# production; locally the compose port mapping exposes it as plain HTTP.
+rtsp: no
+rtmp: no
+srt: no
+api: yes
+apiAddress: :9997
+hls: yes
+hlsAddress: :8888
+hlsAlwaysRemux: no
+webrtc: yes
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: :8189
+webrtcIPsFromInterfaces: yes
+
+# A teacher publishing from a browser may be behind NAT; a hostname is better
+# than an IP for the ICE candidate. Set MEDIA_MTX_WEBRTC_HOST in production.
+webrtcAdditionalHosts: []
+
+# -----------------------------------------------------------------------------
+# Recordings
+# -----------------------------------------------------------------------------
+# One fMP4 file per stream, written under /recordings/<path>. The app's
+# finalize job reads this directory, remuxes to faststart MP4 and copies the
+# lesson onto the private disk. Nothing serves these files directly.
+record: yes
+recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S
+recordFormat: fmp4
+recordPartDuration: 1s
+recordSegmentDuration: 1h
+recordDeleteAfter: 0s
+
+# -----------------------------------------------------------------------------
+# Auth
+# -----------------------------------------------------------------------------
+# Loopback only in the default compose topology. When the WebRTC ports are
+# opened to the internet, enable `authHTTPAddress` and point it at the app's
+# signed-token endpoint (Phase 3 in docs/live-classroom-plan.md).
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+      - action: read
+
+# -----------------------------------------------------------------------------
+# Paths
+# -----------------------------------------------------------------------------
+# One wildcard path for every session. The path name is the session's random
+# `stream_key`, which the app renders only to the owning teacher and to
+# enrolled students.
+#
+# No `runOnNotReady` hook here on purpose. The official MediaMTX image ships no
+# HTTP client, so a hook would have to shell out to a binary that is not in the
+# image. The app asks this server's API instead (MEDIA_API_URL +
+# `live-sessions:finalize` every five minutes), which needs nothing installed
+# here and keeps the reconciliation in one place. The app-side hook endpoint
+# stays available for deployments that add curl to this image.
+paths:
+  all_others:
+    record: yes

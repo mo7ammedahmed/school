@@ -23,7 +23,7 @@ export default function FinanceDiscountsCreate() {
                 description="Add a new discount"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/discounts"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/discounts"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

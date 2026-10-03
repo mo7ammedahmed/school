@@ -23,7 +23,7 @@ export default function AttendanceSessionsEdit({ session, sections, teachers, su
                 description={`Session #${session.id}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/attendance-sessions"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/attendance-sessions"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

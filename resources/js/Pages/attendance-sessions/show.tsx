@@ -22,7 +22,7 @@ export default function AttendanceSessionsShow({ session }: { session: { id: num
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/attendance-sessions"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/attendance-sessions"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/attendance-sessions/${session.id}/edit`}>Edit</Link>
@@ -82,9 +82,9 @@ export default function AttendanceSessionsShow({ session }: { session: { id: num
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b">
-                                    <th className="px-4 py-3 text-left font-medium">Student</th>
-                                    <th className="px-4 py-3 text-left font-medium">Status</th>
-                                    <th className="px-4 py-3 text-left font-medium">Notes</th>
+                                    <th className="px-4 py-3 text-start font-medium">Student</th>
+                                    <th className="px-4 py-3 text-start font-medium">Status</th>
+                                    <th className="px-4 py-3 text-start font-medium">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>

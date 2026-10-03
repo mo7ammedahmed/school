@@ -74,10 +74,16 @@ function isCopy(value) {
     if (!/^\p{L}/u.test(text)) return false;
     // A single lowercase word is a key, a slug or a CSS utility, not a label.
     if (/^[a-z][a-z0-9_-]*$/.test(text)) return false;
+    // `row.original.is_active ?` — a condition that happens to sit between two
+    // tags, not a label.
+    if (/^[A-Za-z_$][\w$.]*\s*\?$/.test(text)) return false;
     // A path or a file name.
     if (/^[\w-]+(\.[\w-]+)+$/.test(text)) return false;
-    // "AC…" and friends: a truncation, not a sentence.
-    if (!text.includes(' ') && text.length < 5) return false;
+    // "OK" and two-letter fragments are truncations or codes, not labels — but
+    // a three-letter word is a real one ("View", "Edit", "Yes"), and the rule
+    // used to be a five-letter one, which kept every row action in English on
+    // an Arabic page.
+    if (!text.includes(' ') && text.length < 3) return false;
 
     for (const character of text) {
         if ((character.codePointAt(0) ?? 0) > 0x7f && /[\p{L}\p{N}]/u.test(character)) return false;
@@ -91,7 +97,11 @@ function walk(dir, files = []) {
         const full = join(dir, entry.name);
 
         if (entry.isDirectory()) walk(full, files);
-        else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith('.d.ts')) files.push(full);
+        // Test fixtures read like screens but are never rendered, and a string
+        // that only exists in a test is one nobody will ever read.
+        else if (/\.tsx?$/.test(entry.name) && !entry.name.endsWith('.d.ts') && !/\.test\.tsx?$/.test(entry.name)) {
+            files.push(full);
+        }
     }
 
     return files;

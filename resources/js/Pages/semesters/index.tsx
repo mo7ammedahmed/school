@@ -83,7 +83,7 @@ export default function SemestersIndex({ semesters }: { semesters: Semester[] })
                 actions={
                     <Button asChild>
                         <Link href="/semesters/create">
-                            <Plus className="mr-2 h-4 w-4" />
+                            <Plus className="me-2 h-4 w-4" />
                             Add Semester
                         </Link>
                     </Button>

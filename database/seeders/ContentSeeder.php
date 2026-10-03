@@ -14,6 +14,7 @@ use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\News;
 use App\Domain\Content\Models\StaffProfile;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -26,6 +27,10 @@ class ContentSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->firstOrFail();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
 
         $this->seedNews($school);
         $this->seedEvents($school);

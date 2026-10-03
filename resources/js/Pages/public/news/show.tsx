@@ -40,7 +40,7 @@ export default function NewsShow({ article }: NewsShowProps) {
                     <div className="max-w-4xl mx-auto">
                         <Button asChild variant="outline" className="mb-8">
                             <Link href="/news">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="me-2 h-4 w-4" />
                                 {t(locale, 'public.backToNews')}
                             </Link>
                         </Button>
@@ -53,7 +53,7 @@ export default function NewsShow({ article }: NewsShowProps) {
                                         alt={article.title}
                                         className="h-full w-full object-cover"
                                     />
-                                    <div className="absolute bottom-4 left-4">
+                                    <div className="absolute bottom-4 start-4">
                                         <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm text-gray-900">
                                             <Calendar className="h-4 w-4" />
                                             {published}

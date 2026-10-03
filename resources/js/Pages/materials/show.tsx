@@ -3,9 +3,11 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download } from 'lucide-react';
+import { formatDuration } from '@/lib/media/format';
 import { Link } from '@inertiajs/react';
 
-export default function MaterialsShow({ material }: {    material: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_path: string | null; description: string; file_size: number; uploaded_at: string } }) {
+export default function MaterialsShow({ material }: {    material: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_path: string | null; description: string; file_size: number; kind: string; duration_seconds: number | null; uploaded_at: string } }) {
+    const streamable = (material.kind === 'video' || material.kind === 'recording') && material.file_path;
     return (
         <AppShell
             title="Material Details"
@@ -21,14 +23,14 @@ export default function MaterialsShow({ material }: {    material: { id: number;
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/materials"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/materials"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         {/* The file is on the private disk, so this is the only way
                             to get it. */}
                         {material.file_path && (
                             <Button variant="outline" asChild>
                                 <a href={`/materials/${material.id}/download`}>
-                                    <Download className="mr-2 h-4 w-4" />Download
+                                    <Download className="me-2 h-4 w-4" />Download
                                 </a>
                             </Button>
                         )}
@@ -38,6 +40,25 @@ export default function MaterialsShow({ material }: {    material: { id: number;
                     </div>
                 }
             />
+
+            {streamable && (
+                <Card className="mb-6 overflow-hidden">
+                    <CardHeader>
+                        <CardTitle>Lesson video</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {/* Streamed from the private disk with Range support, so
+                            seeking works without exposing a file URL. */}
+                        <video
+                            className="aspect-video w-full rounded-lg border border-border/70 bg-black"
+                            controls
+                            playsInline
+                            preload="metadata"
+                            src={`/materials/${material.id}/stream`}
+                        />
+                    </CardContent>
+                </Card>
+            )}
 
             <Card>
                 <CardHeader>
@@ -62,9 +83,19 @@ export default function MaterialsShow({ material }: {    material: { id: number;
                             <p className="text-base uppercase">{material.file_type}</p>
                         </div>
                         <div>
+                            <span className="text-sm font-medium text-muted-foreground">Kind</span>
+                            <p className="text-base capitalize">{material.kind}</p>
+                        </div>
+                        <div>
                             <span className="text-sm font-medium text-muted-foreground">File Size</span>
                             <p className="text-base">{material.file_size ? `${(material.file_size / 1024).toFixed(1)} KB` : '-'}</p>
                         </div>
+                        {material.kind !== 'file' && (
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Duration</span>
+                                <p className="text-base tabular-nums">{formatDuration(material.duration_seconds)}</p>
+                            </div>
+                        )}
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Uploaded At</span>
                             <p className="text-base">{material.uploaded_at}</p>

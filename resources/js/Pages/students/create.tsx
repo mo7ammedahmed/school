@@ -22,7 +22,7 @@ export default function StudentsCreate({ guardians }: { guardians: { id: number;
                 description="Register a new student"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/students"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/students"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

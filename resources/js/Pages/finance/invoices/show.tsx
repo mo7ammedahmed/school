@@ -98,13 +98,13 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" asChild>
                             <Link href="/finance/invoices">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="me-2 h-4 w-4" />
                                 Back
                             </Link>
                         </Button>
                         <Button variant="outline" asChild>
                             <a href={`/finance/invoices/${invoice.id}/pdf`}>
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="me-2 h-4 w-4" />
                                 PDF
                             </a>
                         </Button>
@@ -115,13 +115,13 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                         )}
                         {invoice.status === 'draft' && (
                             <Button onClick={issue}>
-                                <Send className="mr-2 h-4 w-4" />
+                                <Send className="me-2 h-4 w-4" />
                                 Issue &amp; send
                             </Button>
                         )}
                         {!settled && invoice.status !== 'draft' && (
                             <Button onClick={send}>
-                                <Send className="mr-2 h-4 w-4" />
+                                <Send className="me-2 h-4 w-4" />
                                 {delivery.sent_at ? 'Resend to guardian' : 'Send to guardian'}
                             </Button>
                         )}
@@ -153,7 +153,7 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                                 <Field label="Subtotal">{money(invoice.subtotal, invoice.currency)}</Field>
                                 <Field label="Tax">
                                     {money(invoice.tax_amount, invoice.currency)}
-                                    <span className="ml-2 text-xs text-muted-foreground">
+                                    <span className="ms-2 text-xs text-muted-foreground">
                                         ({Math.round(Number(invoice.tax_rate) * 100)}%)
                                     </span>
                                 </Field>
@@ -184,18 +184,18 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                             {invoice.lines && invoice.lines.length > 0 ? (
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+                                        <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
                                             <th className="pb-2">Description</th>
-                                            <th className="pb-2 text-right">Qty</th>
-                                            <th className="pb-2 text-right">Amount</th>
+                                            <th className="pb-2 text-end">Qty</th>
+                                            <th className="pb-2 text-end">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {invoice.lines.map((line) => (
                                             <tr key={line.id} className="border-t border-border/60">
                                                 <td className="py-2">{line.description}</td>
-                                                <td className="py-2 text-right">{Number(line.quantity)}</td>
-                                                <td className="py-2 text-right">
+                                                <td className="py-2 text-end">{Number(line.quantity)}</td>
+                                                <td className="py-2 text-end">
                                                     {money(line.amount, invoice.currency)}
                                                 </td>
                                             </tr>
@@ -218,11 +218,11 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                             <CardContent>
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+                                        <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
                                             <th className="pb-2">Date</th>
                                             <th className="pb-2">Method</th>
                                             <th className="pb-2">Status</th>
-                                            <th className="pb-2 text-right">Amount</th>
+                                            <th className="pb-2 text-end">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -241,7 +241,7 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                                                         {payment.status}
                                                     </Badge>
                                                 </td>
-                                                <td className="py-2 text-right">
+                                                <td className="py-2 text-end">
                                                     {money(payment.amount, invoice.currency)}
                                                 </td>
                                             </tr>
@@ -350,19 +350,19 @@ export default function FinanceInvoicesShow({ invoice, payUrl, guardians, delive
                                         <Button variant="outline" size="sm" onClick={copyLink} className="flex-1">
                                             {copied ? (
                                                 <>
-                                                    <Check className="mr-2 h-4 w-4" />
+                                                    <Check className="me-2 h-4 w-4" />
                                                     Copied
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Copy className="mr-2 h-4 w-4" />
+                                                    <Copy className="me-2 h-4 w-4" />
                                                     Copy link
                                                 </>
                                             )}
                                         </Button>
                                         <Button variant="outline" size="sm" asChild>
                                             <a href={payUrl} target="_blank" rel="noreferrer">
-                                                <ExternalLink className="mr-2 h-4 w-4" />
+                                                <ExternalLink className="me-2 h-4 w-4" />
                                                 Open
                                             </a>
                                         </Button>

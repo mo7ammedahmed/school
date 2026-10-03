@@ -64,7 +64,7 @@ export default function NewsIndex({ articles }: NewsIndexProps) {
                                                 alt={article.title}
                                                 className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                                             />
-                                            <div className="absolute bottom-4 left-4">
+                                            <div className="absolute bottom-4 start-4">
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-sm text-gray-900">
                                                     <Calendar className="h-4 w-4" />
                                                     {published(article.publish_date, locale)}
@@ -97,7 +97,7 @@ export default function NewsIndex({ articles }: NewsIndexProps) {
                                 {articles.current_page > 1 && (
                                     <Button variant="outline" asChild>
                                         <Link href={`/news?page=${articles.current_page - 1}`}>
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
+                                            <ArrowLeft className="me-2 h-4 w-4" />
                                             {t(locale, 'public.previous')}
                                         </Link>
                                     </Button>

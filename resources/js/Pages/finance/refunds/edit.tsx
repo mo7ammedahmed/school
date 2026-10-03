@@ -24,7 +24,7 @@ export default function FinanceRefundsEdit({ refund }: { refund: { id: number; a
                 description="Update refund information"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/refunds"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/refunds"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

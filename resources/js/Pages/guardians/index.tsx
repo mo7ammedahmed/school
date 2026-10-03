@@ -57,7 +57,7 @@ export default function GuardiansIndex({ guardians }: { guardians: { id: number;
                 description="Manage parent and guardian records"
                 actions={
                     <Button asChild>
-                        <Link href="/guardians/create"><Plus className="mr-2 h-4 w-4" />New Guardian</Link>
+                        <Link href="/guardians/create"><Plus className="me-2 h-4 w-4" />New Guardian</Link>
                     </Button>
                 }
             />

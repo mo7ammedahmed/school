@@ -62,7 +62,7 @@ export default function FinanceRefundsIndex({ refunds }: { refunds: { id: number
                 description="Process and track refunds"
                 actions={
                     <Button asChild>
-                        <Link href="/finance/refunds/create"><Plus className="mr-2 h-4 w-4" />New Refund</Link>
+                        <Link href="/finance/refunds/create"><Plus className="me-2 h-4 w-4" />New Refund</Link>
                     </Button>
                 }
             />

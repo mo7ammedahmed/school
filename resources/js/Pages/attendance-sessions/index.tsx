@@ -78,7 +78,7 @@ export default function AttendanceSessionsIndex({ sessions }: { sessions: { id: 
                 description="Manage attendance sessions"
                 actions={
                     <Button asChild>
-                        <Link href="/attendance-sessions/create"><Plus className="mr-2 h-4 w-4" />New Session</Link>
+                        <Link href="/attendance-sessions/create"><Plus className="me-2 h-4 w-4" />New Session</Link>
                     </Button>
                 }
             />

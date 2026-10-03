@@ -75,7 +75,7 @@ export default function DocumentsIndex({ documents }: { documents: DocumentRow[]
                 description="Manage documents"
                 actions={
                     <Button asChild>
-                        <Link href="/documents/create"><Plus className="mr-2 h-4 w-4" />Upload Document</Link>
+                        <Link href="/documents/create"><Plus className="me-2 h-4 w-4" />Upload Document</Link>
                     </Button>
                 }
             />

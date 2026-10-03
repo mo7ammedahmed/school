@@ -7,6 +7,7 @@ use App\Domain\Academics\Models\GradeLevel;
 use App\Domain\Academics\Models\Semester;
 use App\Domain\Academics\Models\Subject;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use Illuminate\Database\Seeder;
 
 class AcademicSeeder extends Seeder
@@ -14,6 +15,10 @@ class AcademicSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->first();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
 
         $academicYear = AcademicYear::firstOrCreate(
             ['school_id' => $school->id, 'name_en' => '2025-2026'],
@@ -83,7 +88,11 @@ class AcademicSeeder extends Seeder
         $gradeLevelRows = GradeLevel::where('school_id', $school->id)->orderBy('level')->get();
 
         foreach ($subjects as $index => $subjectData) {
-            $gradeLevel = $gradeLevelRows[$index % $gradeLevelRows->count()] ?? null;
+            // Round-robin the subjects over the levels that exist. No levels
+            // means no level to point at — not a modulo by zero.
+            $gradeLevel = $gradeLevelRows->isNotEmpty()
+                ? $gradeLevelRows[$index % $gradeLevelRows->count()]
+                : null;
 
             Subject::updateOrCreate(
                 ['school_id' => $school->id, 'code' => $subjectData['code']],

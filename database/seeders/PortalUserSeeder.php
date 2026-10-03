@@ -9,6 +9,7 @@ use App\Domain\People\Models\Guardian;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +22,10 @@ class PortalUserSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->firstOrFail();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
 
         // --- Staff memberships (school context for each role) ---
         $staff = [

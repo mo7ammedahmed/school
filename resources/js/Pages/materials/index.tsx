@@ -2,11 +2,12 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { type ColumnDef } from '@/lib/table';
 
-export default function MaterialsIndex({ materials }: {    materials: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_size: number; uploaded_at: string }[] }) {
+export default function MaterialsIndex({ materials }: {    materials: { id: number; title: string; subject: { name: string }; section: { name: string }; file_type: string; file_size: number; kind: string; uploaded_at: string }[] }) {
     const columns: ColumnDef<any>[] = [
         {
             accessorKey: 'title',
@@ -19,6 +20,18 @@ export default function MaterialsIndex({ materials }: {    materials: { id: numb
         {
             accessorKey: 'section.name',
             header: 'Section',
+        },
+        {
+            accessorKey: 'kind',
+            header: 'Kind',
+            cell: ({ row }) =>
+                row.original.kind === 'recording' ? (
+                    <Badge variant="info">Recording</Badge>
+                ) : row.original.kind === 'video' ? (
+                    <Badge variant="success">Video</Badge>
+                ) : (
+                    <Badge variant="neutral">Document</Badge>
+                ),
         },
         {
             accessorKey: 'file_type',
@@ -63,7 +76,7 @@ export default function MaterialsIndex({ materials }: {    materials: { id: numb
                 description="Manage learning materials"
                 actions={
                     <Button asChild>
-                        <Link href="/materials/create"><Plus className="mr-2 h-4 w-4" />Upload Material</Link>
+                        <Link href="/materials/create"><Plus className="me-2 h-4 w-4" />Upload Material</Link>
                     </Button>
                 }
             />

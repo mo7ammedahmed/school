@@ -70,7 +70,7 @@ export default function MessagesIndex({
                 description="School conversations and announcements"
                 actions={
                     <Button asChild>
-                        <Link href="/messages/create"><Plus className="mr-2 h-4 w-4" />New Message</Link>
+                        <Link href="/messages/create"><Plus className="me-2 h-4 w-4" />New Message</Link>
                     </Button>
                 }
             />

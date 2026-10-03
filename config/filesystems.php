@@ -38,6 +38,22 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Scratch space for MediaMTX recordings.
+         *
+         * The live server writes here (a shared volume in production) and the
+         * finalize job copies the finished file onto the private `local` disk,
+         * where every other material lives. Keeping it a separate disk means
+         * nothing can serve a half-written file: the stream endpoint only ever
+         * reads `local`.
+         */
+        'recordings' => [
+            'driver' => 'local',
+            'root' => storage_path('app/recordings'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

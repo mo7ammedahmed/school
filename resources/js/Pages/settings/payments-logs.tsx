@@ -54,7 +54,7 @@ export default function PaymentLogs({ transactions, events }: Props) {
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/settings/payments">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            <ArrowLeft className="me-2 h-4 w-4" />
                             Back to settings
                         </Link>
                     </Button>
@@ -77,26 +77,26 @@ export default function PaymentLogs({ transactions, events }: Props) {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                                            <th className="pb-2 pr-4">Gateway</th>
-                                            <th className="pb-2 pr-4">Event</th>
-                                            <th className="pb-2 pr-4">Type</th>
-                                            <th className="pb-2 pr-4">Status</th>
+                                        <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
+                                            <th className="pb-2 pe-4">Gateway</th>
+                                            <th className="pb-2 pe-4">Event</th>
+                                            <th className="pb-2 pe-4">Type</th>
+                                            <th className="pb-2 pe-4">Status</th>
                                             <th className="pb-2">Received</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {events.map((event) => (
                                             <tr key={event.id} className="border-t border-border/60">
-                                                <td className="py-2 pr-4">{event.gateway}</td>
-                                                <td className="py-2 pr-4 font-mono text-xs">{event.event_id}</td>
-                                                <td className="py-2 pr-4">{event.event_type ?? '—'}</td>
-                                                <td className="py-2 pr-4">
+                                                <td className="py-2 pe-4">{event.gateway}</td>
+                                                <td className="py-2 pe-4 font-mono text-xs">{event.event_id}</td>
+                                                <td className="py-2 pe-4">{event.event_type ?? '—'}</td>
+                                                <td className="py-2 pe-4">
                                                     <Badge variant={statusVariant(event.status)}>
                                                         {event.status}
                                                     </Badge>
                                                     {event.error_message && (
-                                                        <span className="ml-2 text-xs text-muted-foreground">
+                                                        <span className="ms-2 text-xs text-muted-foreground">
                                                             {event.error_message}
                                                         </span>
                                                     )}
@@ -128,25 +128,25 @@ export default function PaymentLogs({ transactions, events }: Props) {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
-                                            <th className="pb-2 pr-4">Gateway</th>
-                                            <th className="pb-2 pr-4">Transaction</th>
-                                            <th className="pb-2 pr-4">Amount</th>
-                                            <th className="pb-2 pr-4">Status</th>
+                                        <tr className="text-start text-xs uppercase tracking-wide text-muted-foreground">
+                                            <th className="pb-2 pe-4">Gateway</th>
+                                            <th className="pb-2 pe-4">Transaction</th>
+                                            <th className="pb-2 pe-4">Amount</th>
+                                            <th className="pb-2 pe-4">Status</th>
                                             <th className="pb-2">Created</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {transactions.map((transaction) => (
                                             <tr key={transaction.id} className="border-t border-border/60">
-                                                <td className="py-2 pr-4">{transaction.gateway}</td>
-                                                <td className="py-2 pr-4 font-mono text-xs">
+                                                <td className="py-2 pe-4">{transaction.gateway}</td>
+                                                <td className="py-2 pe-4 font-mono text-xs">
                                                     {transaction.gateway_transaction_id}
                                                 </td>
-                                                <td className="py-2 pr-4">
+                                                <td className="py-2 pe-4">
                                                     {Number(transaction.amount).toFixed(2)}
                                                 </td>
-                                                <td className="py-2 pr-4">
+                                                <td className="py-2 pe-4">
                                                     <Badge variant={statusVariant(transaction.status)}>
                                                         {transaction.status}
                                                     </Badge>

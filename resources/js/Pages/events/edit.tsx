@@ -22,7 +22,7 @@ export default function EventsEdit({ event }: { event: { id: number; title: stri
                 description={event.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/content/events"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/content/events"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

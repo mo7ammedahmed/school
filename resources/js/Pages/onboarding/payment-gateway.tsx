@@ -51,10 +51,10 @@ export default function OnboardingPaymentGateway() {
 
                     <div className="flex justify-between mt-6">
                         <Button type="button" variant="outline" asChild>
-                            <Link href="/onboarding/fee-structure"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/onboarding/fee-structure"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
-                            <Link href="/onboarding/finish">Skip for Now<ArrowRight className="ml-2 h-4 w-4" /></Link>
+                            <Link href="/onboarding/finish">Skip for Now<ArrowRight className="ms-2 h-4 w-4" /></Link>
                         </Button>
                     </div>
                 </CardContent>

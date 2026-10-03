@@ -24,7 +24,7 @@ export default function QuizzesShow({ quiz }: { quiz: { id: number; title: strin
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/quizzes"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/quizzes"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/quizzes/${quiz.id}/edit`}>Edit</Link>

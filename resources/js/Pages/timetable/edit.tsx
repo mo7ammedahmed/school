@@ -22,7 +22,7 @@ export default function TimetableEdit({ schedule, sections, subjects, teachers }
                 description={`Schedule #${schedule.id}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/timetable"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/timetable"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

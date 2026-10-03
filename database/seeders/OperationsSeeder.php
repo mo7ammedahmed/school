@@ -36,6 +36,7 @@ use App\Domain\People\Models\TeacherProfile;
 use App\Domain\Scheduling\Models\Room;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Domain\Schools\Models\School;
+use App\Domain\Schools\Support\TenantContext;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -60,6 +61,11 @@ class OperationsSeeder extends Seeder
     public function run(): void
     {
         $school = School::where('slug', 'al-noor-school')->firstOrFail();
+
+        // School-owned models are scoped to the active tenant, and console work
+        // has none by default: without this every read below finds nothing.
+        app(TenantContext::class)->set((int) $school->id);
+
         $year = AcademicYear::where('school_id', $school->id)->where('is_current', true)->firstOrFail();
         $semester = Semester::where('academic_year_id', $year->id)->where('is_current', true)->first();
         $gradeLevels = GradeLevel::where('school_id', $school->id)->orderBy('level')->get();
@@ -386,17 +392,20 @@ class OperationsSeeder extends Seeder
                 ],
                 [
                     'gpa' => $gpa,
-                    'grades' => json_encode([
+                    // The columns are cast to `array`; `json_encode` here would
+                    // store a JSON string inside the JSON, which reads back as a
+                    // string and breaks every `.map` over it.
+                    'grades' => [
                         ['subject' => 'Mathematics', 'score' => 82 + ($student->id % 15)],
                         ['subject' => 'Science', 'score' => 78 + ($student->id % 18)],
                         ['subject' => 'English', 'score' => 80 + ($student->id % 12)],
                         ['subject' => 'Arabic', 'score' => 85 + ($student->id % 10)],
-                    ]),
-                    'attendance_summary' => json_encode([
+                    ],
+                    'attendance_summary' => [
                         'present' => 40 + ($student->id % 5),
                         'absent' => $student->id % 3,
                         'late' => ($student->id + 1) % 3,
-                    ]),
+                    ],
                     'comments' => $gpa >= 3.0
                         ? 'A strong semester. Keep up the excellent effort.'
                         : 'A steady semester with room to grow in core subjects.',
@@ -450,10 +459,10 @@ class OperationsSeeder extends Seeder
                 ],
                 [
                     'description' => 'Short formative quiz.',
-                    'questions' => json_encode([
+                    'questions' => [
                         ['question' => 'What is 7 x 8?', 'options' => ['54', '56', '58', '48'], 'answer' => 1],
                         ['question' => 'What is the capital of Saudi Arabia?', 'options' => ['Jeddah', 'Riyadh', 'Dammam', 'Makkah'], 'answer' => 1],
-                    ]),
+                    ],
                     'time_limit_minutes' => 15,
                     'max_score' => 10,
                     'is_published' => true,
@@ -481,7 +490,7 @@ class OperationsSeeder extends Seeder
                     ['quiz_id' => $quiz->id, 'student_id' => $student->id],
                     [
                         'school_id' => $school->id,
-                        'answers' => json_encode([1, 1]),
+                        'answers' => [1, 1],
                         'score' => $sIndex === 1 ? null : 10,
                         'started_at' => now()->subDays(2),
                         'completed_at' => $sIndex === 1 ? null : now()->subDays(2)->addMinutes(12),
@@ -502,7 +511,7 @@ class OperationsSeeder extends Seeder
             [
                 'body' => 'Classes begin Sunday. Homeroom lists are posted in the portal, and the first assembly is at 8:00 AM in the Main Hall.',
                 'audience' => 'all',
-                'target_audience' => json_encode(['all']),
+                'target_audience' => 'all',
                 'start_date' => now()->startOfWeek()->format('Y-m-d'),
                 'end_date' => now()->addDays(30)->format('Y-m-d'),
                 'is_published' => true,
@@ -516,7 +525,7 @@ class OperationsSeeder extends Seeder
             [
                 'body' => 'Guardians can now book conference slots through the guardian portal. Slots fill quickly — book early.',
                 'audience' => 'guardians',
-                'target_audience' => json_encode(['guardian']),
+                'target_audience' => 'parents',
                 'start_date' => now()->format('Y-m-d'),
                 'end_date' => now()->addDays(14)->format('Y-m-d'),
                 'is_published' => true,
@@ -606,7 +615,7 @@ class OperationsSeeder extends Seeder
                     'entity_id' => $student->id,
                 ],
                 [
-                    'new_values' => json_encode(['status' => 'active']),
+                    'new_values' => ['status' => 'active'],
                     'ip_address' => '127.0.0.1',
                     'user_agent' => 'seeder',
                 ]

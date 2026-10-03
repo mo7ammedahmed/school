@@ -22,14 +22,14 @@ export default function SubmissionsShow({ submission }: { submission: { id: numb
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/submissions"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/submissions"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         {/* A submission can be text only, so the button is
                             conditional rather than always present. */}
                         {submission.file_path && (
                             <Button variant="outline" asChild>
                                 <a href={`/submissions/${submission.id}/download`}>
-                                    <Download className="mr-2 h-4 w-4" />Download
+                                    <Download className="me-2 h-4 w-4" />Download
                                 </a>
                             </Button>
                         )}

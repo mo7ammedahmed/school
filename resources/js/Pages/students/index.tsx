@@ -86,7 +86,7 @@ export default function StudentsIndex({ students }: { students: StudentPage }) {
                 description="Manage student records"
                 actions={
                     <Button asChild>
-                        <Link href="/students/create"><Plus className="mr-2 h-4 w-4" />New Student</Link>
+                        <Link href="/students/create"><Plus className="me-2 h-4 w-4" />New Student</Link>
                     </Button>
                 }
             />

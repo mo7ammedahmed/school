@@ -58,7 +58,7 @@ export default function NewsIndex({ news }: { news: { id: number; title: string;
                 description="Manage news articles"
                 actions={
                     <Button asChild>
-                        <Link href="/content/news/create"><Plus className="mr-2 h-4 w-4" />New Article</Link>
+                        <Link href="/content/news/create"><Plus className="me-2 h-4 w-4" />New Article</Link>
                     </Button>
                 }
             />

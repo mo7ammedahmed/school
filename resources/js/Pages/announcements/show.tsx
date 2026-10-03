@@ -33,7 +33,7 @@ export default function AnnouncementsShow({ announcement }: { announcement: Anno
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/announcements"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/announcements"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/announcements/${announcement.id}/edit`}>Edit</Link>

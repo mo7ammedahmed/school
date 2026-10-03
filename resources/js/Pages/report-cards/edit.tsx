@@ -47,7 +47,7 @@ export default function ReportCardsEdit({
                 description={bilingual(reportCard.comments, reportCard.comments_ar, '')}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/report-cards"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/report-cards"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

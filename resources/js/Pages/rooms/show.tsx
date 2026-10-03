@@ -21,7 +21,7 @@ export default function RoomsShow({ room }: { room: { id: number; name: string; 
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/rooms"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/rooms"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/rooms/${room.id}/edit`}>Edit</Link>

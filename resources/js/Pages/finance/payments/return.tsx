@@ -47,7 +47,7 @@ export default function FinancePaymentReturn({ payment }: { payment: Payment }) 
                 description={`Payment for ${payment.invoice_number}`}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/payments/offline"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/payments/offline"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

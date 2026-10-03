@@ -80,7 +80,7 @@ export default function FinanceOfflinePayments({ payments }: { payments: Pending
                 description="Confirm bank transfers a guardian reported from their payment link."
                 actions={
                     <Button asChild>
-                        <Link href="/finance/payments/create"><Plus className="mr-2 h-4 w-4" />New Payment</Link>
+                        <Link href="/finance/payments/create"><Plus className="me-2 h-4 w-4" />New Payment</Link>
                     </Button>
                 }
             />

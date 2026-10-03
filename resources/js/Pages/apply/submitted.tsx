@@ -45,7 +45,7 @@ export default function ApplySubmitted({ reference }: { reference?: string | nul
                             </p>
                         </div>
                         <Button asChild>
-                            <Link href="/"><Home className="mr-2 h-4 w-4" />Return Home</Link>
+                            <Link href="/"><Home className="me-2 h-4 w-4" />Return Home</Link>
                         </Button>
                     </div>
                 </CardContent>

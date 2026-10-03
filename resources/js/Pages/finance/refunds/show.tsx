@@ -22,7 +22,7 @@ export default function FinanceRefundsShow({ refund }: { refund: { id: number; a
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/finance/refunds"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/finance/refunds"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/finance/refunds/${refund.id}/edit`}>Edit</Link>

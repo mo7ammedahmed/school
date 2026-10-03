@@ -28,7 +28,7 @@ export default function OnboardingFinish() {
                 `<p>Here are some suggested next steps to get started with your school management system.</p>`
             ],
             attachTo: {
-                element: '.p-4.bg-gray-50.rounded-lg.text-left:first-child',
+                element: '.p-4.bg-gray-50.rounded-lg.text-start:first-child',
                 on: 'top'
             },
             buttons: [
@@ -45,7 +45,7 @@ export default function OnboardingFinish() {
                 `<p>Here are some quick actions you can take right now.</p>`
             ],
             attachTo: {
-                element: '.p-4.bg-gray-50.rounded-lg.text-left:last-child',
+                element: '.p-4.bg-gray-50.rounded-lg.text-start:last-child',
                 on: 'top'
             },
             buttons: [
@@ -121,7 +121,7 @@ export default function OnboardingFinish() {
                         </p>
 
                         <div className="grid gap-4 md:grid-cols-2 mb-6">
-                            <div className="p-4 bg-gray-50 rounded-lg text-left">
+                            <div className="p-4 bg-gray-50 rounded-lg text-start">
                                 <h3 className="font-medium mb-2">Next Steps</h3>
                                 <ul className="text-sm text-gray-600 space-y-1">
                                     <li>• Add more students and teachers</li>
@@ -130,7 +130,7 @@ export default function OnboardingFinish() {
                                     <li>• Configure payment gateways</li>
                                 </ul>
                             </div>
-                            <div className="p-4 bg-gray-50 rounded-lg text-left">
+                            <div className="p-4 bg-gray-50 rounded-lg text-start">
                                 <h3 className="font-medium mb-2">Quick Actions</h3>
                                 <ul className="text-sm text-gray-600 space-y-1">
                                     <li>• View Dashboard</li>
@@ -142,7 +142,7 @@ export default function OnboardingFinish() {
                         </div>
 
                         <Button asChild>
-                            <Link href="/dashboard">Go to Dashboard<ArrowRight className="ml-2 h-4 w-4" /></Link>
+                            <Link href="/dashboard">Go to Dashboard<ArrowRight className="ms-2 h-4 w-4" /></Link>
                         </Button>
                     </div>
                 </CardContent>

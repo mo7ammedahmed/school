@@ -74,7 +74,7 @@ export default function AnnouncementsIndex({ announcements }: { announcements: P
                 description="Manage announcements"
                 actions={
                     <Button asChild>
-                        <Link href="/announcements/create"><Plus className="mr-2 h-4 w-4" />New Announcement</Link>
+                        <Link href="/announcements/create"><Plus className="me-2 h-4 w-4" />New Announcement</Link>
                     </Button>
                 }
             />

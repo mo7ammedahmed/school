@@ -22,7 +22,7 @@ export default function NewsEdit({ article }: { article: { id: number; title: st
                 description={article.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/content/news"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/content/news"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

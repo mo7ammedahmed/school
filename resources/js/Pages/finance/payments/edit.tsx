@@ -23,7 +23,7 @@ export default function FinancePaymentsEdit({ payment }: { payment: { id: number
                 description={payment.payment_number}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/payments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/payments"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

@@ -22,7 +22,7 @@ export default function MessagesCreate() {
                 description="Start a school conversation"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/messages"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/messages"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

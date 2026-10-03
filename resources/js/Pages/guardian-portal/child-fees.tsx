@@ -53,7 +53,7 @@ export default function GuardianChildFees({ child, invoices }: { child: { first_
                 description="Fee summary and invoices"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/guardian/children"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/guardian/children"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

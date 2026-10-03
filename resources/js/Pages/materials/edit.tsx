@@ -22,7 +22,7 @@ export default function MaterialsEdit({ material, subjects, sections }: { materi
                 description={material.title}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/materials"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/materials"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

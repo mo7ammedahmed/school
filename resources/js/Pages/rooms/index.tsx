@@ -54,7 +54,7 @@ export default function RoomsIndex({ rooms }: { rooms: { id: number; name: strin
                 description="Manage school rooms and facilities"
                 actions={
                     <Button asChild>
-                        <Link href="/rooms/create"><Plus className="mr-2 h-4 w-4" />Add Room</Link>
+                        <Link href="/rooms/create"><Plus className="me-2 h-4 w-4" />Add Room</Link>
                     </Button>
                 }
             />

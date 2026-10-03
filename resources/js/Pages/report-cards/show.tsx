@@ -35,7 +35,7 @@ export default function ReportCardsShow({ reportCard }: { reportCard: ReportCard
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/report-cards"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/report-cards"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/report-cards/${reportCard.id}/edit`}>Edit</Link>

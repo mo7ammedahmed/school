@@ -123,19 +123,19 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: InvoicePa
                     <div className="flex flex-wrap gap-1">
                         {invoice.status === 'draft' && (
                             <Button variant="ghost" size="sm" onClick={() => issue(invoice)}>
-                                <Send className="mr-1.5 h-3.5 w-3.5" />
+                                <Send className="me-1.5 h-3.5 w-3.5" />
                                 {t(locale, 'finance.invoices.issue')}
                             </Button>
                         )}
                         {!settled && (
                             <Button variant="ghost" size="sm" onClick={() => send(invoice)}>
-                                <Send className="mr-1.5 h-3.5 w-3.5" />
+                                <Send className="me-1.5 h-3.5 w-3.5" />
                                 {t(locale, invoice.sent_at ? 'finance.invoices.resend' : 'finance.invoices.send')}
                             </Button>
                         )}
                         <Button variant="ghost" size="sm" asChild>
                             <a href={`/finance/invoices/${invoice.id}/pdf`}>
-                                <Download className="mr-1.5 h-3.5 w-3.5" />
+                                <Download className="me-1.5 h-3.5 w-3.5" />
                                 PDF
                             </a>
                         </Button>
@@ -161,13 +161,13 @@ export default function FinanceInvoicesIndex({ invoices }: { invoices: InvoicePa
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
                             <Link href="/finance/payments/offline">
-                                <FileDown className="mr-2 h-4 w-4" />
+                                <FileDown className="me-2 h-4 w-4" />
                                 {t(locale, 'finance.invoices.confirmPayments')}
                             </Link>
                         </Button>
                         <Button asChild>
                             <Link href="/finance/invoices/create">
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="me-2 h-4 w-4" />
                                 {t(locale, 'finance.invoices.new')}
                             </Link>
                         </Button>

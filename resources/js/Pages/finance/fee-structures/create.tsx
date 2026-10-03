@@ -35,7 +35,7 @@ export default function FinanceFeeStructuresCreate({
                 description="Set the amount a grade level pays for one kind of charge"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/fee-structures"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/fee-structures"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

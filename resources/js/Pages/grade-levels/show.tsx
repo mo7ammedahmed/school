@@ -21,7 +21,7 @@ export default function GradeLevelsShow({ gradeLevel }: { gradeLevel: { id: numb
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/grade-levels"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/grade-levels"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/grade-levels/${gradeLevel.id}/edit`}>Edit</Link>

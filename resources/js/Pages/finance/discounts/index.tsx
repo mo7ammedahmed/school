@@ -66,7 +66,7 @@ export default function FinanceDiscountsIndex({ discounts }: { discounts: { id: 
                 description="Manage discounts and promotions"
                 actions={
                     <Button asChild>
-                        <Link href="/finance/discounts/create"><Plus className="mr-2 h-4 w-4" />New Discount</Link>
+                        <Link href="/finance/discounts/create"><Plus className="me-2 h-4 w-4" />New Discount</Link>
                     </Button>
                 }
             />

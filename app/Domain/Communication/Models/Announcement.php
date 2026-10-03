@@ -16,8 +16,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `title_ar` and `body_ar` are bilingual columns the translation layer adds to
  * this table, so they are invisible to static analysis without this.
  *
+ * `target_audience` is one label (`all`, `students`, `parents`, …) stored in a
+ * JSON column, because the column type is JSON and the audience list is not: the
+ * controller validates a single string, and every screen calls `.replace()` on
+ * it. That makes the model's `array` cast a transport detail, not the shape.
+ *
  * @property string|null $title_ar
  * @property string|null $body_ar
+ * @property string|null $target_audience
  */
 #[Fillable([
     'school_id',

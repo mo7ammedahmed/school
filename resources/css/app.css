@@ -136,6 +136,7 @@
     --animate-float: float 7s ease-in-out infinite;
     --animate-shimmer: shimmer 2.2s linear infinite;
     --animate-pulse-soft: pulse-soft 3.2s ease-in-out infinite;
+    --animate-tile-in: tile-in 0.55s var(--ease-out-expo) backwards;
 
     @keyframes marquee {
         from {
@@ -177,6 +178,30 @@
         }
         50% {
             opacity: 0.45;
+        }
+    }
+    /*
+     * Entrance for the dashboard stat tiles.
+     *
+     * A CSS animation, not a GSAP tween: the tween applies its hidden start
+     * state immediately and advances on a requestAnimationFrame ticker, so a
+     * throttled renderer (an occluded tab, the embedded preview while its
+     * panel is unfocused) leaves the tiles at opacity 0 — invisible text.
+     * A CSS animation is driven by the document timeline, so the next paint
+     * shows it at the elapsed-time state instead.
+     *
+     * `backwards` (not `both`): the hidden state applies only during the
+     * stagger delay and `transform` is released once the animation ends, so
+     * the tile's own `hover:-translate-y-0.5` transition keeps working.
+     */
+    @keyframes tile-in {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 }

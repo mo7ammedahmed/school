@@ -106,7 +106,7 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                 {events.current_page > 1 && (
                                     <Button variant="outline" asChild>
                                         <Link href={`/events?page=${events.current_page - 1}`}>
-                                            <ArrowLeft className="mr-2 h-4 w-4" />
+                                            <ArrowLeft className="me-2 h-4 w-4" />
                                             {t(locale, 'public.previous')}
                                         </Link>
                                     </Button>

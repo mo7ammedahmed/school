@@ -56,7 +56,7 @@ export default function ExamResultsIndex({ results }: { results: { id: number; e
                 description="Manage exam results"
                 actions={
                     <Button asChild>
-                        <Link href="/exam-results/create"><Plus className="mr-2 h-4 w-4" />Add Result</Link>
+                        <Link href="/exam-results/create"><Plus className="me-2 h-4 w-4" />Add Result</Link>
                     </Button>
                 }
             />

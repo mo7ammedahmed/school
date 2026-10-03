@@ -86,11 +86,13 @@ use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Identity\Policies\UserMembershipPolicy;
 use App\Domain\Identity\Services\SharedPermissionList;
 use App\Domain\Learning\Models\Assignment;
+use App\Domain\Learning\Models\LiveSession;
 use App\Domain\Learning\Models\Material;
 use App\Domain\Learning\Models\Quiz;
 use App\Domain\Learning\Models\QuizAttempt;
 use App\Domain\Learning\Models\Submission;
 use App\Domain\Learning\Policies\AssignmentPolicy;
+use App\Domain\Learning\Policies\LiveSessionPolicy;
 use App\Domain\Learning\Policies\MaterialPolicy;
 use App\Domain\Learning\Policies\QuizAttemptPolicy;
 use App\Domain\Learning\Policies\QuizPolicy;
@@ -275,6 +277,7 @@ class AppServiceProvider extends ServiceProvider
             ReportCard::class => ReportCardPolicy::class,
 
             // Learning
+            LiveSession::class => LiveSessionPolicy::class,
             Material::class => MaterialPolicy::class,
             Assignment::class => AssignmentPolicy::class,
             Submission::class => SubmissionPolicy::class,

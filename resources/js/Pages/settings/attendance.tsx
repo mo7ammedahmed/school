@@ -34,7 +34,7 @@ export default function AttendanceSettings({ settings }: { settings: { late_thre
                 description="Configure attendance rules and thresholds"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/settings/school"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/settings/school"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

@@ -23,7 +23,7 @@ export default function StudentsShow({ student }: { student: { id: number; first
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/students"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/students"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/students/${student.id}/edit`}>Edit</Link>

@@ -46,7 +46,7 @@ export default function FinanceFeeStructuresEdit({
                 description={bilingual(feeStructure.description, feeStructure.description_ar, '')}
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/finance/fee-structures"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/finance/fee-structures"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

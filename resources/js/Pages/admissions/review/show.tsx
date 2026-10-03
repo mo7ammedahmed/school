@@ -111,7 +111,7 @@ export default function AdmissionsReviewShow({ application }: { application: App
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/admissions/review">
-                <ArrowLeft className="mr-2 h-4 w-4" />Back to Review Queue
+                <ArrowLeft className="me-2 h-4 w-4" />Back to Review Queue
               </Link>
             </Button>
             {canDecide && (
@@ -122,7 +122,7 @@ export default function AdmissionsReviewShow({ application }: { application: App
                   disabled={decideForm.processing}
                   onClick={() => decide('rejected')}
                 >
-                  <X className="mr-2 h-4 w-4" />Reject
+                  <X className="me-2 h-4 w-4" />Reject
                 </Button>
                 <Button
                   variant="default"
@@ -130,7 +130,7 @@ export default function AdmissionsReviewShow({ application }: { application: App
                   disabled={decideForm.processing}
                   onClick={() => decide('approved')}
                 >
-                  <Check className="mr-2 h-4 w-4" />Approve
+                  <Check className="me-2 h-4 w-4" />Approve
                 </Button>
               </>
             )}
@@ -378,7 +378,7 @@ export default function AdmissionsReviewShow({ application }: { application: App
               {application.documents.map((doc, index) => (
                 <div key={doc.name + index} className="flex items-center justify-between p-3 border rounded">
                   <div className="flex-1">
-                    <FileText className="mr-3 h-4 w-4" />
+                    <FileText className="me-3 h-4 w-4" />
                     <div>
                       <p className="font-medium">{doc.name}</p>
                       <p className="text-sm text-muted-foreground">
@@ -469,14 +469,14 @@ export default function AdmissionsReviewShow({ application }: { application: App
                 disabled={decideForm.processing}
                 onClick={() => decide('rejected')}
               >
-                <X className="mr-2 h-4 w-4" />Reject
+                <X className="me-2 h-4 w-4" />Reject
               </Button>
               <Button
                 type="button"
                 disabled={decideForm.processing}
                 onClick={() => decide('approved')}
               >
-                <Check className="mr-2 h-4 w-4" />Approve
+                <Check className="me-2 h-4 w-4" />Approve
               </Button>
             </div>
           </CardContent>

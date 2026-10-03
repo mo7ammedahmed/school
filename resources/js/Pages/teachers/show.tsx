@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function TeachersShow({ teacher }: { teacher: { id: number; first_name: string; last_name: string; email: string; phone: string; employee_id: string; specialization: string; qualification: string; date_of_birth: string; gender: string; address: string; hire_date: string; status: string } }) {
+export default function TeachersShow({ teacher }: { teacher: { id: number; first_name: string; last_name: string; email: string; phone: string; employee_id: string; specialization: string; qualification: string; date_of_birth: string; gender: string; address: string; hire_date: string; status?: string } }) {
     return (
         <AppShell
             title="Teacher Details"
@@ -21,7 +21,7 @@ export default function TeachersShow({ teacher }: { teacher: { id: number; first
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/teachers"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/teachers"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/teachers/${teacher.id}/edit`}>Edit</Link>
@@ -76,10 +76,15 @@ export default function TeachersShow({ teacher }: { teacher: { id: number; first
                             <span className="text-sm font-medium text-muted-foreground">Hire Date</span>
                             <p className="text-base">{teacher.hire_date}</p>
                         </div>
-                        <div>
-                            <span className="text-sm font-medium text-muted-foreground">Status</span>
-                            <p className="text-base capitalize">{teacher.status.replace('_', ' ')}</p>
-                        </div>
+                        {/* `teacher_profiles` has no status column, and the index
+                            already treats it as optional: reading it flatly crashed
+                            the whole page whenever it was missing. */}
+                        {teacher.status && (
+                            <div>
+                                <span className="text-sm font-medium text-muted-foreground">Status</span>
+                                <p className="text-base capitalize">{teacher.status.replace('_', ' ')}</p>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

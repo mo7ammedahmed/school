@@ -22,7 +22,7 @@ export default function EnrollmentsCreate({ students, sections, academicYears }:
                 description="Enroll a student in a section"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/enrollments"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/enrollments"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

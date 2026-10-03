@@ -21,7 +21,7 @@ export default function NewsShow({ article }: { article: { id: number; title: st
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/content/news"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                            <Link href="/content/news"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
                         <Button asChild>
                             <Link href={`/content/news/${article.id}/edit`}>Edit</Link>

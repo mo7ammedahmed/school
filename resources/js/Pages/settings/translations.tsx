@@ -309,7 +309,7 @@ export default function TranslationSettingsPage({
                                         onClick={() => void loadModels()}
                                         disabled={loadingModels}
                                     >
-                                        <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loadingModels ? 'animate-spin' : ''}`} />
+                                        <RefreshCw className={`me-2 h-3.5 w-3.5 ${loadingModels ? 'animate-spin' : ''}`} />
                                         {loadingModels ? 'Loading…' : 'Load models'}
                                     </Button>
                                 </div>
@@ -430,7 +430,7 @@ export default function TranslationSettingsPage({
                                 onClick={() => void testConnection()}
                                 disabled={testing}
                             >
-                                <PlugZap className="mr-2 h-4 w-4" />
+                                <PlugZap className="me-2 h-4 w-4" />
                                 {testing ? 'Testing…' : 'Test connection'}
                             </Button>
                             {testResult && (
@@ -496,12 +496,12 @@ export default function TranslationSettingsPage({
                             >
                                 {backfilling ? (
                                     <>
-                                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                        <RefreshCw className="me-2 h-4 w-4 animate-spin" />
                                         Stop translating
                                     </>
                                 ) : (
                                     <>
-                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        <Sparkles className="me-2 h-4 w-4" />
                                         Translate everything that is missing
                                     </>
                                 )}

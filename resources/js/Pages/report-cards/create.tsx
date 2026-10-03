@@ -29,7 +29,7 @@ export default function ReportCardsCreate({ students, academicYears }: { student
                 description="Record a student's GPA and a comment in both languages"
                 actions={
                     <Button variant="outline" asChild>
-                        <Link href="/report-cards"><ArrowLeft className="mr-2 h-4 w-4" />Back</Link>
+                        <Link href="/report-cards"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                     </Button>
                 }
             />

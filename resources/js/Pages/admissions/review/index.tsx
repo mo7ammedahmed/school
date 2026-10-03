@@ -155,7 +155,7 @@ export default function AdmissionsReviewIndex({
         actions={
           <div className="flex flex-wrap items-center gap-4">
             <Button variant="outline" onClick={() => setShowAssignDialog(true)}>
-              <Users className="mr-2 h-4 w-4" /> Assign Applications
+              <Users className="me-2 h-4 w-4" /> Assign Applications
             </Button>
             <Button onClick={() => handleBulkAction('approve')} disabled={selectedApplications.length === 0}>
               Approve Selected
@@ -164,7 +164,7 @@ export default function AdmissionsReviewIndex({
               Reject Selected
             </Button>
             <Button variant="outline" onClick={() => handleBulkAction('set_under_review')} disabled={selectedApplications.length === 0}>
-              <AlertTriangle className="mr-2 h-4 w-4" /> Set to Review
+              <AlertTriangle className="me-2 h-4 w-4" /> Set to Review
             </Button>
           </div>
         }
@@ -251,10 +251,10 @@ export default function AdmissionsReviewIndex({
           <div className="flex-1 min-w-[200px]">
             <form onSubmit={(e) => { e.preventDefault(); applyFilters(); }}>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search applications..."
-                  className="pl-9"
+                  className="ps-9"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -296,7 +296,7 @@ export default function AdmissionsReviewIndex({
               <TableCell>Priority</TableCell>
               <TableCell>Assigned To</TableCell>
               <TableCell>Submitted</TableCell>
-              <TableCell className="text-right">Actions</TableCell>
+              <TableCell className="text-end">Actions</TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -345,7 +345,7 @@ export default function AdmissionsReviewIndex({
                     '—'
                   )}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-end">
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/admissions/review/${application.id}`}>

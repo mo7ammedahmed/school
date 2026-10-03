@@ -30,7 +30,7 @@ export default function SemestersCreate({ academicYears }: Props) {
                 actions={
                     <Button variant="outline" asChild>
                         <Link href="/semesters">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            <ArrowLeft className="me-2 h-4 w-4" />
                             Back
                         </Link>
                     </Button>

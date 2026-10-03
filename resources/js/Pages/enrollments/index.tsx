@@ -61,7 +61,7 @@ export default function EnrollmentsIndex({ enrollments }: { enrollments: { id: n
                 description="Manage student enrollments"
                 actions={
                     <Button asChild>
-                        <Link href="/enrollments/create"><Plus className="mr-2 h-4 w-4" />New Enrollment</Link>
+                        <Link href="/enrollments/create"><Plus className="me-2 h-4 w-4" />New Enrollment</Link>
                     </Button>
                 }
             />

@@ -49,7 +49,7 @@ export default function SubjectsIndex({ subjects }: { subjects: { id: number; na
                 description="Manage subjects and curriculum"
                 actions={
                     <Button asChild>
-                        <Link href="/subjects/create"><Plus className="mr-2 h-4 w-4" />New Subject</Link>
+                        <Link href="/subjects/create"><Plus className="me-2 h-4 w-4" />New Subject</Link>
                     </Button>
                 }
             />

@@ -68,10 +68,10 @@ export default function QuizzesIndex({ quizzes }: {    quizzes: { id: number; ti
                 actions={
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/assessments/import"><FileUp className="mr-2 h-4 w-4" />Import from Word</Link>
+                            <Link href="/assessments/import"><FileUp className="me-2 h-4 w-4" />Import from Word</Link>
                         </Button>
                         <Button asChild>
-                            <Link href="/quizzes/create"><Plus className="mr-2 h-4 w-4" />New Quiz</Link>
+                            <Link href="/quizzes/create"><Plus className="me-2 h-4 w-4" />New Quiz</Link>
                         </Button>
                     </div>
                 }
