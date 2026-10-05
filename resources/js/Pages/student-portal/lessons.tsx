@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Radio, Square } from 'lucide-react';
-import { playFromWhep, type WhepSession } from '@/lib/media/whep';
+import { playLive, sessionSources, type LiveMode, type LivePlayback } from '@/lib/media/live';
 import { formatDuration } from '@/lib/media/format';
 
 type LiveSession = {
     id: number;
     title: string;
     stream_key: string;
+    read_token: string;
+    hls_playback_url: string | null;
     started_at: string | null;
     offering: { subject: { name: string } | null; section: { name: string } | null } | null;
 };
@@ -34,25 +36,31 @@ export default function StudentLessons({
 }: {
     liveSessions: LiveSession[];
     recordings: Recording[];
-    media: { configured: boolean; webrtcUrl: string | null };
+    media: { configured: boolean; webrtcUrl: string | null; hlsUrl: string | null };
 }) {
     const liveVideoRef = useRef<HTMLVideoElement>(null);
-    const whepRef = useRef<WhepSession | null>(null);
+    const playbackRef = useRef<LivePlayback | null>(null);
     const [player, setPlayer] = useState<Player>(null);
+    const [mode, setMode] = useState<LiveMode | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const activeLive = player?.kind === 'live' ? liveSessions.find((session) => session.id === player.id) : null;
     const activeRecording = player?.kind === 'recording' ? recordings.find((item) => item.id === player.id) : null;
 
     /*
-     * The WHEP handshake starts from an effect, not from the click: the video
-     * element only exists after React renders the player card in response to
-     * the click, so a ref read in the handler is still null on the first watch.
-     * The effect runs on the render that mounts the element, and its cleanup
-     * closes the peer connection whenever the player changes or unmounts.
+     * The playback starts from an effect, not from the click: the video element
+     * only exists after React renders the player card in response to the click,
+     * so a ref read in the handler is still null on the first watch. The effect
+     * runs on the render that mounts the element, and its cleanup stops whatever
+     * is playing — peer connection, hls.js, or the browser's own player.
+     *
+     * `playLive` decides the path: WHEP first, and the HLS fallback when the
+     * connection never receives media (a school network that blocks the UDP port
+     * WebRTC needs). `onMode` reports which one is running, so the pupil is told
+     * why the picture is a few seconds behind rather than left guessing.
      */
     useEffect(() => {
-        if (player?.kind !== 'live' || !media.webrtcUrl) {
+        if (player?.kind !== 'live') {
             return;
         }
 
@@ -65,17 +73,19 @@ export default function StudentLessons({
 
         let cancelled = false;
 
-        const url = `${media.webrtcUrl.replace(/\/$/, '')}/${session.stream_key}/whep`;
-
-        void playFromWhep(url, video)
-            .then((whep) => {
+        void playLive({ ...sessionSources(media, session.stream_key), readToken: session.read_token, hlsUrl: session.hls_playback_url }, video, (next) => {
+            if (!cancelled) {
+                setMode(next);
+            }
+        })
+            .then((playback) => {
                 if (cancelled) {
-                    whep.close();
+                    playback.close();
 
                     return;
                 }
 
-                whepRef.current = whep;
+                playbackRef.current = playback;
             })
             .catch((caught: unknown) => {
                 if (cancelled) {
@@ -83,26 +93,33 @@ export default function StudentLessons({
                 }
 
                 setPlayer(null);
+                setMode(null);
                 setError(caught instanceof Error ? caught.message : 'The lesson could not be opened.');
             });
 
         return () => {
             cancelled = true;
-            whepRef.current?.close();
-            whepRef.current = null;
+            playbackRef.current?.close();
+            playbackRef.current = null;
         };
-    }, [player, liveSessions, media.webrtcUrl]);
+    }, [player, liveSessions, media.webrtcUrl, media.hlsUrl]);
 
     const watchLive = (session: LiveSession) => {
         setError(null);
+        setMode(null);
 
-        if (!media.configured || !media.webrtcUrl) {
+        if (!media.configured) {
             setError('Live viewing is not configured on this server yet.');
 
             return;
         }
 
         setPlayer({ kind: 'live', id: session.id });
+    };
+
+    const leaveLive = () => {
+        setPlayer(null);
+        setMode(null);
     };
 
     return (
@@ -119,16 +136,34 @@ export default function StudentLessons({
                 <Card className="mb-6 overflow-hidden">
                     <CardHeader className="flex-row items-center justify-between space-y-0">
                         <CardTitle>{activeLive.title}</CardTitle>
-                        <Badge variant="success">
-                            <Radio className="me-1 h-3 w-3" />
-                            Live now
-                        </Badge>
+                        {/*
+                            Two labels rather than one ternary: the extraction script
+                            reads text between tags, so a string inside an expression
+                            never reaches the Arabic dictionary.
+                        */}
+                        {mode === 'hls' ? (
+                            <Badge variant="info">
+                                <Radio className="me-1 h-3 w-3" />
+                                Backup stream
+                            </Badge>
+                        ) : (
+                            <Badge variant="success">
+                                <Radio className="me-1 h-3 w-3" />
+                                Live now
+                            </Badge>
+                        )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="aspect-video w-full overflow-hidden rounded-lg border border-border/70 bg-black">
                             <video ref={liveVideoRef} className="h-full w-full object-contain" controls playsInline />
                         </div>
-                        <Button variant="outline" onClick={() => setPlayer(null)}>
+                        {mode === 'hls' && (
+                            <p className="text-sm text-muted-foreground">
+                                Playing the backup stream: the low-latency one needs a network port this
+                                connection does not allow, so this may run a few seconds behind.
+                            </p>
+                        )}
+                        <Button variant="outline" onClick={leaveLive}>
                             <Square className="me-2 h-4 w-4" />
                             Leave the lesson
                         </Button>

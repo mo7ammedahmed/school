@@ -26,19 +26,9 @@ class MaterialPolicy
 
     public function view(User $user, Material $material): bool
     {
-        if ((int) $material->school_id !== (int) session('school_id')) {
-            return false;
-        }
-
-        if ($user->hasPermissionTo('manage-materials')) {
-            return true;
-        }
-
-        if (! $user->hasPermissionTo('view-own-lessons')) {
-            return false;
-        }
-
-        return $this->studentMayWatch($user, $material);
+        return $this->inSchool($material)
+            && ($user->hasPermissionTo('manage-materials')
+                || ($user->hasPermissionTo('view-own-lessons') && $this->studentMayWatch($user, $material)));
     }
 
     /**
@@ -52,14 +42,21 @@ class MaterialPolicy
 
     public function update(User $user, Material $material): bool
     {
-        return $user->hasPermissionTo('manage-materials') &&
-            $material->school_id === session('school_id');
+        return $user->hasPermissionTo('manage-materials') && $this->inSchool($material);
     }
 
     public function delete(User $user, Material $material): bool
     {
-        return $user->hasPermissionTo('manage-materials') &&
-            $material->school_id === session('school_id');
+        return $user->hasPermissionTo('manage-materials') && $this->inSchool($material);
+    }
+
+    /**
+     * The tenant half of every ability: permission says what a role may do, the
+     * school says to whose rows.
+     */
+    private function inSchool(Material $material): bool
+    {
+        return (int) $material->school_id === (int) session('school_id');
     }
 
     private function studentMayWatch(User $user, Material $material): bool

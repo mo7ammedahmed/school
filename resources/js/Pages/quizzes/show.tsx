@@ -6,15 +6,15 @@ import { QuestionPaper, type ExamQuestion } from '@/components/ui/question-paper
 import { ArrowLeft, ListChecks } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function QuizzesShow({ quiz }: { quiz: { id: number; title: string; subject: { name: string }; section: { name: string }; total_marks: number; passing_marks: number; duration_minutes: number; status: string; questions?: ExamQuestion[] | null } }) {
+export default function QuizzesShow({ quiz, canManage = true }: { quiz: { id: number; title: string; subject: { name: string } | null; section: { name: string } | null; total_marks: number; passing_marks: number; duration_minutes: number; status: string; questions?: ExamQuestion[] | null }; canManage?: boolean }) {
     const questions = quiz.questions ?? [];
 
     return (
         <AppShell
             title="Quiz Details"
             breadcrumbs={[
-                { label: 'Dashboard', href: '/dashboard' },
-                { label: 'Quizzes', href: '/quizzes' },
+                { label: 'Dashboard', href: canManage ? '/dashboard' : '/student/dashboard' },
+                { label: canManage ? 'Quizzes' : 'Assignments', href: canManage ? '/quizzes' : '/student/assignments' },
                 { label: quiz.title },
             ]}
         >
@@ -24,11 +24,11 @@ export default function QuizzesShow({ quiz }: { quiz: { id: number; title: strin
                 actions={
                     <div className="flex gap-2">
                         <Button variant="outline" asChild>
-                            <Link href="/quizzes"><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
+                            <Link href={canManage ? '/quizzes' : '/student/assignments'}><ArrowLeft className="me-2 h-4 w-4" />Back</Link>
                         </Button>
-                        <Button asChild>
+                        {canManage && <Button asChild>
                             <Link href={`/quizzes/${quiz.id}/edit`}>Edit</Link>
-                        </Button>
+                        </Button>}
                     </div>
                 }
             />
@@ -45,11 +45,11 @@ export default function QuizzesShow({ quiz }: { quiz: { id: number; title: strin
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Subject</span>
-                            <p className="text-base">{quiz.subject.name}</p>
+                            <p className="text-base">{quiz.subject?.name ?? '—'}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Section</span>
-                            <p className="text-base">{quiz.section.name}</p>
+                            <p className="text-base">{quiz.section?.name ?? '—'}</p>
                         </div>
                         <div>
                             <span className="text-sm font-medium text-muted-foreground">Total Marks</span>
@@ -84,7 +84,7 @@ export default function QuizzesShow({ quiz }: { quiz: { id: number; title: strin
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <QuestionPaper questions={questions} />
+                    <QuestionPaper questions={questions} showAnswers={canManage} />
                 </CardContent>
             </Card>
         </AppShell>

@@ -14,6 +14,7 @@ type UserRecord = {
     role: string;
     is_active: boolean;
     last_login_at: string | null;
+    can_update: boolean;
 };
 
 export default function UsersShow({ user }: { user: UserRecord }) {
@@ -72,9 +73,9 @@ export default function UsersShow({ user }: { user: UserRecord }) {
                         <CardTitle>Actions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Button asChild>
+                        {user.can_update ? <Button asChild>
                             <Link href={`/settings/users/${user.id}/edit`}>Edit this user</Link>
-                        </Button>
+                        </Button> : <p className="text-sm text-muted-foreground">This account requires a platform administrator to make changes.</p>}
                     </CardContent>
                 </Card>
             </div>

@@ -10,34 +10,40 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\People\Models\Student;
 use App\Domain\People\Models\TeacherProfile;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $schoolId = session('school_id');
 
-        // Initialize stats with default values
-        $stats = [
-            'total_students' => 0,
-            'total_teachers' => 0,
-            'total_classes' => 0,
-            'total_revenue' => 0,
-            'attendance_rate' => 0.0,
-            'pending_payments' => 0,
-        ];
+        $stats = [];
 
-        // Only fetch stats if we have a valid school ID
+        // A hidden tile is not a data boundary: only send statistics for
+        // modules the caller can open.
         if ($schoolId) {
-            $stats = [
-                'total_students' => Student::where('school_id', $schoolId)->count(),
-                'total_teachers' => TeacherProfile::where('school_id', $schoolId)->count(),
-                'total_classes' => Section::where('school_id', $schoolId)->count(),
-                'total_revenue' => Payment::where('school_id', $schoolId)->where('status', 'completed')->sum('amount'),
-                'attendance_rate' => $this->calculateAttendanceRate($schoolId),
-                'pending_payments' => Invoice::where('school_id', $schoolId)->whereNotIn('status', ['paid', 'voided', 'draft'])->count(),
-            ];
+            $user = $request->user();
+
+            if ($user->can('manage-students')) {
+                $stats['total_students'] = Student::where('school_id', $schoolId)->count();
+            }
+            if ($user->can('manage-teachers')) {
+                $stats['total_teachers'] = TeacherProfile::where('school_id', $schoolId)->count();
+            }
+            if ($user->can('manage-sections')) {
+                $stats['total_classes'] = Section::where('school_id', $schoolId)->count();
+            }
+            if ($user->can('manage-payments')) {
+                $stats['total_revenue'] = Payment::where('school_id', $schoolId)->where('status', 'completed')->sum('amount');
+            }
+            if ($user->can('manage-attendance')) {
+                $stats['attendance_rate'] = $this->calculateAttendanceRate($schoolId);
+            }
+            if ($user->can('manage-invoices')) {
+                $stats['pending_payments'] = Invoice::where('school_id', $schoolId)->whereNotIn('status', ['paid', 'voided', 'draft'])->count();
+            }
         }
 
         return Inertia::render('dashboard', [

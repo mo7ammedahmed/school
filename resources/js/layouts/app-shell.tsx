@@ -72,7 +72,8 @@ interface NavItem {
     key: CopyKey;
     href: string;
     icon: typeof BarChart3;
-    roles: string[];
+    roles?: string[];
+    permissions?: string[][];
 }
 
 interface NavGroup {
@@ -80,14 +81,7 @@ interface NavGroup {
     items: NavItem[];
 }
 
-// Role names match the seeded Spatie roles exactly.
-const STAFF = ['school_admin', 'super_admin', 'principal', 'registrar', 'teacher', 'accountant'];
-const ADMINS = ['school_admin', 'super_admin'];
-// Every signed-in role — used by the personal account screens.
-const ALL_ROLES = [...STAFF, 'student', 'guardian'];
-const ACADEMIC_ADMINS = [...ADMINS, 'registrar', 'principal'];
-const FINANCE = [...ADMINS, 'accountant'];
-
+// Permission groups mirror route middleware: AND between groups, OR within each group.
 export const NAV_GROUPS: NavGroup[] = [
     {
         labelKey: 'shell.group.studentPortal',
@@ -109,109 +103,118 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
     },
     {
-        items: [{ key: 'nav.dashboard', href: '/dashboard', icon: BarChart3, roles: STAFF }],
+        items: [{ key: 'nav.dashboard', href: '/dashboard', icon: BarChart3, permissions: [['view-dashboard']] }],
     },
     {
         labelKey: 'shell.group.people',
         items: [
-            { key: 'nav.students', href: '/students', icon: Users, roles: [...ADMINS, 'registrar', 'teacher'] },
-            { key: 'nav.guardians', href: '/guardians', icon: Users2, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.teachers', href: '/teachers', icon: UserCheck, roles: [...ADMINS, 'principal'] },
+            { key: 'nav.students', href: '/students', icon: Users, permissions: [['manage-students']] },
+            { key: 'nav.guardians', href: '/guardians', icon: Users2, permissions: [['manage-guardians']] },
+            { key: 'nav.teachers', href: '/teachers', icon: UserCheck, permissions: [['manage-teachers']] },
         ],
     },
     {
         labelKey: 'shell.group.academics',
         items: [
-            { key: 'nav.academicYears', href: '/academic-years', icon: BookOpen, roles: ACADEMIC_ADMINS },
-            { key: 'nav.gradeLevels', href: '/grade-levels', icon: GraduationCap, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.subjects', href: '/subjects', icon: Layers, roles: ACADEMIC_ADMINS },
-            { key: 'nav.sections', href: '/sections', icon: LayoutGrid, roles: ACADEMIC_ADMINS },
-            { key: 'nav.rooms', href: '/rooms', icon: DoorOpen, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.periods', href: '/periods', icon: Clock, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.enrollments', href: '/enrollments', icon: Package, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.timetable', href: '/timetable', icon: CalendarDays, roles: [...ADMINS, 'teacher'] },
+            { key: 'nav.academicYears', href: '/academic-years', icon: BookOpen, permissions: [['manage-academic-years']] },
+            { key: 'nav.gradeLevels', href: '/grade-levels', icon: GraduationCap, permissions: [['manage-grade-levels']] },
+            { key: 'nav.subjects', href: '/subjects', icon: Layers, permissions: [['manage-subjects']] },
+            { key: 'nav.sections', href: '/sections', icon: LayoutGrid, permissions: [['manage-sections']] },
+            { key: 'nav.rooms', href: '/rooms', icon: DoorOpen, permissions: [['manage-rooms']] },
+            { key: 'nav.periods', href: '/periods', icon: Clock, permissions: [['manage-periods']] },
+            { key: 'nav.enrollments', href: '/enrollments', icon: Package, permissions: [['manage-enrollments']] },
+            { key: 'nav.timetable', href: '/timetable', icon: CalendarDays, permissions: [['manage-timetable-entries']] },
         ],
     },
     {
         labelKey: 'shell.group.teaching',
         items: [
-            { key: 'nav.attendance', href: '/attendance', icon: CalendarCheck, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.attendanceSessions', href: '/attendance-sessions', icon: Calendar, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.exams', href: '/exams', icon: ClipboardList, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.examResults', href: '/exam-results', icon: FileText, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.assignments', href: '/assignments', icon: PenTool, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.quizzes', href: '/quizzes', icon: ClipboardCheck, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.submissions', href: '/submissions', icon: Upload, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.reportCards', href: '/report-cards', icon: Award, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.materials', href: '/materials', icon: Upload, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.live', href: '/live', icon: Radio, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.assessments', href: '/assessments', icon: FileSpreadsheet, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.calendar', href: '/calendar', icon: CalendarRange, roles: STAFF },
+            { key: 'nav.attendance', href: '/attendance', icon: CalendarCheck, permissions: [['manage-attendance']] },
+            { key: 'nav.attendanceSessions', href: '/attendance-sessions', icon: Calendar, permissions: [['manage-attendance']] },
+            { key: 'nav.exams', href: '/exams', icon: ClipboardList, permissions: [['manage-exams']] },
+            { key: 'nav.examResults', href: '/exam-results', icon: FileText, permissions: [['manage-exams', 'manage-report-cards']] },
+            { key: 'nav.assignments', href: '/assignments', icon: PenTool, permissions: [['manage-assignments']] },
+            { key: 'nav.quizzes', href: '/quizzes', icon: ClipboardCheck, permissions: [['manage-quizzes']] },
+            { key: 'nav.submissions', href: '/submissions', icon: Upload, permissions: [['manage-submissions']] },
+            { key: 'nav.reportCards', href: '/report-cards', icon: Award, permissions: [['manage-report-cards']] },
+            { key: 'nav.materials', href: '/materials', icon: Upload, permissions: [['manage-materials']] },
+            { key: 'nav.live', href: '/live', icon: Radio, permissions: [['manage-live-sessions']] },
+            { key: 'nav.assessments', href: '/assessments', icon: FileSpreadsheet, permissions: [['manage-assessments']] },
+            { key: 'nav.calendar', href: '/calendar', icon: CalendarRange, permissions: [['manage-calendar']] },
         ],
     },
     {
         labelKey: 'shell.group.communication',
         items: [
-            { key: 'nav.announcements', href: '/announcements', icon: Bell, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.news', href: '/content/news', icon: Bell, roles: ADMINS },
-            { key: 'nav.events', href: '/content/events', icon: Calendar, roles: ADMINS },
-            { key: 'nav.messages', href: '/messages', icon: MessageSquare, roles: [...ADMINS, 'teacher', 'registrar'] },
-            { key: 'nav.documents', href: '/documents', icon: FileText, roles: [...ADMINS, 'teacher'] },
-            { key: 'nav.websitePages', href: '/content/pages', icon: Globe, roles: ADMINS },
+            { key: 'nav.announcements', href: '/announcements', icon: Bell, permissions: [['manage-announcements']] },
+            { key: 'nav.news', href: '/content/news', icon: Bell, permissions: [['manage-content']] },
+            { key: 'nav.events', href: '/content/events', icon: Calendar, permissions: [['manage-content']] },
+            { key: 'nav.messages', href: '/messages', icon: MessageSquare, permissions: [['manage-messages']] },
+            { key: 'nav.documents', href: '/documents', icon: FileText, permissions: [['manage-documents']] },
+            { key: 'nav.websitePages', href: '/content/pages', icon: Globe, permissions: [['manage-content']] },
         ],
     },
     {
         labelKey: 'shell.group.operations',
         items: [
-            { key: 'nav.admissions', href: '/admissions/applications', icon: UserPlus, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.admissionsReview', href: '/admissions/review', icon: ClipboardCheck, roles: [...ADMINS, 'registrar'] },
-            { key: 'nav.finance', href: '/finance/invoices', icon: DollarSign, roles: FINANCE },
-            { key: 'nav.feeStructures', href: '/finance/fee-structures', icon: Receipt, roles: FINANCE },
-            { key: 'nav.feeTypes', href: '/finance/fee-types', icon: Tags, roles: FINANCE },
-            { key: 'nav.discounts', href: '/finance/discounts', icon: Percent, roles: FINANCE },
-            { key: 'nav.financePayments', href: '/finance/payments', icon: CreditCard, roles: FINANCE },
-            { key: 'nav.refunds', href: '/finance/refunds', icon: RotateCcw, roles: FINANCE },
-            { key: 'nav.reports', href: '/reports', icon: FileBarChart, roles: [...ACADEMIC_ADMINS, 'accountant'] },
+            { key: 'nav.admissions', href: '/admissions/applications', icon: UserPlus, permissions: [['manage-admissions']] },
+            { key: 'nav.admissionsReview', href: '/admissions/review', icon: ClipboardCheck, permissions: [['manage-admissions']] },
+            { key: 'nav.finance', href: '/finance/invoices', icon: DollarSign, permissions: [['manage-invoices']] },
+            { key: 'nav.feeStructures', href: '/finance/fee-structures', icon: Receipt, permissions: [['manage-fee-types', 'manage-fee-structures']] },
+            { key: 'nav.feeTypes', href: '/finance/fee-types', icon: Tags, permissions: [['manage-fee-types', 'manage-fee-structures']] },
+            { key: 'nav.discounts', href: '/finance/discounts', icon: Percent, permissions: [['manage-discounts']] },
+            { key: 'nav.financePayments', href: '/finance/payments', icon: CreditCard, permissions: [['manage-payments']] },
+            { key: 'nav.refunds', href: '/finance/refunds', icon: RotateCcw, permissions: [['manage-refunds']] },
+            { key: 'nav.reports', href: '/reports', icon: FileBarChart, permissions: [['manage-reports']] },
         ],
     },
     {
         labelKey: 'shell.group.administration',
         items: [
-            { key: 'nav.users', href: '/settings/users', icon: Users, roles: ADMINS },
-            { key: 'nav.roles', href: '/roles', icon: ShieldCheck, roles: ADMINS },
-            { key: 'nav.schools', href: '/schools', icon: Building2, roles: ADMINS },
-            { key: 'nav.auditLogs', href: '/audit-logs', icon: ScrollText, roles: ADMINS },
+            { key: 'nav.users', href: '/settings/users', icon: Users, permissions: [['manage-settings', 'manage-schools'], ['manage-users']] },
+            { key: 'nav.roles', href: '/roles', icon: ShieldCheck, permissions: [['manage-roles']] },
+            { key: 'nav.schools', href: '/schools', icon: Building2, permissions: [['manage-schools']] },
+            { key: 'nav.auditLogs', href: '/audit-logs', icon: ScrollText, permissions: [['view-audit-logs']] },
         ],
     },
     {
         labelKey: 'shell.group.system',
         items: [
-            { key: 'nav.settings', href: '/settings/school', icon: Settings, roles: ADMINS },
-            { key: 'nav.settingsAcademic', href: '/settings/academic', icon: GraduationCap, roles: ADMINS },
-            { key: 'nav.settingsAttendance', href: '/settings/attendance', icon: CalendarCheck, roles: ADMINS },
-            { key: 'nav.settingsGrading', href: '/settings/grading', icon: Award, roles: ADMINS },
-            { key: 'nav.settingsLocalization', href: '/settings/localization', icon: Languages, roles: ADMINS },
-            { key: 'nav.settingsTranslations', href: '/settings/translations', icon: Languages, roles: ADMINS },
-            { key: 'nav.settingsNotifications', href: '/settings/notifications-config', icon: Bell, roles: ADMINS },
-            { key: 'nav.settingsEmail', href: '/settings/email', icon: Mail, roles: ADMINS },
-            { key: 'nav.settingsSms', href: '/settings/sms', icon: MessageSquare, roles: ADMINS },
-            { key: 'nav.settingsPayments', href: '/settings/payments', icon: CreditCard, roles: ADMINS },
-            { key: 'nav.settingsPaymentLogs', href: '/settings/payments/logs', icon: ScrollText, roles: ADMINS },
-            { key: 'nav.settingsSecurity', href: '/settings/security', icon: ShieldCheck, roles: ADMINS },
-            { key: 'nav.appearance', href: '/settings/appearance', icon: Palette, roles: ADMINS },
-            { key: 'nav.navigationLabels', href: '/settings/navigation', icon: LayoutGrid, roles: ADMINS },
+            { key: 'nav.settings', href: '/settings/school', icon: Settings, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsAcademic', href: '/settings/academic', icon: GraduationCap, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsAttendance', href: '/settings/attendance', icon: CalendarCheck, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsGrading', href: '/settings/grading', icon: Award, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsLocalization', href: '/settings/localization', icon: Languages, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsTranslations', href: '/settings/translations', icon: Languages, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsNotifications', href: '/settings/notifications-config', icon: Bell, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsEmail', href: '/settings/email', icon: Mail, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsSms', href: '/settings/sms', icon: MessageSquare, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsPayments', href: '/settings/payments', icon: CreditCard, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsPaymentLogs', href: '/settings/payments/logs', icon: ScrollText, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.settingsSecurity', href: '/settings/security', icon: ShieldCheck, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.appearance', href: '/settings/appearance', icon: Palette, permissions: [['manage-settings', 'manage-schools']] },
+            { key: 'nav.navigationLabels', href: '/settings/navigation', icon: LayoutGrid, permissions: [['manage-settings', 'manage-schools']] },
         ],
     },
     {
         labelKey: 'shell.group.account',
         items: [
-            { key: 'nav.profile', href: '/settings/profile', icon: User, roles: ALL_ROLES },
-            { key: 'nav.password', href: '/settings/password', icon: Lock, roles: ALL_ROLES },
-            { key: 'nav.preferences', href: '/settings/preferences', icon: SlidersHorizontal, roles: ALL_ROLES },
-            { key: 'nav.twoFactor', href: '/settings/security/two-factor', icon: ShieldCheck, roles: ALL_ROLES },
+            { key: 'nav.profile', href: '/settings/profile', icon: User, permissions: [] },
+            { key: 'nav.password', href: '/settings/password', icon: Lock, permissions: [] },
+            { key: 'nav.preferences', href: '/settings/preferences', icon: SlidersHorizontal, permissions: [] },
+            { key: 'nav.twoFactor', href: '/settings/security/two-factor', icon: ShieldCheck, permissions: [] },
         ],
     },
 ];
+
+export function canSeeNavigation(item: Pick<NavItem, 'roles' | 'permissions'>, user: App.PageProps['auth']['user']): boolean {
+    if (!user) return false;
+    if (item.roles) return item.roles.some((role) => user.roles?.includes(role));
+    if (!item.permissions) return false;
+    return user.roles?.includes('super_admin') || item.permissions.every(
+        (group) => group.some((permission) => user.permissions?.includes(permission))
+    );
+}
 
 function isActive(href: string, pathname: string): boolean {
     if (href === '/dashboard') return pathname === '/dashboard' || pathname === '/';
@@ -265,7 +268,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
     const visibleGroups = NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => item.roles.some((role) => userRoles.includes(role))),
+        items: group.items.filter((item) => canSeeNavigation(item, auth.user)),
     })).filter((group) => group.items.length > 0);
 
     // The section that owns the current page, so navigating always reveals it.
@@ -308,14 +311,14 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                             className={cn(
                                 'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
                                 active
-                                    ? 'bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(10,92,66,0.04)]'
+                                    ? 'bg-primary/10 text-link dark:text-pine-200 shadow-[inset_0_0_0_1px_rgba(10,92,66,0.04)]'
                                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                             )}
                         >
                             <Icon
                                 className={cn(
                                     'size-[1.05rem] shrink-0 transition-colors',
-                                    active ? 'text-primary' : 'text-muted-foreground/70 group-hover:text-foreground'
+                                    active ? 'text-link dark:text-pine-200' : 'text-muted-foreground/70 group-hover:text-foreground'
                                 )}
                                 aria-hidden="true"
                             />
@@ -426,9 +429,8 @@ export default function AppShell({ children, title, breadcrumbs }: AppShellProps
     const page = usePage<App.PageProps>();
     const { auth } = page.props;
     const url = page.url;
-    const userRoles = auth.user?.roles || [];
-    const canNotify = userRoles.some((r) => ['school_admin', 'super_admin', 'teacher'].includes(r));
-    const canSettings = userRoles.some((r) => ['school_admin', 'super_admin'].includes(r));
+    const canNotify = canSeeNavigation({ permissions: [['manage-announcements']] }, auth.user);
+    const canSettings = canSeeNavigation({ permissions: [['manage-settings', 'manage-schools']] }, auth.user);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     // The screens themselves are written in English. The shared catalog is

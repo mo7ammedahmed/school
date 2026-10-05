@@ -12,8 +12,11 @@
 logLevel: info
 logDestinations: [stdout]
 
-# WHIP/WHEP/HLS share one HTTP port. nginx terminates TLS in front of it in
-# production; locally the compose port mapping exposes it as plain HTTP.
+# Two HTTP ports, both plain here and both behind TLS in production (nginx, or
+# a load balancer): WHIP and WHEP on 8889, HLS on 8888. They are separate
+# because they answer different questions — WHEP is the sub-second path the
+# student player tries first, HLS is the one that survives a network which
+# blocks WebRTC's UDP port (`MEDIA_HLS_URL` on the app side).
 rtsp: no
 rtmp: no
 srt: no
@@ -22,6 +25,19 @@ apiAddress: :9997
 hls: yes
 hlsAddress: :8888
 hlsAlwaysRemux: no
+# fMP4 playlists with partial segments, which is what `lowLatencyMode` in
+# hls.js consumes. It also carries AV1/VP9/Opus, the codecs a browser publish
+# ends up with here — the mpegts variant does not.
+hlsVariant: lowLatency
+# The player runs on the app's origin (a different port locally, a different
+# host behind a reverse proxy), so the browser will not read the playlist
+# without this header — and the fallback would fail in exactly the place it
+# exists to cover. Read-only endpoint; it exposes streams that are already
+# being broadcast to whoever holds the session's stream key.
+#
+# The plural name, not `hlsAllowOrigin`: 1.21 warns on every start that the
+# singular form is deprecated, and a config that warns is a config nobody reads.
+hlsAllowOrigins: ['*']
 webrtc: yes
 webrtcAddress: :8889
 webrtcLocalUDPAddress: :8189
@@ -38,27 +54,32 @@ webrtcAdditionalHosts: []
 # One fMP4 file per stream, written under /recordings/<path>. The app's
 # finalize job reads this directory, remuxes to faststart MP4 and copies the
 # lesson onto the private disk. Nothing serves these files directly.
-record: yes
-recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S
-recordFormat: fmp4
-recordPartDuration: 1s
-recordSegmentDuration: 1h
-recordDeleteAfter: 0s
+#
+# These live under `pathDefaults` because MediaMTX 1.21 moved them there; the
+# old top-level keys still load but warn on every start.
+#
+# fMP4 cannot carry VP8 (nor can MPEG-TS). A browser that publishes VP8 is
+# logged as `no supported tracks found` and nothing is written — which is why
+# the studio asks for a recordable codec before it offers the stream
+# (resources/js/lib/media/whip.ts).
+# -----------------------------------------------------------------------------
+pathDefaults:
+  record: yes
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordSegmentDuration: 1h
+  recordDeleteAfter: 0s
 
 # -----------------------------------------------------------------------------
 # Auth
 # -----------------------------------------------------------------------------
-# Loopback only in the default compose topology. When the WebRTC ports are
-# opened to the internet, enable `authHTTPAddress` and point it at the app's
-# signed-token endpoint (Phase 3 in docs/live-classroom-plan.md).
-authMethod: internal
-authInternalUsers:
-  - user: any
-    pass:
-    ips: []
-    permissions:
-      - action: publish
-      - action: read
+# The application validates action-bound encrypted credentials and current
+# membership/enrollment. Knowing a stream path never grants publish or read.
+# For a non-Compose server, override MTX_AUTHHTTPADDRESS with its app URL.
+authMethod: http
+authHTTPAddress: http://nginx/media/authorize
+authHTTPExclude: []
 
 # -----------------------------------------------------------------------------
 # Paths

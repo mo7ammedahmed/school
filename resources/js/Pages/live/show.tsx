@@ -24,6 +24,7 @@ type Media = {
     configured: boolean;
     whipUrl: string | null;
     whepUrl: string | null;
+    publishToken: string | null;
 };
 
 type StudioState = 'idle' | 'connecting' | 'publishing';
@@ -112,7 +113,7 @@ export default function LiveShow({
                 await startRequest();
             }
 
-            publisherRef.current = await publishToWhip(media.whipUrl, stream);
+            publisherRef.current = await publishToWhip(media.whipUrl, stream, media.publishToken ?? undefined);
             setStudio('publishing');
         } catch (caught) {
             stopPublishing();

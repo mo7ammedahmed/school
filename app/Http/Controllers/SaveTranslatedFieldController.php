@@ -60,11 +60,11 @@ class SaveTranslatedFieldController extends Controller
             ->firstOrFail();
 
         if ($validated['table'] === 'schools') {
-            $permissions = $request->user()->getAllPermissions()->pluck('name');
-            abort_unless($permissions->contains('manage-settings') || $permissions->contains('manage-schools'), 403);
-        }
-
-        if ($validated['table'] !== 'schools' && Gate::getPolicyFor($record) !== null) {
+            abort_unless(Gate::any(['manage-settings', 'manage-schools']), 403);
+        } elseif ($validated['table'] === 'organizations') {
+            Gate::authorize('manage-schools');
+        } else {
+            // Missing policies must refuse the write, rather than skip authorization.
             Gate::authorize('update', $record);
         }
 

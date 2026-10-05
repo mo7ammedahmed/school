@@ -10,6 +10,7 @@ use App\Domain\Academics\Models\Subject;
 use App\Domain\Identity\Models\UserMembership;
 use App\Domain\Learning\Models\Quiz;
 use App\Domain\People\Models\TeacherProfile;
+use App\Domain\People\Models\Student;
 use App\Domain\Schools\Models\School;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -90,6 +91,16 @@ class RoleRouteMatrixTest extends TestCase
      * @var array<string, string>
      */
     private const EXPECTED_UNGATED_ROUTES = [
+        'GET /live/{liveSession}/hls/{file}' => 'Live HLS playback rechecks active membership, '
+            .'live status and LiveSessionPolicy view for every playlist and segment. '
+            .'Students can read only their active sections; they cannot publish.',
+        'GET /materials/{material}/stream' => 'Playback for a lesson video or a finished '
+            .'recording. Who may watch is a fact about the row rather than the role: staff hold '
+            .'manage-materials, and a student passes only when the material is published, its kind '
+            .'is video or recording, and the offering teaches a section they are enrolled in. A '
+            .'group-level permission would either lock students out of their own lessons or open '
+            .'every document to them, so MaterialPolicy decides and the route answers 404/403 '
+            .'without ever handing the file to a caller the policy refused.',
         'GET /notifications' => 'The caller\'s own inbox, read from their own conversations. '
             .'There is no school-wide list here to leak, so a permission would only gate a '
             .'private row the ownership check already covers.',
@@ -624,6 +635,14 @@ class RoleRouteMatrixTest extends TestCase
             'offering_id' => $offering->id,
             'title' => 'Matrix quiz',
             'is_published' => true,
+        ]);
+
+        $student = Student::factory()->create(['school_id' => $school->id, 'user_id' => auth()->id()]);
+        $section->students()->attach($student->id, [
+            'school_id' => $school->id,
+            'academic_year_id' => $section->academic_year_id,
+            'enrollment_date' => now()->toDateString(),
+            'status' => 'active',
         ]);
 
         return [

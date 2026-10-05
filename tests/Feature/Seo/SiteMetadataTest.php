@@ -89,6 +89,24 @@ class SiteMetadataTest extends TestCase
             ->assertSee('المظهر والسمة', false);
     }
 
+    public function test_the_live_lesson_screens_are_named_in_both_languages(): void
+    {
+        $school = School::factory()->create(['name_en' => 'Al Noor School', 'name_ar' => 'مدرسة النور']);
+        $this->actingAsMember($school, ['manage-live-sessions']);
+
+        // The tab, not the heading: an unrouted page name falls back to
+        // Str::headline(), which writes English on an Arabic tab. The school
+        // name is the suffix, so only the head can produce this whole string.
+        $this->get('/live')
+            ->assertOk()
+            ->assertSee('Live Lessons — Al Noor School', false);
+
+        $this->withSession(['locale' => 'ar'])
+            ->get('/live')
+            ->assertOk()
+            ->assertSee('الدروس المباشرة — مدرسة النور', false);
+    }
+
     public function test_an_unknown_url_gets_a_titled_error_page_that_is_not_indexed(): void
     {
         School::factory()->create();

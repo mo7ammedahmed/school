@@ -29,11 +29,11 @@ class PortalController extends Controller
             'name' => $child->first_name.' '.$child->last_name,
             'attendance_rate' => $this->calculateAttendanceRate($child),
             'average_grade' => $this->calculateAverageGrade($child),
-            'outstanding_fees' => (float) Invoice::where('student_id', $child->id)->whereNotIn('status', ['paid', 'voided'])->sum('total_amount'),
+            'outstanding_fees' => (float) Invoice::where('status', '!=', 'draft')->where('student_id', $child->id)->whereNotIn('status', ['paid', 'voided'])->sum('balance_due'),
         ]);
 
         return inertia('guardian-portal/dashboard', [
-            'guardian' => $guardian,
+            'guardian' => $guardian->only(['id', 'first_name', 'last_name']) + ['name' => trim($guardian->first_name.' '.$guardian->last_name)],
             'children' => $childrenSummary,
         ]);
     }
@@ -47,8 +47,8 @@ class PortalController extends Controller
         $children = $guardian->students()->get();
 
         return inertia('guardian-portal/children', [
-            'guardian' => $guardian,
-            'children' => $children,
+            'guardian' => $guardian->only(['id', 'first_name', 'last_name']) + ['name' => trim($guardian->first_name.' '.$guardian->last_name)],
+            'children' => $children->map(fn (Student $child): array => $child->only(['id', 'first_name', 'last_name', 'date_of_birth', 'gender'])),
         ]);
     }
 
@@ -59,13 +59,13 @@ class PortalController extends Controller
         $timetable = TimetableEntry::where('school_id', session('school_id'))
             ->where('is_published', true)
             ->whereHas('section.students', fn ($q) => $q->where('students.id', $child->id))
-            ->with(['offering.subject', 'teacher.user', 'room'])
+            ->with(['offering.subject', 'teacher:id,user_id,first_name,last_name', 'teacher.user:id,name', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')
             ->get();
 
         return inertia('guardian-portal/child-schedule', [
-            'child' => $child,
+            'child' => $child->only(['id', 'first_name', 'last_name']),
             'timetable' => $timetable,
         ]);
     }
@@ -80,7 +80,7 @@ class PortalController extends Controller
             ->paginate(15);
 
         return inertia('guardian-portal/child-attendance', [
-            'child' => $child,
+            'child' => $child->only(['id', 'first_name', 'last_name']),
             'records' => $records,
         ]);
     }
@@ -89,13 +89,13 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $reportCards = ReportCard::where('student_id', $child->id)
+        $reportCards = ReportCard::whereNotNull('published_at')->where('published_at', '<=', now())->where('student_id', $child->id)
             ->with('academicYear')
             ->latest()
             ->paginate(10);
 
         return inertia('guardian-portal/child-grades', [
-            'child' => $child,
+            'child' => $child->only(['id', 'first_name', 'last_name']),
             'reportCards' => $reportCards,
         ]);
     }
@@ -104,13 +104,13 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $assignments = Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $child->id))
+        $assignments = Assignment::where('is_published', true)->whereHas('offering.section.students', fn ($q) => $q->where('students.id', $child->id))
             ->with(['offering.subject'])
             ->latest()
             ->paginate(15);
 
         return inertia('guardian-portal/child-assignments', [
-            'child' => $child,
+            'child' => $child->only(['id', 'first_name', 'last_name']),
             'assignments' => $assignments,
         ]);
     }
@@ -119,12 +119,12 @@ class PortalController extends Controller
     {
         $this->authorizeChild($request, $child);
 
-        $invoices = Invoice::where('student_id', $child->id)
+        $invoices = Invoice::where('status', '!=', 'draft')->where('student_id', $child->id)
             ->latest()
             ->paginate(15);
 
         return inertia('guardian-portal/child-fees', [
-            'child' => $child,
+            'child' => $child->only(['id', 'first_name', 'last_name']),
             'invoices' => $invoices,
         ]);
     }
@@ -161,7 +161,7 @@ class PortalController extends Controller
 
     private function calculateAverageGrade(Student $student): float
     {
-        $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
+        $reportCard = ReportCard::whereNotNull('published_at')->where('published_at', '<=', now())->where('student_id', $student->id)->latest()->first();
 
         // `gpa` is a decimal column, so the driver hands it back as a string.
         return (float) ($reportCard?->gpa ?? 0.0);

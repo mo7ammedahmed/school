@@ -13,17 +13,87 @@
 
 const ICE_GATHERING_TIMEOUT_MS = 2500;
 
+/**
+ * The codecs MediaMTX can actually write to disk, most compatible first.
+ *
+ * The recorder stores fMP4, which carries H264, AV1 and VP9 — but not VP8.
+ * VP8 is a perfectly valid WebRTC codec and Chrome's default, so without an
+ * explicit preference a lesson publishes, plays, and is never recorded: the
+ * live server logs "no supported tracks found" and writes nothing. The order
+ * is deliberate: H264 plays everywhere, the other two compress better.
+ */
+const RECORDABLE_VIDEO_CODECS: readonly (readonly string[])[] = [
+    ['video/h264', 'video/av1', 'video/vp9'],
+    ['video/av1', 'video/vp9'],
+];
+
+/** One entry of the browser's own video codec list. */
+type VideoCodecCapability = NonNullable<ReturnType<typeof RTCRtpSender.getCapabilities>>['codecs'][number];
+
+/**
+ * Build the codec preferences to try, in order, from the browser's own
+ * capabilities. Each entry is one complete `setCodecPreferences` argument.
+ *
+ * The second list exists because browsers are not uniform: some reject a list
+ * that names a codec they cannot use for the transceiver at all (Chromium
+ * refuses H264 here with `InvalidModificationError`), and being refused must
+ * not stop a lesson from going out — it must fall back to the next list.
+ *
+ * VP8 never appears: the recorder would drop it.
+ */
+export function recordableVideoCodecPreferences(
+    capabilities: readonly VideoCodecCapability[],
+): VideoCodecCapability[][] {
+    return RECORDABLE_VIDEO_CODECS.map((mimes) =>
+        mimes.flatMap((mime) => capabilities.filter((capability) => capability.mimeType.toLowerCase() === mime)),
+    ).filter((preferences) => preferences.length > 0);
+}
+
+/**
+ * Ask the connection for a recordable video codec before the offer is made.
+ *
+ * Preference is best-effort by design: if the browser refuses every list, the
+ * stream is still published on the browser's defaults, exactly as before.
+ */
+function preferRecordableVideoCodec(connection: RTCPeerConnection): void {
+    const capabilities = RTCRtpSender.getCapabilities?.('video')?.codecs ?? [];
+
+    if (capabilities.length === 0) {
+        return;
+    }
+
+    const transceiver = connection
+        .getTransceivers()
+        .find((candidate) => candidate.sender.track?.kind === 'video');
+
+    if (transceiver === undefined || typeof transceiver.setCodecPreferences !== 'function') {
+        return;
+    }
+
+    for (const preferences of recordableVideoCodecPreferences(capabilities)) {
+        try {
+            transceiver.setCodecPreferences(preferences);
+
+            return;
+        } catch {
+            // Some browsers reject a list they cannot satisfy; try the next one.
+        }
+    }
+}
+
 export interface WhipSession {
     /** Stop publishing and release the camera / screen tracks. */
     close: () => void;
 }
 
-export async function publishToWhip(url: string, stream: MediaStream): Promise<WhipSession> {
+export async function publishToWhip(url: string, stream: MediaStream, token?: string): Promise<WhipSession> {
     const connection = new RTCPeerConnection();
 
     for (const track of stream.getTracks()) {
         connection.addTrack(track, stream);
     }
+
+    preferRecordableVideoCodec(connection);
 
     const offer = await connection.createOffer();
     await connection.setLocalDescription(offer);
@@ -34,7 +104,7 @@ export async function publishToWhip(url: string, stream: MediaStream): Promise<W
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/sdp' },
+            headers: { 'Content-Type': 'application/sdp', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
             body: connection.localDescription?.sdp ?? '',
         });
 

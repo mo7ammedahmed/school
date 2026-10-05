@@ -89,6 +89,7 @@ class SchoolController extends Controller
     {
         return auth()->user()
             ?->memberships()
+            ->where('is_active', true)
             ->with('school:id,organization_id')
             ->get()
             ->pluck('school.organization_id')
@@ -129,6 +130,8 @@ class SchoolController extends Controller
 
     public function show(School $school): Response
     {
+        $this->assertOrganizationAllowed((int) $school->organization_id);
+
         return Inertia::render('schools/form', [
             'school' => $this->payload($school),
             'organizations' => $this->organizations(),
@@ -137,6 +140,8 @@ class SchoolController extends Controller
 
     public function edit(School $school): Response
     {
+        $this->assertOrganizationAllowed((int) $school->organization_id);
+
         return Inertia::render('schools/form', [
             'school' => $this->payload($school),
             'organizations' => $this->organizations(),
@@ -145,6 +150,8 @@ class SchoolController extends Controller
 
     public function update(Request $request, School $school): RedirectResponse
     {
+        $this->assertOrganizationAllowed((int) $school->organization_id);
+
         $validated = $request->validate($this->rules());
         $this->assertOrganizationAllowed((int) $validated['organization_id']);
 
@@ -160,6 +167,8 @@ class SchoolController extends Controller
 
     public function destroy(School $school): RedirectResponse
     {
+        $this->assertOrganizationAllowed((int) $school->organization_id);
+
         if ((int) session('school_id') === $school->id) {
             return back()->with('error', 'You cannot delete the school you are currently working in.');
         }

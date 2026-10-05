@@ -26,66 +26,25 @@ function getPageList({
   boundaryCount?: number;
   siblingCount?: number;
 }) {
-  const leftSiblings = Math.max(0, currentPage - siblingCount - 1);
-  const rightSiblings = Math.min(
-    pageCount + 1,
-    currentPage + siblingCount + 1
-  );
-  const showLeftDots = leftSiblings > boundaryCount;
-  const showRightDots = rightSiblings < pageCount - boundaryCount;
-
+  const pages = new Set<number>([1, pageCount, currentPage]);
+  for (let i = 1; i <= boundaryCount; i++) {
+    pages.add(i);
+    pages.add(pageCount - i + 1);
+  }
+  for (let i = currentPage - siblingCount; i <= currentPage + siblingCount; i++) {
+    pages.add(i);
+  }
+  const ordered = [...pages].filter((page) => page >= 1 && page <= pageCount).sort((a, b) => a - b);
   const pageList: PageItem[] = [];
-
-  if (showLeftDots) {
-    for (let i = 0; i < boundaryCount; i++) {
-      pageList.push({ type: 'page', page: i + 1 });
+  let previous = 0;
+  for (const page of ordered) {
+    if (previous > 0 && page - previous === 2) {
+      pageList.push({ type: 'page', page: previous + 1 });
+    } else if (previous > 0 && page - previous > 2) {
+      pageList.push({ type: 'dot' });
     }
-    pageList.push({ type: 'dot' });
-    for (
-      let i = pageCount - boundaryCount - leftSiblings + 1;
-      i < pageCount - boundaryCount + 1;
-      i++
-    ) {
-      pageList.push({ type: 'page', page: i });
-    }
-  } else {
-    for (let i = 0; i < leftSiblings; i++) {
-      pageList.push({ type: 'page', page: i + 1 });
-    }
-  }
-
-  for (
-    let i = Math.max(boundaryCount + 1, leftSiblings + 1);
-    i < Math.min(pageCount - boundaryCount, rightSiblings);
-    i++
-  ) {
-    pageList.push({ type: 'page', page: i });
-  }
-
-  if (showRightDots) {
-    for (
-      let i = pageCount - boundaryCount + 1;
-      i < pageCount - boundaryCount + leftSiblings + 1;
-      i++
-    ) {
-      pageList.push({ type: 'page', page: i });
-    }
-    pageList.push({ type: 'dot' });
-    for (
-      let i = pageCount - boundaryCount + 1;
-      i <= pageCount;
-      i++
-    ) {
-      pageList.push({ type: 'page', page: i });
-    }
-  } else {
-    for (
-      let i = Math.max(boundaryCount + 1, rightSiblings);
-      i <= pageCount;
-      i++
-    ) {
-      pageList.push({ type: 'page', page: i });
-    }
+    pageList.push({ type: 'page', page });
+    previous = page;
   }
 
   return pageList;
@@ -153,7 +112,7 @@ export function Pagination({
               );
             }
             return (
-              <span key={index} className="flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium">
+              <span key={`dot-${index}`} className="flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium">
                 …
               </span>
             );

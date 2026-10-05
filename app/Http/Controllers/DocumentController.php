@@ -48,8 +48,9 @@ class DocumentController extends Controller
             // The disk is named, not inherited. `store()` with one argument falls back
             // to `config('filesystems.default')`, so the guarantee that a document is
             // not written inside the document root would otherwise be a value in
-            // `.env` rather than anything this code says.
-            $path = $request->file('file')->store('documents', 'local');
+            // `.env` rather than anything this code says. The name itself comes from
+            // `filesystems.private`, the one place a deployment can move it.
+            $path = $request->file('file')->store('documents', $this->privateDisk());
             $validated['file_path'] = $path;
             $validated['file_size'] = $request->file('file')->getSize();
             $validated['file_type'] = $request->file('file')->extension();
@@ -109,7 +110,7 @@ class DocumentController extends Controller
         // Both disks: documents uploaded before this stopped writing to the
         // public disk are still there, and the copy nobody deletes is the copy
         // that stays reachable inside the document root.
-        foreach (['local', 'public'] as $disk) {
+        foreach (array_unique([$this->privateDisk(), 'public']) as $disk) {
             if ($document->file_path && Storage::disk($disk)->exists($document->file_path)) {
                 Storage::disk($disk)->delete($document->file_path);
             }

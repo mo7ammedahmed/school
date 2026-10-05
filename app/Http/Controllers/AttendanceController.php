@@ -147,10 +147,10 @@ class AttendanceController extends Controller
     {
         $student = Student::where('school_id', session('school_id'))
             ->where('user_id', auth()->id())
-            ->first();
+            ->firstOrFail();
 
         $records = AttendanceRecord::where('school_id', session('school_id'))
-            ->when($student, fn ($query) => $query->where('student_id', $student->id))
+            ->where('student_id', $student->id)
             ->with(['student', 'attendanceSession'])
             ->latest()
             ->paginate(15);

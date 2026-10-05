@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Academics\Models\Offering;
 use App\Domain\Learning\Models\LiveSession;
+use App\Domain\Learning\Services\LiveMediaAccess;
 use App\Domain\People\Models\TeacherProfile;
 use App\Jobs\FinalizeLiveSession;
 use Illuminate\Http\RedirectResponse;
@@ -94,14 +95,16 @@ class LiveSessionController extends Controller
         $liveSession->load(['offering.subject', 'offering.section', 'material']);
 
         $base = rtrim((string) config('media.webrtc_url'), '/');
+        $canManage = Gate::allows('update', $liveSession);
 
         return inertia('live/show', [
             'session' => $liveSession,
-            'canManage' => Gate::allows('update', $liveSession),
+            'canManage' => $canManage,
             'media' => [
                 'configured' => $base !== '',
-                'whipUrl' => $base === '' ? null : $base.'/'.$liveSession->stream_key.'/whip',
+                'whipUrl' => $base === '' || ! $canManage ? null : $base.'/'.$liveSession->stream_key.'/whip',
                 'whepUrl' => $base === '' ? null : $base.'/'.$liveSession->stream_key.'/whep',
+                'publishToken' => $canManage ? app(LiveMediaAccess::class)->issue($request->user(), $liveSession, 'publish') : null,
             ],
         ]);
     }
@@ -168,7 +171,7 @@ class LiveSessionController extends Controller
      * `store()` via the same list — a request cannot name an offering the form
      * never offered.
      *
-     * @return Collection<int, array{id: int, name: string, subject: string|null, section: string|null}>
+     * @return Collection<int, array{id: int<0, max>, name: string, subject: string|null, section: string|null}>
      */
     private function offeringOptions(Request $request): Collection
     {

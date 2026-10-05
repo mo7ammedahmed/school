@@ -120,9 +120,15 @@ class AssignmentController extends Controller
         return redirect()->route('assignments.index')->with('success', 'Assignment deleted successfully.');
     }
 
-    public function myAssignments(): Response
+    public function myAssignments(): RedirectResponse|Response
     {
-        return $this->index();
+        if (auth()->user()->can('manage-assignments')) {
+            return $this->index();
+        }
+
+        abort_unless(auth()->user()->hasRole('student'), 403);
+
+        return redirect()->route('student.assignments');
     }
 
     private function resolveOfferingId(int $subjectId, int $sectionId): int

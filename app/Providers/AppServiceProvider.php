@@ -148,11 +148,19 @@ class AppServiceProvider extends ServiceProvider
             new MoyasarWebhookVerifier,
         ]));
 
-        // One tenant context per process. Requests pin it after proving
+        // One tenant context per request. Requests pin it after proving
         // membership; commands and queued jobs pin it explicitly, and a null
         // context is a real answer — "no school" — not a reason to see every
         // school's rows.
-        $this->app->singleton(TenantContext::class);
+        //
+        // `scoped`, not `singleton`: the pin is state belonging to one unit of
+        // work, and on Laravel Cloud (and any Octane runtime) a singleton is
+        // the *same object* for every request the worker handles. A pin left
+        // behind after a response would be read by the next request — including
+        // a public page that never proves a membership — as "this is school
+        // one's data". Octane forgets scoped instances between requests; the
+        // queue worker does the same between jobs.
+        $this->app->scoped(TenantContext::class);
 
         // The permission list Inertia shares with the browser. Registered as a
         // singleton because the cache entry it serves is per user and per

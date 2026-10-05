@@ -132,6 +132,7 @@ class HandleInertiaRequests extends Middleware
             'slug',
             'locale',
             'timezone',
+            'currency',
             'name_ar',
             'name_en',
             'logo_path',

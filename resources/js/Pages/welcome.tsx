@@ -179,7 +179,7 @@ export default function Welcome() {
                                     <span data-hero="line" className="block text-balance">
                                         {t(locale, 'welcome.titleA')}
                                     </span>
-                                    <span data-hero="line" className="block text-balance text-pine-700">
+                                    <span data-hero="line" className="block text-balance text-pine-700 dark:text-pine-200">
                                         {t(locale, 'welcome.titleB')}
                                     </span>
                                 </h1>
@@ -222,7 +222,7 @@ export default function Welcome() {
                                     className="absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-pine-100/70 via-transparent to-gold-100/80 blur-2xl"
                                 />
                                 {/* Motto card */}
-                                <div className="relative rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-[var(--shadow-panel)] backdrop-blur-sm sm:p-10">
+                                <div className="relative rounded-[2rem] border border-border/70 bg-card/85 p-8 shadow-[var(--shadow-panel)] backdrop-blur-sm sm:p-10">
                                     <div className="flex items-center justify-between">
                                         <span className="font-display text-[0.8125rem] font-semibold uppercase tracking-[0.22em] text-gold-600">
                                             {locale === 'ar' ? 'شعارنا' : 'Our motto'}
@@ -244,7 +244,7 @@ export default function Welcome() {
                                         <span className="text-muted-foreground">
                                             {locale === 'ar' ? 'الرؤية منذ ١٩٩٥' : 'The vision since 1995'}
                                         </span>
-                                        <span className="inline-flex items-center gap-1.5 font-medium text-pine-700">
+                                        <span className="inline-flex items-center gap-1.5 font-medium text-pine-700 dark:text-pine-200">
                                             <span className="size-1.5 rounded-full bg-pine-600" aria-hidden="true" />
                                             {locale === 'ar' ? 'الرياض' : 'Riyadh'}
                                         </span>
@@ -253,7 +253,7 @@ export default function Welcome() {
 
                                 {/* Floating mini-card */}
                                 <div
-                                    className="absolute -bottom-8 -start-4 hidden rounded-2xl border border-border/70 bg-white p-4 pe-6 shadow-[var(--shadow-lift)] sm:block animate-float"
+                                    className="absolute -bottom-8 -start-4 hidden rounded-2xl border border-border/70 bg-card p-4 pe-6 shadow-[var(--shadow-lift)] sm:block animate-float"
                                     style={{ animationDelay: '-2.4s' }}
                                 >
                                     <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ export default function Welcome() {
                 </section>
 
                 {/* ============ MARQUEE ============ */}
-                <section className="border-y border-border/60 bg-white/60 py-5 backdrop-blur-sm" data-static>
+                <section className="border-y border-border/60 bg-card/60 py-5 backdrop-blur-sm" data-static>
                     <div className="marquee-mask overflow-hidden">
                         <div className="flex w-max animate-marquee">
                             {[0, 1].map((dup) => (
@@ -333,7 +333,7 @@ export default function Welcome() {
                 </section>
 
                 {/* ============ LEARNING JOURNEY ============ */}
-                <section data-journey className="relative overflow-hidden bg-white">
+                <section data-journey className="relative overflow-hidden bg-card">
                     <div
                         aria-hidden="true"
                         className="pointer-events-none absolute -start-40 top-20 -z-0 size-[24rem] rounded-full bg-pine-50 blur-[100px]"
@@ -377,7 +377,7 @@ export default function Welcome() {
                                         <span className="inline-flex items-center gap-2 rounded-full border border-pine-200/70 bg-pine-50/60 px-3.5 py-1.5 text-[0.8125rem] font-medium text-pine-800">
                                             {t(locale, stage.agesKey)}
                                         </span>
-                                        <span className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-white text-foreground transition-all duration-300 group-hover:border-pine-700 group-hover:bg-pine-800 group-hover:text-white">
+                                        <span className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-card text-foreground transition-all duration-300 group-hover:border-pine-700 group-hover:bg-pine-800 group-hover:text-white">
                                             <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
                                         </span>
                                     </span>
@@ -414,7 +414,7 @@ export default function Welcome() {
                                         <div
                                             key={pillar.titleKey}
                                             data-pillar
-                                            className="group relative overflow-hidden rounded-2xl border border-border/70 bg-white p-7 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] sm:p-8"
+                                            className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card p-7 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] sm:p-8"
                                         >
                                             <div
                                                 aria-hidden="true"

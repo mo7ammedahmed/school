@@ -23,7 +23,7 @@ const TYPE_LABELS: Record<ExamQuestionType, string> = {
  * Read-only rendering of a question paper. Used on the exam and quiz detail
  * pages for papers imported from Word.
  */
-export function QuestionPaper({ questions, className }: { questions: ExamQuestion[]; className?: string }) {
+export function QuestionPaper({ questions, className, showAnswers = true }: { questions: ExamQuestion[]; className?: string; showAnswers?: boolean }) {
     if (questions.length === 0) {
         return (
             <EmptyState
@@ -54,7 +54,7 @@ export function QuestionPaper({ questions, className }: { questions: ExamQuestio
                                     key={option.key}
                                     className={cn(
                                         'rounded-md border px-2 py-1 text-sm',
-                                        option.key === question.answer
+                                        showAnswers && option.key === question.answer
                                             ? 'border-success/50 bg-success/10 font-medium text-success'
                                             : 'border-border/70 text-muted-foreground'
                                     )}
@@ -63,12 +63,12 @@ export function QuestionPaper({ questions, className }: { questions: ExamQuestio
                                 </li>
                             ))}
                         </ul>
-                    ) : (
+                    ) : showAnswers ? (
                         <p className="mt-3 text-sm text-muted-foreground">
                             Answer:{' '}
                             <span className="font-medium text-foreground">{question.answer ?? '—'}</span>
                         </p>
-                    )}
+                    ) : null}
                 </li>
             ))}
         </ol>

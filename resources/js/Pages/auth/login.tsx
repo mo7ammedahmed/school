@@ -52,7 +52,7 @@ export default function Login({ errors = {} }: { errors?: Record<string, string>
                             <Checkbox name="remember" label={ar ? 'تذكرني' : 'Remember me'} />
                             <Link
                                 href="/forgot-password"
-                                className="text-[0.8125rem] font-medium text-primary transition-colors hover:text-pine-700"
+                                className="text-[0.8125rem] font-medium text-link dark:text-pine-200 transition-colors hover:text-link-hover dark:hover:text-pine-100"
                             >
                                 {ar ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
                             </Link>
@@ -68,7 +68,7 @@ export default function Login({ errors = {} }: { errors?: Record<string, string>
                             {ar ? 'ليس لديك حساب؟ ' : 'New to Al Noor? '}
                             <Link
                                 href="/apply"
-                                className="font-semibold text-primary transition-colors hover:text-pine-700"
+                                className="font-semibold text-link dark:text-pine-200 transition-colors hover:text-link-hover dark:hover:text-pine-100"
                             >
                                 {ar ? 'قدّم طلب قبول' : 'Apply for admission'}
                             </Link>

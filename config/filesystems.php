@@ -17,6 +17,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | The Private Disk
+    |--------------------------------------------------------------------------
+    |
+    | Where school files that must never be web-served are written: documents,
+    | materials, submissions, admission attachments, and the finished file a
+    | live lesson recording becomes. The disk is named here rather than at each
+    | call site so uploads and the routes that hand the files back cannot drift
+    | apart, and so a deployment can move the lot by setting one variable.
+    |
+    | `local` is the classic deployment, where `storage/app/private` persists.
+    | Laravel Cloud's filesystem is ephemeral and per-replica: a file written in
+    | one request is gone after the next deploy, and a second replica never saw
+    | it at all. A Cloud deployment points this at a private bucket instead (the
+    | S3 driver below, or Laravel Cloud Object Storage) and nothing in the code
+    | has to change — see docs/DEPLOY.md, "Laravel Cloud".
+    |
+    */
+
+    'private' => env('PRIVATE_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -67,10 +89,16 @@ return [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
+            // AWS_DEFAULT_REGION is the SDK's own name; AWS_REGION is what
+            // Laravel Cloud injects for an attached bucket. Reading both means
+            // a Cloud bucket works with no copied variables, and a plain AWS
+            // setup keeps working with the names it already uses.
+            'region' => env('AWS_DEFAULT_REGION', env('AWS_REGION')),
             'bucket' => env('AWS_BUCKET'),
             'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
+            // Likewise AWS_ENDPOINT_URL, which Cloud injects for S3-compatible
+            // (R2) buckets and which a plain AWS account never sets.
+            'endpoint' => env('AWS_ENDPOINT', env('AWS_ENDPOINT_URL')),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
             'report' => false,

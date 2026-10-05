@@ -74,7 +74,7 @@ class RelocatePublicUploads extends Command
                             continue;
                         }
 
-                        if (Storage::disk('local')->exists($path)) {
+                        if (Storage::disk($this->privateDisk())->exists($path)) {
                             // The upload was replaced after the disk change, so
                             // the private copy is the newer one. Removing the
                             // public copy is the point; overwriting it is not.
@@ -119,11 +119,23 @@ class RelocatePublicUploads extends Command
             return false;
         }
 
-        Storage::disk('local')->writeStream($path, $stream);
+        Storage::disk($this->privateDisk())->writeStream($path, $stream);
 
         Storage::disk('public')->delete($path);
 
         return true;
+    }
+
+    /**
+     * The disk the relocation is *to*, by the name the deployment gave it.
+     *
+     * `local` on a machine whose storage persists, a bucket on Laravel Cloud.
+     * The point of the command is to get uploads out of the document root, and
+     * which private disk they land on is the same decision every upload makes.
+     */
+    private function privateDisk(): string
+    {
+        return (string) config('filesystems.private', 'local');
     }
 
     private function removePublicCopy(string $path, bool $dryRun): void

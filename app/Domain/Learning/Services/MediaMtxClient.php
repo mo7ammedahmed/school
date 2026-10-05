@@ -32,7 +32,11 @@ class MediaMtxClient
         }
 
         try {
-            $response = Http::timeout(3)->acceptJson()->get($base.'/v3/paths/get/'.$streamKey);
+            $client = Http::timeout(3)->acceptJson();
+            if (config('media.api_user') && config('media.api_password')) {
+                $client->withBasicAuth((string) config('media.api_user'), (string) config('media.api_password'));
+            }
+            $response = $client->get($base.'/v3/paths/get/'.$streamKey);
         } catch (Throwable) {
             return null;
         }

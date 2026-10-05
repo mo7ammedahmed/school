@@ -22,7 +22,14 @@ class OnboardingController extends Controller
 
     public function createSchool(Request $request)
     {
-        $organizations = Organization::all();
+        $this->authorize('manage-schools');
+
+        $organizations = Organization::query()
+            ->when(! $request->user()->hasRole('super_admin'), fn ($query) => $query->whereHas(
+                'schools.memberships',
+                fn ($memberships) => $memberships->where('user_id', $request->user()->id)->where('is_active', true),
+            ))
+            ->get(['id', 'name']);
 
         return Inertia::render('onboarding/create-school', [
             'organizations' => $organizations,

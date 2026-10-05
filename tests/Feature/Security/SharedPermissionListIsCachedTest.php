@@ -215,6 +215,16 @@ class SharedPermissionListIsCachedTest extends TestCase
         $this->assertNotContains('manage-students', $teacherList);
     }
 
+    public function test_flushing_after_role_permissions_change_invalidates_warm_user_lists(): void
+    {
+        $user = $this->signedInAs('registrar');
+        $this->assertContains('manage-students', $this->permissionsSharedFor($user));
+        Role::findByName('registrar')->syncPermissions(['view-dashboard']);
+        app(SharedPermissionList::class)->flush();
+
+        $this->assertNotContains('manage-students', app(SharedPermissionList::class)->for($user->fresh()));
+    }
+
     // ------------------------------------------------------------------
 
     /**

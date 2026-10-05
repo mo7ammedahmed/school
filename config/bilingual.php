@@ -45,6 +45,7 @@ use App\Domain\Finance\Models\InvoiceLine;
 use App\Domain\Finance\Models\Payment;
 use App\Domain\Finance\Models\Refund;
 use App\Domain\Learning\Models\Assignment;
+use App\Domain\Learning\Models\LiveSession;
 use App\Domain\Learning\Models\Material;
 use App\Domain\Learning\Models\Quiz;
 use App\Domain\Learning\Models\Submission;
@@ -433,6 +434,13 @@ return [
             'model' => Material::class,
             'scope' => 'school_id',
             'pairs' => [['en' => 'title', 'ar' => 'title_ar'], ['en' => 'description', 'ar' => 'description_ar']],
+        ],
+
+        [
+            'label' => 'Live sessions',
+            'model' => LiveSession::class,
+            'scope' => 'school_id',
+            'pairs' => [['en' => 'title', 'ar' => 'title_ar']],
         ],
 
         [

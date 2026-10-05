@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Domain\Schools\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,10 @@ class SchoolSelectionController extends Controller
             ->where('is_active', true)
             ->with('school')
             ->get()
-            ->pluck('school');
+            ->pluck('school')
+            ->filter()
+            ->map(fn (School $school): array => $school->only(['id', 'name', 'name_en', 'name_ar']))
+            ->values();
 
         return inertia('auth/select-school', [
             'schools' => $schools,
@@ -52,7 +56,10 @@ class SchoolSelectionController extends Controller
         // it now stands for.
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        $destination = $user->hasRole('student') ? 'student.dashboard'
+            : ($user->hasRole('guardian') ? 'guardian.dashboard' : 'dashboard');
+
+        return redirect()->route($destination);
     }
 
     public function select(Request $request)

@@ -15,6 +15,7 @@ type UserRow = {
     role: string;
     is_active: boolean;
     last_login_at: string | null;
+    can_update: boolean;
 };
 
 export default function UsersIndex({ users }: { users: UserRow[] | Paginator<UserRow> }) {
@@ -51,9 +52,9 @@ export default function UsersIndex({ users }: { users: UserRow[] | Paginator<Use
                     <Button variant="ghost" size="sm" asChild>
                         <Link href={`/settings/users/${row.original.id}`}>View</Link>
                     </Button>
-                    <Button variant="ghost" size="sm" asChild>
+                    {row.original.can_update && <Button variant="ghost" size="sm" asChild>
                         <Link href={`/settings/users/${row.original.id}/edit`}>Edit</Link>
-                    </Button>
+                    </Button>}
                 </div>
             ),
         },

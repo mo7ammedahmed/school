@@ -10,6 +10,7 @@ use App\Domain\Finance\Models\Invoice;
 use App\Domain\Learning\Models\Assignment;
 use App\Domain\Learning\Models\LiveSession;
 use App\Domain\Learning\Models\Material;
+use App\Domain\Learning\Services\LiveMediaAccess;
 use App\Domain\People\Models\Student;
 use App\Domain\Scheduling\Models\TimetableEntry;
 use App\Http\Controllers\Controller;
@@ -26,12 +27,15 @@ class PortalController extends Controller
         $stats = [
             'attendance_rate' => $this->calculateAttendanceRate($student),
             'average_grade' => $this->calculateAverageGrade($student),
-            'pending_assignments' => Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))->count(),
-            'outstanding_fees' => (float) Invoice::where('student_id', $student->id)->whereNotIn('status', ['paid', 'voided'])->sum('total_amount'),
+            'pending_assignments' => Assignment::where('is_published', true)
+                ->whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))
+                ->whereDoesntHave('submissions', fn ($q) => $q->where('student_id', $student->id)->whereNotNull('submitted_at'))
+                ->count(),
+            'outstanding_fees' => (float) Invoice::where('status', '!=', 'draft')->where('student_id', $student->id)->whereNotIn('status', ['paid', 'voided'])->sum('balance_due'),
         ];
 
         return inertia('student-portal/dashboard', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'stats' => $stats,
         ]);
     }
@@ -45,13 +49,13 @@ class PortalController extends Controller
         $timetable = TimetableEntry::where('school_id', session('school_id'))
             ->where('is_published', true)
             ->whereHas('section.students', fn ($q) => $q->where('students.id', $student->id))
-            ->with(['offering.subject', 'teacher.user', 'room'])
+            ->with(['offering.subject', 'teacher:id,user_id,first_name,last_name', 'teacher.user:id,name', 'room'])
             ->orderBy('day_of_week')
             ->orderBy('start_time')
             ->get();
 
         return inertia('student-portal/schedule', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'timetable' => $timetable,
         ]);
     }
@@ -68,7 +72,7 @@ class PortalController extends Controller
             ->paginate(15);
 
         return inertia('student-portal/attendance', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'records' => $records,
         ]);
     }
@@ -79,13 +83,13 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $reportCards = ReportCard::where('student_id', $student->id)
+        $reportCards = ReportCard::whereNotNull('published_at')->where('published_at', '<=', now())->where('student_id', $student->id)
             ->with('academicYear')
             ->latest()
             ->paginate(10);
 
         return inertia('student-portal/grades', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'reportCards' => $reportCards,
         ]);
     }
@@ -96,13 +100,13 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $assignments = Assignment::whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))
+        $assignments = Assignment::where('is_published', true)->whereHas('offering.section.students', fn ($q) => $q->where('students.id', $student->id))
             ->with(['offering.subject'])
             ->latest()
             ->paginate(15);
 
         return inertia('student-portal/assignments', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'assignments' => $assignments,
         ]);
     }
@@ -130,6 +134,12 @@ class PortalController extends Controller
             ->latest('started_at')
             ->get();
 
+        foreach ($liveSessions as $liveSession) {
+            $liveSession->setAttribute('read_token', app(LiveMediaAccess::class)->issue($request->user(), $liveSession, 'read'));
+            $liveSession->setAttribute('hls_playback_url', config('media.hls_url')
+                ? route('live.hls', ['liveSession' => $liveSession, 'file' => 'index.m3u8']) : null);
+        }
+
         $recordings = Material::query()
             ->where('is_published', true)
             ->whereIn('kind', ['video', 'recording'])
@@ -139,12 +149,23 @@ class PortalController extends Controller
             ->limit(60)
             ->get();
 
+        // Both watch paths, resolved here rather than in the browser: the
+        // low-latency one (WHEP, needs UDP to the media server) and the one that
+        // survives a network which allows nothing but 443 (HLS, plain HTTP).
+        // "Configured" means *either* of them exists — a deployment with HLS
+        // alone can still show a lesson, and telling the pupil there is no live
+        // viewing at all would be false.
+        $whepBase = rtrim((string) config('media.webrtc_url'), '/');
+        $hlsBase = rtrim((string) config('media.hls_url'), '/');
+
         return inertia('student-portal/lessons', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'liveSessions' => $liveSessions,
             'recordings' => $recordings,
             'media' => [
-                'configured' => (string) config('media.webrtc_url') !== '',
+                'configured' => $whepBase !== '' || $hlsBase !== '',
+                'webrtcUrl' => $whepBase === '' ? null : $whepBase,
+                'hlsUrl' => $hlsBase === '' ? null : $hlsBase,
             ],
         ]);
     }
@@ -155,12 +176,12 @@ class PortalController extends Controller
             ->where('school_id', session('school_id'))
             ->firstOrFail();
 
-        $invoices = Invoice::where('student_id', $student->id)
+        $invoices = Invoice::where('status', '!=', 'draft')->where('student_id', $student->id)
             ->latest()
             ->paginate(15);
 
         return inertia('student-portal/fees', [
-            'student' => $student,
+            'student' => $student->only(['id', 'first_name', 'last_name']),
             'invoices' => $invoices,
         ]);
     }
@@ -179,7 +200,7 @@ class PortalController extends Controller
 
     private function calculateAverageGrade(Student $student): float
     {
-        $reportCard = ReportCard::where('student_id', $student->id)->latest()->first();
+        $reportCard = ReportCard::whereNotNull('published_at')->where('published_at', '<=', now())->where('student_id', $student->id)->latest()->first();
 
         // `gpa` is a decimal column, so the driver hands it back as a string.
         return (float) ($reportCard?->gpa ?? 0.0);

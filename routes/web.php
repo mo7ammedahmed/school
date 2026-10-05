@@ -36,6 +36,8 @@ use App\Http\Controllers\GradeLevelController;
 use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\LiveSessionController;
+use App\Http\Controllers\LiveHlsController;
+use App\Http\Controllers\MediaAuthorizationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MediaHookController;
@@ -199,6 +201,10 @@ Route::middleware(['auth', 'school.context'])
 Route::middleware(['auth', 'school.context'])
     ->post('/translate/save', SaveTranslatedFieldController::class)
     ->name('translate.save');
+
+Route::middleware(['auth', 'school.context'])
+    ->get('/live/{liveSession}/hls/{file}', LiveHlsController::class)
+    ->where('file', '[A-Za-z0-9_.-]+')->name('live.hls');
 
 // Translates the dashboard's own interface words, so choosing Arabic does not
 // leave English headings and buttons around Arabic content. Same rate limit
@@ -488,8 +494,11 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     Route::prefix('settings')->name('settings.')->middleware('permission:manage-settings|manage-schools')->group(function () {
         // One school editor, one URL. /settings/general stays as the historic
         // Settings landing that the sidebar and every breadcrumb pointed at, but
-        // now forwards to the school form so the two can never drift apart.
-        Route::get('/general', fn () => redirect()->route('settings.school'))->name('general');
+        // now forwards to the school form so the two can never drift apart. The
+        // method is on the controller, not a closure here: `php artisan optimize`
+        // — which a Laravel Cloud build runs — caches the route table and cannot
+        // serialise a closure.
+        Route::get('/general', [SchoolSettingsController::class, 'general'])->name('general');
         Route::get('/school', [SchoolSettingsController::class, 'index'])->name('school');
         Route::post('/school', [SchoolSettingsController::class, 'store']);
         Route::get('/academic', [AcademicSettingsController::class, 'index'])->name('academic');
@@ -616,6 +625,7 @@ Route::prefix('webhooks')->name('webhooks.')->group(function () {
 // live server cannot hold a token — and authenticated by the shared secret in
 // `config/media.php`: an unset secret refuses every call.
 Route::post('/media/hooks/not-ready', [MediaHookController::class, 'notReady'])->name('media.hooks.not-ready');
+Route::post('/media/authorize', MediaAuthorizationController::class)->name('media.authorize');
 
 // Platform/Super Admin routes
 Route::middleware(['auth', 'can:access-platform'])->prefix('platform')->name('platform.')->group(function () {

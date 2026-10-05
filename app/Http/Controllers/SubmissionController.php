@@ -50,7 +50,7 @@ class SubmissionController extends Controller
         if ($request->hasFile('file')) {
             // Private disk: a pupil's work is a school record, not a web asset.
             // The disk is named, not inherited — see DocumentController::store().
-            $path = $request->file('file')->store('submissions', 'local');
+            $path = $request->file('file')->store('submissions', $this->privateDisk());
             $validated['file_path'] = $path;
             $validated['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $validated['file_size'] = $request->file('file')->getSize();
@@ -129,7 +129,7 @@ class SubmissionController extends Controller
         // Both disks: submissions uploaded before this stopped writing to the
         // public disk are still there, and the copy nobody deletes is the copy
         // that stays reachable inside the document root.
-        foreach (['local', 'public'] as $disk) {
+        foreach (array_unique([$this->privateDisk(), 'public']) as $disk) {
             if ($submission->file_path && Storage::disk($disk)->exists($submission->file_path)) {
                 Storage::disk($disk)->delete($submission->file_path);
             }

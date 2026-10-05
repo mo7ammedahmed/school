@@ -13,6 +13,9 @@ return [
     | the public HTTPS origin nginx proxies to MediaMTX; in local development it
     | is the compose service's published port.
     |
+    | One origin, three protocols: WHIP publishes, WHEP watches with sub-second
+    | latency, and `hls_url` below watches without WebRTC at all.
+    |
     | When unset, the app still shows the session pages but the studio cannot
     | publish — an honest "not configured" state rather than a broken button.
     |
@@ -33,6 +36,30 @@ return [
     */
 
     'api_url' => env('MEDIA_API_URL'),
+    'api_user' => env('MEDIA_API_USER'),
+    'api_password' => env('MEDIA_API_PASSWORD'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | HLS fallback
+    |--------------------------------------------------------------------------
+    |
+    | The same lesson over plain HTTP, from the live server's HLS endpoint. It
+    | is the path that survives a school network which allows 443 and nothing
+    | else: WHEP needs UDP (or a second TCP port) to the media server, and a
+    | network that blocks either one leaves the low-latency player with a black
+    | rectangle and no error to show for it.
+    |
+    | The browser-reachable base only; the player appends the session's own
+    | `<stream_key>/index.m3u8`. Unset disables the fallback — a deployment that
+    | leaves it empty has no answer when UDP is blocked, which is why production
+    | should set it. Local development needs it too when the spike config turns
+    | HLS off (`hls: no`), because then the fallback has nothing to fall back to.
+    |
+    */
+
+    'hls_url' => env('MEDIA_HLS_URL'),
+    'hls_internal_url' => env('MEDIA_HLS_INTERNAL_URL', env('MEDIA_HLS_URL')),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,6 +75,22 @@ return [
     */
 
     'disk' => env('MEDIA_RECORDINGS_DISK', 'recordings'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scratch retention
+    |--------------------------------------------------------------------------
+    |
+    | How long a file may sit on the `recordings` disk before
+    | `live-sessions:prune` deletes it. The finalize job retries for minutes,
+    | not days, so a recording past this window is a leftover: a segment of a
+    | lesson longer than one record-segment, or a stream whose session failed.
+    | Files belonging to a session that already produced its material are
+    | deleted immediately, whatever this window says.
+    |
+    */
+
+    'recordings_retention_hours' => (int) env('MEDIA_RECORDINGS_RETENTION_HOURS', 24),
 
     /*
     |--------------------------------------------------------------------------

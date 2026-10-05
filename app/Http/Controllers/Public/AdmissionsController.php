@@ -131,7 +131,7 @@ class AdmissionsController extends PublicController
             $documents[] = [
                 'type' => $type,
                 'name' => $file->getClientOriginalName(),
-                'path' => $file->store("admission-documents/{$schoolId}", 'local'),
+                'path' => $file->store("admission-documents/{$schoolId}", (string) config('filesystems.private', 'local')),
             ];
         }
 

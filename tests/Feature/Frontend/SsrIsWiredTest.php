@@ -43,12 +43,16 @@ class SsrIsWiredTest extends TestCase
         $scripts = json_decode((string) file_get_contents(base_path('package.json')), true)['scripts'];
 
         $this->assertSame(
-            'vite build && vite build --ssr',
+            'vite build && vite build --ssr && node scripts/check-build.mjs',
             $scripts['build'] ?? null,
             'A deployment that runs only `vite build` ships no SSR bundle, and SSR then switches itself off.',
         );
 
-        $this->assertSame('vite build --ssr', $scripts['build:ssr'] ?? null);
+        $this->assertSame(
+            'npm run build',
+            $scripts['build:ssr'] ?? null,
+            'Laravel Cloud recommends build:ssr, which must also produce the browser manifest required by @vite.',
+        );
     }
 
     public function test_the_ssr_bundle_is_a_build_artifact(): void

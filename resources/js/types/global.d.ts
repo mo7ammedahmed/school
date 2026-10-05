@@ -37,6 +37,7 @@ declare global {
             slug?: string;
             locale?: string;
             timezone?: string;
+            currency?: string;
             name_ar?: string | null;
             name_en?: string | null;
             logo_path?: string | null;

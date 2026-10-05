@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use Closure;
+use App\Domain\Learning\Models\LiveSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +49,11 @@ class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        $lesson = $request->route('liveSession');
+        $capture = $request->routeIs('live.show') && $lesson instanceof LiveSession
+            && $request->user()?->can('update', $lesson) && $response->isSuccessful();
+        $devices = $capture ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "geolocation=(), microphone={$devices}, camera={$devices}");
 
         $response->headers->set('Content-Security-Policy', $this->policy($nonce));
 
@@ -100,10 +105,80 @@ class SecurityHeaders
         $styleSrc = "'self' 'unsafe-inline'".$viteOrigin." $fontOrigin";
         $fontSrc = "'self' https: data:".$viteOrigin." $fontOrigin";
         $viteWebSocketOrigin = $isLocal ? ' ws://localhost:'.$this->vitePort() : '';
-        $connectSrc = "'self'".$viteOrigin.$viteWebSocketOrigin;
+
+        // The live media server is a different origin whenever it is not behind
+        // the same host — every local setup, and any deployment whose MediaMTX
+        // is reachable on its own name. WHEP and the HLS fallback are both
+        // blocked without these two directives, and the fallback would be
+        // blocked in exactly the network it exists for. Only origins the
+        // configuration actually names are allowed, and nothing here widens
+        // `default-src`.
+        $mediaOrigins = $this->mediaOrigins();
+        $mediaOriginList = $mediaOrigins === [] ? '' : ' '.implode(' ', $mediaOrigins);
+        $connectSrc = "'self'".$viteOrigin.$viteWebSocketOrigin.$mediaOriginList;
+
+        // `blob:` is what hls.js attaches its MediaSource to, and Chromium
+        // refuses a blob: URL for media under 'self' alone. The scheme source
+        // is bounded by what a document on this origin can create, so it adds
+        // the fallback's own pipeline and nothing a cross-site payload can
+        // reach.
+        $mediaSrc = "'self' blob:".$mediaOriginList;
 
         return "default-src 'self'; script-src {$scriptSrc}; style-src {$styleSrc}; "
-            ."img-src 'self' data: https:; font-src {$fontSrc}; connect-src {$connectSrc}";
+            ."img-src 'self' data: https:; font-src {$fontSrc}; connect-src {$connectSrc}; "
+            ."media-src {$mediaSrc}";
+    }
+
+    /**
+     * The origins of the configured live media endpoints, for `connect-src` and
+     * `media-src`.
+     *
+     * `connect-src` governs the WHEP POST and hls.js's playlist and segment
+     * requests; `media-src` governs a `<video src>` pointed straight at a
+     * playlist, which is how Safari and iOS play HLS. Both are derived from
+     * `config/media.php` rather than hardcoded, so a deployment that moves the
+     * media server moves the policy with it.
+     *
+     * Only the origin is taken. A value that is not an http(s) URL with a host
+     * contributes nothing rather than a malformed token: a policy built from an
+     * unusable setting should refuse the request, not invent a source for it.
+     *
+     * @return list<string>
+     */
+    private function mediaOrigins(): array
+    {
+        $origins = [];
+
+        foreach (['media.webrtc_url', 'media.hls_url'] as $key) {
+            $value = config($key);
+
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            $parts = parse_url($value);
+
+            if (
+                ! is_array($parts)
+                || ! in_array($parts['scheme'] ?? null, ['http', 'https'], true)
+                || ! is_string($parts['host'] ?? null)
+                || $parts['host'] === ''
+                || isset($parts['user'])
+                || isset($parts['pass'])
+            ) {
+                continue;
+            }
+
+            $origin = $parts['scheme'].'://'.$parts['host'];
+
+            if (isset($parts['port'])) {
+                $origin .= ':'.$parts['port'];
+            }
+
+            $origins[$origin] = true;
+        }
+
+        return array_keys($origins);
     }
 
     /**

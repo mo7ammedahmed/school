@@ -3,12 +3,12 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && vite build --ssr",
-        "build:ssr": "vite build --ssr",
+        "build": "vite build && vite build --ssr && node scripts/check-build.mjs",
+        "build:ssr": "npm run build",
         "dev": "vite",
-    "typecheck": "tsc --noEmit",
-    "lint": "oxlint --deny-warnings resources/js",
-    "test": "vitest run"
+        "typecheck": "tsc --noEmit",
+        "lint": "oxlint --deny-warnings resources/js",
+        "test": "vitest run"
     },
     "dependencies": {
         "@inertiajs/react": "^3.7.0",
@@ -32,6 +32,7 @@
         "cmdk": "^1.1.1",
         "date-fns": "^4.4.0",
         "gsap": "^3.15.0",
+        "hls.js": "^1.7.3",
         "lucide-react": "^1.44.0",
         "react-bits": "^1.0.5",
         "react-hook-form": "^7.87.0",

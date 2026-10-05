@@ -91,6 +91,7 @@ final class SharedPermissionList
     public function flush(): void
     {
         $this->permissions->forgetCachedPermissions();
+        $this->store()->forever('user-permissions:version', bin2hex(random_bytes(16)));
     }
 
     /**
@@ -123,6 +124,8 @@ final class SharedPermissionList
         // stored on the way in and the entry survives.
         $guard = (string) config('auth.defaults.guard', 'web');
 
-        return 'user-permissions:'.$user->getAuthIdentifier().':'.$guard;
+        $version = $this->store()->get('user-permissions:version', 'initial');
+
+        return 'user-permissions:'.$version.':'.$user->getAuthIdentifier().':'.$guard;
     }
 }

@@ -8,6 +8,8 @@ use App\Domain\Identity\Models\UserMembership;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
@@ -33,7 +35,7 @@ class UserController extends Controller
 
     public function create(): Response
     {
-        $roles = Role::where('guard_name', 'web')->orderBy('name')->get(['id', 'name']);
+        $roles = $this->assignableRoles()->map->only(['id', 'name'])->values();
 
         return inertia('settings/users/create', ['roles' => $roles]);
     }
@@ -45,7 +47,7 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'roles.*' => ['integer', Rule::in($this->assignableRoles()->pluck('id')->all())],
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -83,7 +85,7 @@ class UserController extends Controller
         $this->authorize('update', $user);
 
         $user->load('roles');
-        $roles = Role::where('guard_name', 'web')->orderBy('name')->get(['id', 'name']);
+        $roles = $this->assignableRoles()->map->only(['id', 'name'])->values();
 
         return inertia('settings/users/edit', [
             'user' => $this->payload($user) + [
@@ -102,7 +104,7 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+            'roles.*' => ['integer', Rule::in($this->assignableRoles()->pluck('id')->all())],
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -148,7 +150,7 @@ class UserController extends Controller
     /**
      * Shape one user for the settings screens.
      *
-     * @return array{id: int, name: string, email: string, role: string, is_active: bool, last_login_at: ?string}
+     * @return array{id: int, name: string, email: string, role: string, is_active: bool, last_login_at: ?string, can_update: bool}
      */
     private function payload(User $user): array
     {
@@ -163,6 +165,23 @@ class UserController extends Controller
             'role' => $membership?->role ?? $user->getRoleNames()->first() ?? 'member',
             'is_active' => (bool) ($membership?->is_active ?? false),
             'last_login_at' => $membership?->last_login_at?->toDateTimeString(),
+            'can_update' => auth()->user()->can('update', $user),
         ];
+    }
+
+    /** @return Collection<int, Role> */
+    private function assignableRoles(): Collection
+    {
+        $actor = auth()->user();
+        $roles = Role::where('guard_name', 'web')->with('permissions')->orderBy('name')->get();
+
+        if ($actor->hasRole('super_admin')) {
+            return $roles;
+        }
+
+        $permissions = $actor->getAllPermissions()->pluck('name');
+
+        return $roles->filter(fn (Role $role): bool => $role->name !== 'super_admin'
+            && $role->permissions->pluck('name')->diff($permissions)->isEmpty());
     }
 }

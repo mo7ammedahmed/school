@@ -6,6 +6,7 @@ namespace App\Domain\Learning\Policies;
 
 use App\Domain\Learning\Models\LiveSession;
 use App\Domain\People\Models\Student;
+use App\Domain\Schools\Support\TenantContext;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -33,19 +34,9 @@ class LiveSessionPolicy
 
     public function view(User $user, LiveSession $session): bool
     {
-        if ((int) $session->school_id !== (int) session('school_id')) {
-            return false;
-        }
-
-        if ($user->hasPermissionTo('manage-live-sessions')) {
-            return true;
-        }
-
-        if (! $user->hasPermissionTo('view-own-lessons')) {
-            return false;
-        }
-
-        return $this->studentIsEnrolled($user, $session);
+        return $this->inSchool($session)
+            && ($user->hasPermissionTo('manage-live-sessions')
+                || ($user->hasPermissionTo('view-own-lessons') && $this->studentIsEnrolled($user, $session)));
     }
 
     public function create(User $user): bool
@@ -59,26 +50,26 @@ class LiveSessionPolicy
      */
     public function update(User $user, LiveSession $session): bool
     {
-        if ((int) $session->school_id !== (int) session('school_id')) {
-            return false;
-        }
-
-        if (! $user->hasPermissionTo('manage-live-sessions')) {
-            return false;
-        }
-
-        return (int) $session->started_by === (int) $user->id
-            || $user->hasAnyRole(['school_admin', 'super_admin']);
+        return $this->inSchool($session)
+            && $user->hasPermissionTo('manage-live-sessions')
+            && ((int) $session->started_by === (int) $user->id
+                || $user->hasAnyRole(['school_admin', 'super_admin']));
     }
 
     public function delete(User $user, LiveSession $session): bool
     {
-        if ((int) $session->school_id !== (int) session('school_id')) {
-            return false;
-        }
-
-        return $user->hasPermissionTo('manage-live-sessions')
+        return $this->inSchool($session)
+            && $user->hasPermissionTo('manage-live-sessions')
             && $user->hasAnyRole(['school_admin', 'super_admin']);
+    }
+
+    /**
+     * The tenant half of every ability, written once so none of them can be
+     * reached by a member of another school.
+     */
+    private function inSchool(LiveSession $session): bool
+    {
+        return (int) $session->school_id === app(TenantContext::class)->id();
     }
 
     private function studentIsEnrolled(User $user, LiveSession $session): bool

@@ -11,13 +11,13 @@ use App\Domain\Learning\Models\Material;
 use App\Http\Controllers\Concerns\ServesStoredAttachment;
 use App\Validation\AllowedAttachment;
 use App\Validation\VideoAttachment;
-use Illuminate\Validation\Rules\File;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\ValidationException;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
@@ -62,7 +62,7 @@ class MaterialController extends Controller
         // web asset: on the public disk its URL is inside the document root and
         // the web server will serve — and execute — whatever extension it kept.
         // The disk is named, not inherited — see DocumentController::store().
-        $path = $request->file('file')->store('materials', 'local');
+        $path = $request->file('file')->store('materials', $this->privateDisk());
         $file = $request->file('file');
 
         Material::create([
@@ -134,7 +134,7 @@ class MaterialController extends Controller
             $this->deleteStoredFile($material->file_path);
 
             // The disk is named, not inherited — see DocumentController::store().
-            $path = $request->file('file')->store('materials', 'local');
+            $path = $request->file('file')->store('materials', $this->privateDisk());
             $data['file_path'] = $path;
             $data['file_type'] = $request->file('file')->extension() ?: $request->file('file')->getClientOriginalExtension();
             $data['file_size'] = $request->file('file')->getSize();
@@ -163,7 +163,7 @@ class MaterialController extends Controller
      * that decides who may read which row. Staff keep the same access they have
      * on every other material route.
      */
-    public function stream(Material $material): BinaryFileResponse
+    public function stream(Material $material): SymfonyResponse
     {
         $this->authorize('stream', $material);
 
@@ -210,7 +210,7 @@ class MaterialController extends Controller
             return;
         }
 
-        foreach (['local', 'public'] as $disk) {
+        foreach (array_unique([$this->privateDisk(), 'public']) as $disk) {
             if (Storage::disk($disk)->exists($path)) {
                 Storage::disk($disk)->delete($path);
             }

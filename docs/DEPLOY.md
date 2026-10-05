@@ -27,10 +27,13 @@ the usual PHP ones:
 
 1. **Node 22+ on the machine or worker that runs the SSR server.** Inertia's SSR server
    will not start on an older Node.
-2. **Both bundles built.** `npm run build` is `vite build && vite build --ssr`: the second
+2. **Both bundles built.** `npm run build` runs `vite build && vite build --ssr`, then verifies the artifacts: the second
    pass compiles `resources/js/ssr.tsx` into `bootstrap/ssr/ssr.js`. A deployment that only
    runs `vite build` ships no SSR bundle, and Inertia then renders in the browser without
    saying anything — the application looks fine and never server-renders.
+   `npm run build:ssr` runs the same complete build, including the browser manifest.
+   Building only SSR leaves Blade's `@vite` without `public/build/manifest.json`, which
+   causes a 500 even when the SSR service is healthy.
 3. **The SSR server running** as its own long-lived process:
 
    ```bash
@@ -39,10 +42,38 @@ the usual PHP ones:
    ```
 
 **On Laravel Cloud:** turn on *Use Inertia SSR* in the app cluster's **Advanced** settings
-(the cluster needs Node, which the build image has), make sure the deploy build command is
-`npm run build` rather than `vite build`, and let the platform supervise the SSR process.
-Verify the result from outside: `curl -s https://<domain>/ | grep -o 'data-server-rendered="true"'`
-must print the flag. If it does not, the bundle or the process is missing — not the config.
+(the cluster needs Node, which the build image has), make sure the build command under
+**Settings → Deployments** compiles the frontend — the exact command is in **Laravel Cloud**
+below — and let the platform supervise the SSR process. Verify the result from outside:
+`curl -s https://<domain>/ | grep -o 'data-server-rendered="true"'` must print the flag.
+If it does not, the bundle or the process is missing — not the config.
+
+## The build must produce `public/build`
+
+`public/build` and `bootstrap/ssr` are git-ignored, so they exist only on a machine that has
+run `npm run build`. A deploy whose build step stops at `composer install` ships no manifest
+and answers **500** on every page, from `resources/views/app.blade.php`:
+
+```
+Illuminate\Foundation\ViteManifestNotFoundException:
+Vite manifest not found at: /var/www/html/public/build/manifest.json
+```
+
+Laravel Cloud runs the build commands you give it and nothing else — there is no default that
+adds the frontend step. Two things cover it:
+
+1. **The build command** (the fix): one that compiles the frontend, not only the PHP side.
+   **Laravel Cloud** below gives the command this project uses, frontend first so the hook
+   below never repeats the npm work.
+2. **`post-install-cmd` runs `php artisan assets:ensure`** (the safety net): when the manifest
+   is missing it runs `npm ci && npm run build` (plain `npm run build` when `node_modules`
+   already exists) and fails the build when the build finishes without a manifest, so the
+   failure lands in the deploy log instead of on the first visitor. It is a no-op wherever
+   the manifest is present. `php artisan assets:ensure --force` rebuilds on demand from the
+   Cloud **Commands** tab.
+
+The hook only helps when the build command runs `composer install`; if that step is missing
+from the command, fix the command.
 
 Relevant environment variables (Inertia's own defaults apply when unset):
 
@@ -78,6 +109,157 @@ Two operational notes:
   So the check after a deploy is `tail -f storage/logs/ssr.log` plus
   `php artisan inertia:check-ssr`, not the absence of errors in the web log.
 
+## Laravel Cloud
+
+Cloud builds the commands you give it, serves the app through Octane (FrankenPHP), and resets
+the environment's filesystem on every deploy — and each replica has its own. Four settings and
+one variable carry this project; the rest is the platform working as documented.
+
+| Where | Setting | Value |
+| --- | --- | --- |
+| Deployments → Build commands | build | `npm ci --include=dev --audit=false && npm run build:ssr && composer install --no-dev && php artisan optimize` |
+| Deployments → Deploy commands | deploy | `php artisan migrate --force` |
+| App cluster | Scheduler | **on** — Cloud then runs `schedule:run` every minute |
+| App cluster → Advanced | Use Inertia SSR | **on**, or the SSR bundle built above is never used |
+| Environment variables | | `APP_KEY`, `APP_URL=https://<domain>`, `APP_ENV=production`, `APP_DEBUG=false`, `DB_CONNECTION=mysql`, `PRIVATE_DISK=s3` |
+
+The `--include=dev` flag installs Vite and the other build tools even if the build
+environment sets `NODE_ENV=production`. Both build scripts check the browser manifest,
+its referenced files, and `bootstrap/ssr/ssr.js`, and fail when any is missing.
+
+### Fix a missing Vite manifest after enabling SSR
+
+The error `Vite manifest not found at: /var/www/html/public/build/manifest.json`
+means the deployed browser assets are missing. Before this fix, this project's
+`build:ssr` script compiled only SSR, unlike Laravel's starter kit script that Cloud's
+instructions assume. Use the build command above and deploy again after the corrected
+`package.json` and `scripts/check-build.mjs` reach the deployment branch. Build assets
+in **Build commands**, where Cloud persists them into the deployed image; assets built
+in **Deploy commands** are not persisted.
+
+After deployment, run these in Cloud's **Commands** tab:
+
+```bash
+test -s public/build/manifest.json && test -s bootstrap/ssr/ssr.js
+php artisan inertia:check-ssr
+```
+
+Then request the homepage and check that it returns 200 and includes
+`data-server-rendered="true"`. Leave `APP_DEBUG=false` on the public environment.
+
+Never add `php artisan storage:link` or `php artisan optimize:clear` to the deploy commands:
+the symlink does not survive a deploy, and clearing the cached config right after the build
+wrote it is the opposite of the point.
+
+**Why that build order.** `composer install` fires `post-install-cmd`, which this project hooks
+to `php artisan assets:ensure`. With the frontend built *first* the hook is a no-op. With
+`composer install` first the hook would instead run `npm ci && npm run build` on its own, and
+the explicit `npm ci` after it deletes `node_modules` and repeats the install — two full
+frontend builds, against a fifteen-minute build limit.
+
+`php artisan optimize` belongs in the build, not the deploy: it writes `bootstrap/cache`, and
+only build-command changes to the filesystem are kept for the running deployment. It succeeds
+here because no route is a closure (see "Route cache safety" above).
+
+### Files belong on a bucket
+
+`storage/app/private` is not persistent on Cloud, so `PRIVATE_DISK` has to name a disk that is.
+Attach a bucket, give it the disk name `s3` — the name `config/filesystems.php` already defines
+— and set `PRIVATE_DISK=s3`. Uploads (documents, materials, submissions, admission
+attachments, finished recordings) then land in the bucket and every reader follows:
+
+- `/documents|materials|submissions/{id}/download` streams the bytes through the app, as before.
+- `/materials/{id}/stream` hands the player a short-lived signed URL: a bucket has no filesystem
+  path, and the bucket answers the player's `Range` requests itself, so seeking still works and
+  the video never travels through PHP. A disk whose driver cannot sign falls back to a temporary
+  local copy, ranges included.
+
+`league/flysystem-aws-s3-v3` is in `composer.json` for this — it is also what Cloud's managed
+queues require. The `s3` disk reads `AWS_REGION` / `AWS_ENDPOINT_URL` as well as the
+`AWS_DEFAULT_REGION` / `AWS_ENDPOINT` names, because those are the variables Cloud injects for
+an attached bucket.
+
+### What the platform cannot carry: the live pipeline
+
+A live lesson needs MediaMTX — a process, a WebRTC port, and a **disk shared with whoever
+finalizes the recording** (`config/media.php`, `MEDIA_RECORDINGS_DISK`). Cloud has no shared
+volume and resets its disk on every deploy, and the `recordings` disk is scratch space that
+MediaMTX writes and `FinalizeLiveSession` reads. Keep that stack on a host you run (the compose
+stack in this repository) and let the *published* lesson live in the bucket. A persistent
+network filesystem is the other way to give both processes the same scratch disk — `.env.example`
+already carries an `ARCHIL_*` block for one, and nothing in this codebase reads it, so mounting
+it in the right places is a deployment decision rather than an application setting. Check `ffmpeg` on
+whichever host runs the job — `MEDIA_FFMPEG_BINARY` / `MEDIA_FFPROBE_BINARY` point at it, and
+without it a multi-segment lesson is published as its last segment, with no duration recorded:
+
+```
+php artisan tinker --execute="var_dump(\Illuminate\Support\Facades\Process::run('ffmpeg -version')->successful());"
+```
+
+#### The HLS fallback has its own port, and its own failure mode
+
+`MEDIA_WEBRTC_URL` is the path the student player tries first; `MEDIA_HLS_URL` is the one it
+switches to when the WebRTC media path never opens. That is a real network, not a hypothetical
+one: WHEP carries media over UDP, and a school firewall that allows 443 and nothing else leaves
+the handshake answering successfully and the `<video>` element black, with no error to catch.
+The fallback asks for nothing the page itself did not already need.
+
+Two deployment facts make it work:
+
+- **Proxy the HLS port behind the same TLS origin as the app** — `8888` next to `8889` in the
+  compose file, and in nginx a location (or a name of its own) that forwards to it. An `http://`
+  media URL on an `https://` page is mixed content: the browser blocks it before CSP or CORS
+  are consulted, and the console error names a different problem than the one being debugged.
+- **Set `MEDIA_HLS_URL` to the URL the browser can reach**, not a compose service name. The
+  Content-Security-Policy derives `connect-src` / `media-src` from this value
+  (`app/Http/Middleware/SecurityHeaders.php`), so an unreachable hostname shows up as a CSP
+  violation in the console rather than as a silent black screen. When the media server has an
+  origin of its own, its HLS endpoint also has to allow the app's origin — the shipped
+  `docker/mediamtx/mediamtx.yml` sets `hlsAllowOrigins: ['*']` because the playlist endpoint is
+  read-only and only serves a stream whose key the viewer already has.
+
+Codecs: HLS remuxes whatever was published. Against a live MediaMTX, both H264/AAC and
+AV1/Opus (the codec a browser publish falls back to when H264 is refused) produce real
+segments and low-latency parts, and hls.js plays them. The one rough edge is the start of a
+stream: with `hlsAlwaysRemux: no` the muxer is created when the first HLS viewer arrives, and
+the window before it existed is listed as `#EXT-X-GAP`, which hls.js skips on its way to the
+live edge. Set `hlsAlwaysRemux: yes` if viewers should never see that first join, and accept a
+muxer running for every published stream.
+
+After a deploy, check the endpoint itself — the first request is a redirect carrying
+MediaMTX's cookie check, so `-L` is what makes this a 200:
+
+```bash
+curl -sL -o /dev/null -w '%{http_code}\n' https://<media-origin>/<stream-key>/index.m3u8
+```
+
+To exercise the fallback on purpose, point `MEDIA_WEBRTC_URL` at an unreachable port; the
+player switches after its six-second media check.
+
+### After a deploy
+
+```bash
+curl -fsS https://<domain>/up                       # health endpoint
+curl -s https://<domain>/ | grep -o 'data-server-rendered="true"'
+curl -s -o /dev/null -w '%{http_code}\n' https://<domain>/build/manifest.json   # 200, not 500
+```
+
+Then sign in and upload a document. Downloading it back after a **re-deploy** is what proves
+`PRIVATE_DISK` points at the bucket; uploading and downloading it within the same request
+proves nothing, because the disk that request wrote to is still there.
+
+A release that adds interface copy also needs the dictionary topped up. The Arabic strings ship
+as data (`database/seeders/data/interface-translations-ar.json`), and the running app reads them
+from the database, not the file:
+
+```bash
+php artisan db:seed --class=InterfaceTranslationSeeder --force
+```
+
+It writes only what is missing, so it is safe on every deploy and never overwrites wording a
+school has edited. Without it, new strings render in English on an Arabic page — the student
+player's backup-stream label included.
+
 ## First deploy
 
 \\ash
@@ -88,12 +270,11 @@ make migrate        # php artisan migrate --force
 make storage-link   # php artisan storage:link --relative
 make optimize       # config:cache, route:cache, view:cache, event:cache
 \
-**Route cache safety:** outes/web.php\ contains one closure route at line 444:
-
-\\php
-Route::get('/general', fn () => redirect()->route('settings.school'))->name('general');
-\
-A closure makes oute:cache\ throw. **oute:cache\ is NOT safe** until that closure is moved to a controller method.
+**Route cache safety:** `route:cache` refuses to serialise a closure, and this project has no
+closure routes left — the last one (`/settings/general`) is a controller method. So
+`php artisan optimize` (config, events, routes, views) succeeds, which is exactly what the
+Cloud build step runs. Adding a `fn () => ...` route to `routes/web.php` breaks the build
+again: put the method on a controller instead.
 
 **PHPStan memory rule (Decision 8):** The analyser **must** run with \-d memory_limit=1G\ (as \composer run analyse\ and \make analyse\ do). With the default 128M limit it crashes and reports “incomplete”, which reads like a clean run.
 
@@ -102,7 +283,12 @@ A closure makes oute:cache\ throw. **oute:cache\ is NOT safe** until that closur
 \\ash
 make queue-restart   # php artisan queue:restart
 \
-**Reality check:** There are **ZERO** classes in \pp/\ implementing \ShouldQueue\ and **ZERO** \Schedule::\ definitions anywhere in the project. The \queue\ and \scheduler\ containers have nothing to do today.
+**Reality check:** exactly one class implements `ShouldQueue`
+(`App\Jobs\FinalizeLiveSession`) and exactly two tasks are scheduled —
+`live-sessions:finalize` every five minutes and `live-sessions:prune` hourly, both in
+`routes/console.php`. A deployment that runs no queue worker leaves ended lessons stuck at
+`processing`; one that runs no scheduler leaves recordings unpublished and the scratch disk
+unpruned. On Laravel Cloud both are dashboard toggles (see Laravel Cloud below).
 
 ## Rollback
 
@@ -128,7 +314,9 @@ The comment explains: “Deliberately not reversed: records saved in one languag
 
 Operator-level guidance:
 - Database: \mysqldump\ (or your managed DB's snapshot/export).
-- Private files: \storage/app/private\ (the \local\ disk root in \config/filesystems.php\).
+- Private files: the disk `PRIVATE_DISK` names — `storage/app/private` while it
+  stays `local` (the `local` disk root in `config/filesystems.php`), or the bucket it names
+  otherwise.
 - RPO and RTO are **decisions the operator must make**, not facts this repo can provide.
 
 ## Webhook setup
@@ -164,10 +352,29 @@ a check in name only.
 
 ## Known gaps
 
-1. **No queued jobs, no scheduled tasks.** The \queue\ and \scheduler\ containers run but have nothing to process.
+Live media now requires application authorization rather than anonymous stream-key access.
+Deploy the application and restart MediaMTX with the updated HTTP-auth configuration;
+outside Compose, point `MTX_AUTHHTTPADDRESS` at the reachable app `/media/authorize` endpoint.
+Configure `MEDIA_HLS_INTERNAL_URL` and private `MEDIA_API_USER` / `MEDIA_API_PASSWORD`
+for authenticated HLS fallback and control-API reconciliation. Empty API credentials deny
+access. See [ACCESS-AUDIT.md](ACCESS-AUDIT.md) for rollout checks and verification limits.
+
+1. **One queued job, two scheduled tasks.** `FinalizeLiveSession` (recording post-processing)
+is the only `ShouldQueue` class, and `live-sessions:finalize` (every five minutes) plus
+`live-sessions:prune` (hourly) are the only `Schedule::` entries (`routes/console.php`). All
+three need something to run them: the compose stack's `queue` and `scheduler` containers, or
+Cloud's managed queue and the App-cluster Scheduler toggle. A deployment that runs neither
+leaves recordings stuck at `processing` and the scratch disk unpruned. Both tasks are marked
+`onOneServer`, so a multi-replica deployment needs a cache store they all share — the default
+`database` store is one.
 2. **No backup tooling.** See Backups and restore above.
 3. **No health endpoint beyond Laravel’s \/up\.** Confirmed: \ootstrap/app.php\ has \health: '/up'\.
-4. **No S3 private disk configured.** \config/filesystems.php\ defines exactly three disks: \local\, \public\, \s3\. No \private\ disk exists (Decision 5 requires private storage for student documents; only \s3\ is configured).
+4. **Private storage is a disk a deployment chooses.** `config/filesystems.php` has a
+`private` key (`PRIVATE_DISK`, `local` by default) and four disks: `local`, `recordings`,
+`public`, `s3`. Docs, materials, submissions, admission attachments and finished recordings all
+go through that one name. On a platform whose filesystem is ephemeral — Laravel Cloud — leaving
+`PRIVATE_DISK` unset writes those files to a disk that is reset on the next deploy, and they are
+gone. The `s3` driver needs `league/flysystem-aws-s3-v3`, which `composer.json` now requires.
 5. **The route table is checked as a table.** `RouteIntegrityTest` fails the
    build when a route names a controller method that does not exist, or when an
    earlier route answers a named route's URI first. It found 27 and 3 of those

@@ -1,16 +1,15 @@
 import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Plus, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-export default function ReportsIndex() {
-    const reports = [
-        { id: 1, name: 'Student Enrollment Report', type: 'students', generated_at: '2025-09-01' },
-        { id: 2, name: 'Attendance Summary', type: 'attendance', generated_at: '2025-09-02' },
-        { id: 3, name: 'Financial Report', type: 'finance', generated_at: '2025-09-03' },
-    ];
+type Report = { id: number; name: string; type: string; generated_at: string };
+
+export default function ReportsIndex({ reports = [] }: { reports?: Report[] }) {
+    const [search, setSearch] = useState('');
+    const filteredReports = reports.filter((report) => report.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <AppShell
@@ -22,13 +21,7 @@ export default function ReportsIndex() {
         >
             <PageHeader
                 title="Reports"
-                description="Generate and download reports"
-                actions={
-                    <Button>
-                        <Plus className="me-2 h-4 w-4" />
-                        Generate Report
-                    </Button>
-                }
+                description="Generated reports available to your account"
             />
 
             <div className="mt-6 rounded-lg border bg-card">
@@ -38,15 +31,16 @@ export default function ReportsIndex() {
                         <Input
                             placeholder="Search reports..."
                             className="ps-9"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
                         />
                     </div>
                 </div>
 
-                {reports.length === 0 ? (
+                {filteredReports.length === 0 ? (
                     <EmptyState
                         title="No reports found"
-                        description="Generate your first report."
-                        action={<Button>Generate Report</Button>}
+                        description={search ? 'Try a different search.' : 'There are no generated reports available.'}
                     />
                 ) : (
                     <div className="overflow-x-auto">
@@ -59,7 +53,7 @@ export default function ReportsIndex() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {reports.map((report) => (
+                                {filteredReports.map((report) => (
                                     <tr key={report.id} className="border-b last:border-0">
                                         <td className="px-4 py-3">{report.name}</td>
                                         <td className="px-4 py-3">{report.type}</td>

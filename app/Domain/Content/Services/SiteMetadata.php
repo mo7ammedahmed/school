@@ -38,6 +38,8 @@ final class SiteMetadata
         // The Appearance & Theme screen: without this the Arabic title fell back
         // to Str::headline(), which is English-only.
         'appearance' => ['en' => 'Appearance & Theme', 'ar' => 'المظهر والسمة'],
+        'live' => ['en' => 'Live Lessons', 'ar' => 'الدروس المباشرة'],
+        'lessons' => ['en' => 'My Lessons', 'ar' => 'دروسي'],
     ];
 
     /** Route-name segments that are structure, not a page. */

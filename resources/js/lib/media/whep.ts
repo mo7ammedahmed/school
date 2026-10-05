@@ -15,9 +15,20 @@ const ICE_GATHERING_TIMEOUT_MS = 2500;
 
 export interface WhepSession {
     close: () => void;
+    /**
+     * Whether the connection is carrying media, rather than merely negotiated.
+     *
+     * A handshake that succeeds proves the signalling reached the server; it
+     * proves nothing about the media path. When a school network blocks the UDP
+     * port WebRTC needs, the POST still answers, the peer connection still
+     * reports `connected`, and no packet ever arrives — a black rectangle with
+     * no error to explain it. Inbound bytes are the only honest evidence, so
+     * this is what the HLS fallback watches.
+     */
+    hasMediaFlow: () => Promise<boolean>;
 }
 
-export async function playFromWhep(url: string, video: HTMLVideoElement): Promise<WhepSession> {
+export async function playFromWhep(url: string, video: HTMLVideoElement, token?: string): Promise<WhepSession> {
     const connection = new RTCPeerConnection();
     const stream = new MediaStream();
 
@@ -43,7 +54,7 @@ export async function playFromWhep(url: string, video: HTMLVideoElement): Promis
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/sdp' },
+            headers: { 'Content-Type': 'application/sdp', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
             body: connection.localDescription?.sdp ?? '',
         });
 
@@ -60,9 +71,15 @@ export async function playFromWhep(url: string, video: HTMLVideoElement): Promis
 
     await connection.setRemoteDescription({ type: 'answer', sdp: answer });
 
+    // Muted, because browsers refuse to autoplay an element with sound, and a
+    // lesson that waits for a second click is not a lesson that started. The
+    // player's own control is how the student unmutes.
+    video.muted = true;
+
     void video.play().catch(() => {
-        // Autoplay may be refused before the stream has audio; the controls are
-        // there, and a click starts it.
+        // Autoplay can still be refused (a detached element, a policy that
+        // needs a gesture per element); the controls are there and a click
+        // starts it.
     });
 
     return {
@@ -70,7 +87,34 @@ export async function playFromWhep(url: string, video: HTMLVideoElement): Promis
             connection.close();
             video.srcObject = null;
         },
+        hasMediaFlow: () => hasMediaFlow(connection),
     };
+}
+
+/**
+ * Whether any inbound RTP has been received on this connection.
+ *
+ * `getStats()` is asynchronous and not free, so callers poll it rather than
+ * relying on it per frame. A browser that refuses to answer is read as "no
+ * media": the caller's next move is the fallback stream, which is a lesson the
+ * viewer can still watch, and the alternative — assuming bytes that are not
+ * there — is the silent black screen this exists to catch.
+ */
+async function hasMediaFlow(connection: RTCPeerConnection): Promise<boolean> {
+    try {
+        const report = await connection.getStats();
+        let flowing = false;
+
+        report.forEach((entry: { type?: string; bytesReceived?: number }) => {
+            if (entry.type === 'inbound-rtp' && (entry.bytesReceived ?? 0) > 0) {
+                flowing = true;
+            }
+        });
+
+        return flowing;
+    } catch {
+        return false;
+    }
 }
 
 function waitForIceGathering(connection: RTCPeerConnection): Promise<void> {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { cleanup, screen } from '@testing-library/react';
 import { renderPage } from '@/test/render-page';
 import AppShell from './app-shell';
 
@@ -72,5 +72,26 @@ describe('app shell form feedback', () => {
         mountShell();
 
         expect(screen.queryByRole('status')).toBeNull();
+    });
+});
+
+describe('navigation authorization', () => {
+    it('hides administrative links when a role has no matching grants', () => {
+        pageProps.current = { auth: { user: { id: 7, name: 'Admin', roles: ['school_admin'], permissions: [] } } };
+        const { container } = mountShell();
+        expect(container.querySelector('a[href="/settings/school"]')).toBeNull();
+        expect(container.querySelector('a[href="/announcements"]')).toBeNull();
+        expect(container.querySelector('a[href="/students"]')).toBeNull();
+    });
+
+    it('offers granted modules for custom roles and removes them after revocation', () => {
+        pageProps.current = { auth: { user: { id: 7, name: 'Auditor', roles: ['custom'], permissions: ['view-dashboard', 'manage-payments'] } } };
+        const { container } = mountShell();
+        expect(container.querySelector('a[href="/finance/payments"]')).not.toBeNull();
+        expect(container.querySelector('a[href="/finance/invoices"]')).toBeNull();
+        pageProps.current = { auth: { user: { id: 7, name: 'Auditor', roles: ['custom'], permissions: ['view-dashboard'] } } };
+        cleanup();
+        const revoked = mountShell();
+        expect(revoked.container.querySelector('a[href="/finance/payments"]')).toBeNull();
     });
 });

@@ -110,6 +110,6 @@ class Section extends Model
             'enrollments',
             'section_id',
             'student_id'
-        )->withPivot(['academic_year_id', 'enrollment_date', 'status']);
+        )->wherePivot('status', 'active')->withPivot(['academic_year_id', 'enrollment_date', 'status']);
     }
 }

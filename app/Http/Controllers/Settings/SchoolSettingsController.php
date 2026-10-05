@@ -11,6 +11,21 @@ use Inertia\Response;
 
 class SchoolSettingsController extends Controller
 {
+    /**
+     * The historic landing page, forwarded to the school form.
+     *
+     * A controller method rather than the closure this used to be, and the
+     * reason is a deployment one: `route:cache` refuses to serialise a closure,
+     * so a single `fn () => redirect()` in `routes/web.php` made
+     * `php artisan optimize` fail — the command Laravel Cloud runs as part of
+     * the build. The two screens cannot drift apart while one of them is a
+     * redirect.
+     */
+    public function general(): RedirectResponse
+    {
+        return redirect()->route('settings.school');
+    }
+
     public function index(): Response
     {
         $school = auth()->user()->currentSchool;

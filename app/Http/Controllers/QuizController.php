@@ -121,9 +121,25 @@ class QuizController extends Controller
 
     public function attempt(Quiz $quiz): Response
     {
+        if (auth()->user()->can('manage-quizzes')) {
+            $this->authorize('view', $quiz);
+
+            return $this->show($quiz);
+        }
+
+        $this->authorize('attempt', $quiz);
+
         $quiz->load(['offering.subject', 'offering.section']);
 
-        return inertia('quizzes/show', ['quiz' => $quiz]);
+        $payload = $quiz->only(['id', 'title', 'total_marks', 'passing_marks', 'duration_minutes', 'status']);
+        $payload['subject'] = $quiz->subject?->only(['name']);
+        $payload['section'] = $quiz->section?->only(['name']);
+        $payload['questions'] = collect($quiz->questions ?? [])
+            ->map(fn (array $question): array => collect($question)
+                ->only(['number', 'type', 'prompt', 'options', 'points'])->all() + ['answer' => null])
+            ->all();
+
+        return inertia('quizzes/show', ['quiz' => $payload, 'canManage' => false]);
     }
 
     private function resolveOfferingId(int $subjectId, int $sectionId): int

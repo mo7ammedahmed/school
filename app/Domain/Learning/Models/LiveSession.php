@@ -18,10 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * One live lesson, from "draft" to "ended with a recording".
  *
- * `stream_key` is both the MediaMTX path name and the secret: the path is
- * generated with 40 random characters and is only ever rendered to the owning
- * teacher (publisher) and to students enrolled in the offering's section
- * (viewer). It is never derived from the session id.
+ * `stream_key` is the random MediaMTX path. Access additionally requires an
+ * action-bound credential checked against current membership and enrollment.
  *
  * `status` is one of {@see self::STATUS_DRAFT} (created, not started),
  * {@see self::STATUS_LIVE} (teacher publishing) or {@see self::STATUS_ENDED}.

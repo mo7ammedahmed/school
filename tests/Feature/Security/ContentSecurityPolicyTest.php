@@ -138,6 +138,25 @@ class ContentSecurityPolicyTest extends TestCase
         $this->assertStringContainsString('localhost', $this->directive($csp, 'script-src'), $csp);
     }
 
+    /**
+     * hls.js does not point the element at a URL; it attaches a MediaSource,
+     * which the browser exposes to the element as a `blob:` URL. Chromium
+     * refuses that URL for media when the directive lists only `'self'`, and
+     * the failure looks like a fallback that loads playlists forever and never
+     * shows a picture.
+     */
+    public function test_media_src_permits_the_blob_pipeline_hls_js_attaches(): void
+    {
+        $tokens = $this->tokens($this->directive($this->csp(), 'media-src'));
+
+        $this->assertContains(
+            'blob:',
+            $tokens,
+            'media-src without blob: refuses the MediaSource hls.js plays the fallback through, so '
+            .'the backup stream downloads and never renders.',
+        );
+    }
+
     public function test_the_deprecated_x_xss_protection_header_is_gone(): void
     {
         config()->set('app.env', 'production');
@@ -159,7 +178,7 @@ class ContentSecurityPolicyTest extends TestCase
     {
         $csp = $this->csp();
 
-        foreach (['default-src', 'style-src', 'img-src', 'font-src', 'connect-src'] as $directive) {
+        foreach (['default-src', 'style-src', 'img-src', 'font-src', 'connect-src', 'media-src'] as $directive) {
             $this->assertNotSame(
                 '',
                 $this->directive($csp, $directive),

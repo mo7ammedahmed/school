@@ -16,6 +16,7 @@
         "laravel/head": "^0.2.2",
         "laravel/octane": "^2.20",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "predis/predis": "*",
         "spatie/laravel-activitylog": "*",
         "spatie/laravel-permission": "*"
@@ -70,6 +71,9 @@
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
+        ],
+        "post-install-cmd": [
+            "@php artisan assets:ensure --ansi"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"

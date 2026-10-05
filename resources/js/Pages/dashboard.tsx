@@ -18,23 +18,19 @@ import { roleLabel, t } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 
 interface DashboardStats {
-    total_students: number;
-    total_teachers: number;
-    total_classes: number;
-    total_revenue: number;
-    attendance_rate: number;
-    pending_payments: number;
+    total_students?: number;
+    total_teachers?: number;
+    total_classes?: number;
+    total_revenue?: number;
+    attendance_rate?: number;
+    pending_payments?: number;
 }
-
-const ADMINS = ['school_admin', 'super_admin',];
-
-const canEnroll = (roles: string[]) => roles.some((r) => [...ADMINS, 'registrar'].includes(r));
-const canTeach = (roles: string[]) => roles.some((r) => [...ADMINS, 'teacher'].includes(r));
 
 export default function Dashboard({ stats }: { stats: DashboardStats }) {
     const { auth } = usePage<App.PageProps>().props;
     const { locale } = useLocale();
-    const roles = auth.user?.roles || [];
+    const can = (permission: string) => auth.user?.roles?.includes('super_admin')
+        || auth.user?.permissions?.includes(permission) || false;
 
     const tiles = [
         {
@@ -43,7 +39,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             href: '/students',
             icon: Users,
             accent: 'bg-pine-800/10 text-pine-800',
-            visible: roles.some((r) => [...ADMINS, 'registrar', 'teacher'].includes(r)),
+            visible: can('manage-students') && stats.total_students !== undefined,
         },
         {
             title: 'Total Teachers',
@@ -51,7 +47,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             href: '/teachers',
             icon: GraduationCap,
             accent: 'bg-gold-500/15 text-gold-700',
-            visible: roles.some((r) => [...ADMINS, 'principal'].includes(r)),
+            visible: can('manage-teachers') && stats.total_teachers !== undefined,
         },
         {
             title: 'Total Classes',
@@ -59,7 +55,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             href: '/sections',
             icon: LayoutGrid,
             accent: 'bg-pine-800/10 text-pine-800',
-            visible: roles.some((r) => [...ADMINS, 'registrar', 'principal'].includes(r)),
+            visible: can('manage-sections') && stats.total_classes !== undefined,
         },
         {
             title: 'Attendance Rate',
@@ -67,19 +63,19 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             href: '/attendance',
             icon: CalendarCheck,
             accent: 'bg-gold-500/15 text-gold-700',
-            visible: roles.some((r) => [...ADMINS, 'teacher'].includes(r)),
+            visible: can('manage-attendance') && stats.attendance_rate !== undefined,
         },
         {
             title: 'Revenue',
-            value: new Intl.NumberFormat('en-US', {
+            value: new Intl.NumberFormat(locale, {
                 style: 'currency',
-                currency: 'USD',
+                currency: auth.user?.school?.currency || 'SAR',
                 maximumFractionDigits: 0,
             }).format(Number(stats.total_revenue)),
             href: '/finance/payments',
             icon: DollarSign,
             accent: 'bg-pine-800/10 text-pine-800',
-            visible: roles.some((r) => [...ADMINS, 'accountant'].includes(r)),
+            visible: can('manage-payments') && stats.total_revenue !== undefined,
         },
         {
             title: 'Pending Payments',
@@ -87,7 +83,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             href: '/finance/invoices',
             icon: ReceiptText,
             accent: 'bg-gold-500/15 text-gold-700',
-            visible: roles.some((r) => [...ADMINS, 'accountant'].includes(r)),
+            visible: can('manage-invoices') && stats.pending_payments !== undefined,
         },
     ].filter((tile) => tile.visible);
 
@@ -98,11 +94,11 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
             label: 'Attendance sessions',
             meta: 'Daily registers',
             href: '/attendance-sessions',
-            visible: canTeach(roles),
+            visible: can('manage-attendance'),
         },
-        { label: 'Announcements', meta: 'Share updates', href: '/announcements', visible: canTeach(roles) },
-        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: !!auth.user?.permissions?.includes('manage-content') },
-        { label: 'Documents', meta: 'Policies & forms', href: '/documents', visible: canTeach(roles) },
+        { label: 'Announcements', meta: 'Share updates', href: '/announcements', visible: can('manage-announcements') },
+        { label: 'Events calendar', meta: 'Campus life', href: '/content/events', visible: can('manage-content') },
+        { label: 'Documents', meta: 'Policies & forms', href: '/documents', visible: can('manage-documents') },
     ].filter((item) => item.visible);
 
     return (
@@ -131,7 +127,7 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
                             Here is what is happening across {auth.user?.school?.name ?? 'your school'} today.
                         </p>
                     </div>
-                    {canEnroll(roles) && (
+                    {can('manage-students') && (
                         <Button asChild className="hidden sm:inline-flex">
                             <a href="/students/create">
                                 <BookOpen className="size-4" aria-hidden="true" />
@@ -235,4 +231,3 @@ export default function Dashboard({ stats }: { stats: DashboardStats }) {
         </AppShell>
     );
 }
-

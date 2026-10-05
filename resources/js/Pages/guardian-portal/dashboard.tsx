@@ -3,9 +3,12 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 export default function GuardianDashboard({ guardian, children }: { guardian: { name: string }; children: { id: number; name: string; attendance_rate: number; average_grade: number; outstanding_fees: number }[] }) {
+    const { school } = usePage<App.PageProps>().props;
+    const { locale } = useLocale();
     return (
         <AppShell
             title="Guardian Portal"
@@ -39,7 +42,7 @@ export default function GuardianDashboard({ guardian, children }: { guardian: { 
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-sm text-muted-foreground">Outstanding Fees</span>
-                                    <span className="text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums">${Number(child.outstanding_fees).toFixed(2)}</span>
+                                    <span className="text-[1.5rem] font-semibold leading-[1.2] tracking-[-0.005em] tabular-nums">{new Intl.NumberFormat(locale, { style: 'currency', currency: school?.currency || 'SAR' }).format(Number(child.outstanding_fees))}</span>
                                 </div>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2">

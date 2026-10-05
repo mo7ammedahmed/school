@@ -2,9 +2,12 @@ import AppShell from '@/layouts/app-shell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarCheck, TrendingUp, ClipboardList, DollarSign } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 export default function StudentDashboard({ student, stats }: { student: { first_name: string; last_name: string }; stats: { attendance_rate: number; average_grade: number; pending_assignments: number; outstanding_fees: number } }) {
+    const { school } = usePage<App.PageProps>().props;
+    const { locale } = useLocale();
     const statCards = [
         {
             title: 'Attendance Rate',
@@ -32,7 +35,7 @@ export default function StudentDashboard({ student, stats }: { student: { first_
         },
         {
             title: 'Outstanding Fees',
-            value: `$${Number(stats.outstanding_fees).toFixed(2)}`,
+            value: new Intl.NumberFormat(locale, { style: 'currency', currency: school?.currency || 'SAR' }).format(Number(stats.outstanding_fees)),
             icon: DollarSign,
             color: 'text-orange-600',
             bgColor: 'bg-orange-50',

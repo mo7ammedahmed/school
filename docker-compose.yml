@@ -90,7 +90,13 @@ x-app-env: &app-env
   # WHIP/WHEP URLs it hands to browsers — in local development that is
   # http://localhost:8889, which is what MEDIA_WEBRTC_URL should be set to.
   MEDIA_WEBRTC_URL: ${MEDIA_WEBRTC_URL:-http://localhost:8889}
+  # The fallback the player uses when UDP to the media server is blocked. Same
+  # host, different port — and in production an HTTPS origin on 443.
+  MEDIA_HLS_URL: ${MEDIA_HLS_URL:-http://localhost:8888}
+  MEDIA_HLS_INTERNAL_URL: ${MEDIA_HLS_INTERNAL_URL:-http://mediamtx:8888}
   MEDIA_API_URL: ${MEDIA_API_URL:-http://mediamtx:9997}
+  MEDIA_API_USER: ${MEDIA_API_USER:-}
+  MEDIA_API_PASSWORD: ${MEDIA_API_PASSWORD:-}
   MEDIA_HOOK_SECRET: ${MEDIA_HOOK_SECRET:-}
 
   # Mailpit stands in for a real relay. MAIL_PORT 1025 is Mailpit's SMTP port
@@ -349,6 +355,11 @@ services:
   # published directly rather than behind nginx. In production, restrict 8189
   # to the addresses that need it — an open UDP port on a school server is an
   # open relay for anyone who finds it.
+  #
+  # The HLS port has to be published too, and that is not symmetry for its own
+  # sake: it is the only watch path left when a school network blocks that UDP
+  # port, and an unpublished 8888 would make the in-app fallback fail in exactly
+  # the environment it exists for.
   mediamtx:
     image: bluenviron/mediamtx:1
     restart: unless-stopped
@@ -361,8 +372,12 @@ services:
       # The control API (recording status, publisher detection) stays on
       # loopback: only the app calls it, and it exposes every stream's state.
       - "127.0.0.1:9997:9997"
-      # WHIP / WHEP / HLS over HTTP. TLS is terminated by nginx in production.
+      # WHIP / WHEP over HTTP. TLS is terminated by nginx in production.
       - "8889:8889"
+      # HLS over HTTP — the TCP-only fallback the student player switches to
+      # when WebRTC's UDP path is blocked. TCP, so a network that only allows
+      # HTTP(S) can still reach it (proxied on 443 in production).
+      - "8888:8888"
       # WebRTC media. UDP, published on every interface: browsers connect to it
       # directly and a loopback-only bind would break every viewer.
       - "8189:8189/udp"
