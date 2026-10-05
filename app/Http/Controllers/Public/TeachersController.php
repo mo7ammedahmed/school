@@ -39,6 +39,9 @@ class TeachersController extends PublicController
     // profile calls them `specialization` and `qualification`.
     public function index(): Response
     {
+        if ($managed = $this->managedPage('faculty')) {
+            return $managed;
+        }
         $teachers = Teacher::forSchool($this->schoolId())
             ->with('subjects')
             ->get(self::PUBLIC_COLUMNS);

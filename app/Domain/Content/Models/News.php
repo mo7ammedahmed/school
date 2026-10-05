@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property Carbon|null $published_at
+ * @property string|null $title_ar
+ * @property string|null $excerpt_ar
  */
 #[Fillable([
     'school_id',

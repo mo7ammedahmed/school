@@ -44,21 +44,24 @@ export default function EventsIndex({ events }: EventsIndexProps) {
 
     return (
         <PublicLayout>
-            <div className="min-h-screen bg-white dark:bg-gray-900">
+            <div className="min-h-screen bg-background text-foreground">
                 <section className="py-20 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-16">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                                 {t(locale, 'public.events')}
                             </h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                                 {t(locale, 'public.eventsDescription')}
                             </p>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
                             {events.data.map((event) => (
-                                <Card key={event.id} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
+                                <Card
+                                    key={event.id}
+                                    className="border-0 shadow-lg bg-card text-card-foreground hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col"
+                                >
                                     {event.featured_image_path && (
                                         <div className="relative h-48 w-full overflow-hidden">
                                             <img
@@ -69,8 +72,8 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                         </div>
                                     )}
                                     <CardHeader>
-                                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                                            <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:text-pine-200">
                                                 {event.event_type}
                                             </span>
                                         </div>
@@ -78,20 +81,22 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                     </CardHeader>
                                     <CardContent className="flex-1 flex flex-col">
                                         <div className="space-y-2 mb-4">
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Calendar className="h-4 w-4" />
                                                 <span>{when(event.event_date)}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Clock className="h-4 w-4" />
                                                 <span>{event.start_time}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <MapPin className="h-4 w-4" />
                                                 <span>{event.location}</span>
                                             </div>
                                         </div>
-                                        <p className="text-gray-600 dark:text-gray-300 line-clamp-3 mb-4 flex-1">{event.description}</p>
+                                        <p className="text-muted-foreground line-clamp-3 mb-4 flex-1">
+                                            {event.description}
+                                        </p>
                                         <Button asChild variant="outline" className="w-full mt-auto">
                                             <Link href={`/events/${event.id}`}>{t(locale, 'public.viewDetails')}</Link>
                                         </Button>
@@ -111,8 +116,11 @@ export default function EventsIndex({ events }: EventsIndexProps) {
                                         </Link>
                                     </Button>
                                 )}
-                                <span className="text-gray-600 dark:text-gray-400 px-4">
-                                    {t(locale, 'public.page', { current: events.current_page, total: events.last_page })}
+                                <span className="text-muted-foreground px-4">
+                                    {t(locale, 'public.page', {
+                                        current: events.current_page,
+                                        total: events.last_page,
+                                    })}
                                 </span>
                                 {events.current_page < events.last_page && (
                                     <Button variant="outline" asChild>

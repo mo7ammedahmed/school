@@ -27,33 +27,40 @@ export default function Programs({ programs }: ProgramsProps) {
 
     return (
         <PublicLayout>
-            <div className="min-h-screen bg-white dark:bg-gray-900">
+            <div className="min-h-screen bg-background text-foreground">
                 <section className="py-20 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-16">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                                 {t(locale, 'public.programs')}
                             </h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                                 {t(locale, 'public.programsDescription')}
                             </p>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {programs.map((program) => (
-                                <Card key={program.id} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
+                                <Card
+                                    key={program.id}
+                                    className="border-0 shadow-lg bg-card text-card-foreground hover:shadow-xl transition-shadow duration-300"
+                                >
                                     <CardHeader>
                                         <CardTitle className="text-xl">{program.name}</CardTitle>
                                         {program.grade_level && (
-                                            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                                            <p className="text-sm text-primary dark:text-pine-200 font-medium mt-1">
                                                 {program.grade_level.name}
                                             </p>
                                         )}
                                     </CardHeader>
                                     <CardContent>
-                                        <p className="text-gray-600 dark:text-gray-300 mb-6">{program.description || t(locale, 'public.noDescription')}</p>
+                                        <p className="text-muted-foreground mb-6">
+                                            {program.description || t(locale, 'public.noDescription')}
+                                        </p>
                                         <Button variant="outline" asChild className="w-full">
-                                            <Link href={`/programs/${program.id}`}>{t(locale, 'public.learnMore')}</Link>
+                                            <Link href={`/programs/${program.id}`}>
+                                                {t(locale, 'public.learnMore')}
+                                            </Link>
                                         </Button>
                                     </CardContent>
                                 </Card>

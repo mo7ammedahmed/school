@@ -497,6 +497,15 @@
         }
     }
 
+    /* Header controls use the header's own contrast pair, including a school
+       that chooses a dark header on an otherwise light page. */
+    .public-header {
+        --color-foreground: var(--color-header-foreground);
+        --color-muted-foreground: color-mix(in srgb, var(--color-header-foreground) 80%, transparent);
+        --color-accent: color-mix(in srgb, var(--color-header-foreground) 10%, var(--color-header));
+        --color-accent-foreground: var(--color-header-foreground);
+    }
+
     .link-quiet {
         position: relative;
         color: var(--color-muted-foreground);
@@ -605,4 +614,3 @@
         background-image: var(--gradient-accent, none);
     }
 }
-

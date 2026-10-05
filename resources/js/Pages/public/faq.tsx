@@ -26,17 +26,17 @@ function AccordionItem({
     onClick: () => void;
 }) {
     return (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="rounded-lg border border-border">
             <button
                 onClick={onClick}
-                className="flex w-full items-center justify-between p-4 text-start font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex w-full items-center justify-between p-4 text-start font-medium transition-colors hover:bg-accent"
             >
-                <span className="text-gray-900 dark:text-white">{question}</span>
-                <span className="ms-4 flex-shrink-0 text-gray-500 dark:text-gray-400">{isOpen ? '−' : '+'}</span>
+                <span className="text-foreground">{question}</span>
+                <span className="ms-4 flex-shrink-0 text-muted-foreground">{isOpen ? '−' : '+'}</span>
             </button>
             {isOpen && (
-                <div className="border-t border-gray-200 dark:border-gray-700 p-4">
-                    <p className="text-gray-600 dark:text-gray-300">{answer}</p>
+                <div className="border-t border-border p-4">
+                    <p className="text-muted-foreground">{answer}</p>
                 </div>
             )}
         </div>
@@ -51,21 +51,21 @@ export default function FAQ({ faqs }: FaqProps) {
 
     return (
         <PublicLayout>
-            <div className="min-h-screen bg-white dark:bg-gray-900">
+            <div className="min-h-screen bg-background text-foreground">
                 <section className="py-20 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-16">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                                 {t(locale, 'public.faq')}
                             </h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                                 {t(locale, 'public.faqDescription')}
                             </p>
                         </div>
 
                         <div className="grid gap-8 lg:grid-cols-4">
                             <div className="lg:col-span-1">
-                                <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 sticky top-24">
+                                <Card className="border-0 shadow-lg bg-card text-card-foreground sticky top-24">
                                     <CardHeader>
                                         <CardTitle>{t(locale, 'public.categories')}</CardTitle>
                                     </CardHeader>
@@ -75,7 +75,7 @@ export default function FAQ({ faqs }: FaqProps) {
                                                 <a
                                                     key={category}
                                                     href={`#${category.toLowerCase()}`}
-                                                    className="block rounded-md px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400"
+                                                    className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-primary/10 hover:text-primary"
                                                 >
                                                     {tk(locale, `public.faq.category.${category}`)}
                                                 </a>
@@ -90,7 +90,7 @@ export default function FAQ({ faqs }: FaqProps) {
                                     const categoryFaqs = faqs[category];
                                     return (
                                         <div key={category} id={category.toLowerCase()}>
-                                            <h2 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+                                            <h2 className="mb-6 text-2xl font-semibold text-foreground">
                                                 {tk(locale, `public.faq.category.${category}`)}
                                             </h2>
                                             <div className="space-y-4">

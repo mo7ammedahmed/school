@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'title',
     'title_ar',
     'content',
+    'content_ar',
+    'show_in_navigation',
+    'navigation_order',
     'template',
     'sections',
     'seo_metadata',
@@ -48,6 +51,7 @@ class ContentPage extends Model
             'seo_metadata' => 'array',
             'sections' => 'array',
             'is_published' => 'boolean',
+            'show_in_navigation' => 'boolean',
             'published_at' => 'datetime',
             'scheduled_at' => 'datetime',
         ];
@@ -56,11 +60,16 @@ class ContentPage extends Model
     #[Scope]
     protected function published($query)
     {
-        return $query
-            ->where('status', 'published')
-            ->where('is_published', true)
-            ->where(function ($query): void {
-                $query->whereNull('published_at')->orWhere('published_at', '<=', now());
+        return $query->where(function ($query): void {
+            $query->where(function ($published): void {
+                $published->where('status', 'published')->where('is_published', true)
+                    ->where(function ($date): void {
+                        $date->whereNull('published_at')->orWhere('published_at', '<=', now());
+                    });
+            })->orWhere(function ($scheduled): void {
+                $scheduled->where('status', 'scheduled')->whereNotNull('scheduled_at')
+                    ->where('scheduled_at', '<=', now());
             });
+        });
     }
 }

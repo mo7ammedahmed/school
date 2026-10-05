@@ -13,10 +13,14 @@ class HomeController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('home')) {
+            return $managed;
+        }
         $schoolId = $this->schoolId();
 
         $latestNews = News::forSchool($schoolId)
             ->where('is_published', true)
+            ->whereNotNull('published_at')->where('published_at', '<=', now())
             ->latest('published_at')
             ->take(3)
             ->get(['id', 'title', 'excerpt', 'published_at', 'featured_image_path']);

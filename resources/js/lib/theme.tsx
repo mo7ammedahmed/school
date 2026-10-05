@@ -92,13 +92,18 @@ export function parseGradient(value: unknown): TokenGradient | null {
     const candidate = raw as Partial<TokenGradient>;
     const stops = Array.isArray(candidate.stops)
         ? candidate.stops
-              .filter((stop): stop is GradientStop =>
-                  typeof stop === 'object' && stop !== null && HEX_COLOR.test(String((stop as GradientStop).color))
+              .filter(
+                  (stop): stop is GradientStop =>
+                      typeof stop === 'object' && stop !== null && HEX_COLOR.test(String((stop as GradientStop).color)),
               )
               .map((stop, index, all) => ({
                   color: stop.color,
                   // An omitted position spreads the stop between its neighbours.
-                  position: clampPercent(Number.isFinite(Number(stop.position)) ? Number(stop.position) : (index / Math.max(1, all.length - 1)) * 100),
+                  position: clampPercent(
+                      Number.isFinite(Number(stop.position))
+                          ? Number(stop.position)
+                          : (index / Math.max(1, all.length - 1)) * 100,
+                  ),
               }))
         : [];
 
@@ -129,11 +134,16 @@ export function parseSolid(raw: unknown, fallback = true): boolean {
 }
 
 /** One token out of the raw server payload. */
-export function parseToken(raw: Record<string, string | boolean | null> | undefined, key: TokenKey, mode: 'light' | 'dark'): TokenValue {
+export function parseToken(
+    raw: Record<string, string | boolean | null> | undefined,
+    key: TokenKey,
+    mode: 'light' | 'dark',
+): TokenValue {
     const source = raw ?? {};
-    const color = typeof source[key] === 'string' && HEX_COLOR.test(source[key] as string)
-        ? (source[key] as string)
-        : DEFAULT_COLORS[mode][key];
+    const color =
+        typeof source[key] === 'string' && HEX_COLOR.test(source[key] as string)
+            ? (source[key] as string)
+            : DEFAULT_COLORS[mode][key];
 
     return {
         color,
@@ -210,12 +220,7 @@ const TOKEN_VARS: Record<TokenKey, string[]> = {
     ],
     background: ['--color-background'],
     surface: ['--color-card', '--color-popover', '--color-input-background', '--color-table-row'],
-    text: [
-        '--color-foreground',
-        '--color-card-foreground',
-        '--color-popover-foreground',
-        '--color-input-foreground',
-    ],
+    text: ['--color-foreground', '--color-card-foreground', '--color-popover-foreground', '--color-input-foreground'],
     muted: ['--color-muted-foreground', '--color-input-placeholder'],
 };
 
@@ -262,10 +267,7 @@ export function applyPalette(tokens: ModeTokens): void {
         // A gradient rides its own variable. `--color-*` has to stay a plain
         // colour: it is reused for borders, focus rings and text, where a
         // gradient would be invalid.
-        root.style.setProperty(
-            `--gradient-${token}`,
-            value.gradient ? gradientCss(value.gradient) : 'none'
-        );
+        root.style.setProperty(`--gradient-${token}`, value.gradient ? gradientCss(value.gradient) : 'none');
     });
 
     const accent = tokenBaseColor(tokens.accent);
@@ -300,6 +302,8 @@ const BRAND_TOKENS = new Set([
     'colorInfoForeground',
 ]);
 
+const appliedWebsiteVars = new Set<string>();
+
 /**
  * Writes the school's website palette onto the page.
  *
@@ -312,10 +316,7 @@ const BRAND_TOKENS = new Set([
  * tokens carry over and the neutrals stay with the dark palette — otherwise a
  * cream website palette would put white cards on a black dashboard.
  */
-export function applyWebsitePalette(
-    website?: Record<string, string> | null,
-    mode: ResolvedMode = 'light',
-): void {
+export function applyWebsitePalette(website?: Record<string, string> | null, mode: ResolvedMode = 'light'): void {
     if (!website) return;
 
     const root = document.documentElement;
@@ -324,10 +325,9 @@ export function applyWebsitePalette(
         if (!key.startsWith('color') || typeof value !== 'string' || value === '') continue;
         if (mode === 'dark' && !BRAND_TOKENS.has(key)) continue;
 
-        root.style.setProperty(
-            `--${key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`,
-            value,
-        );
+        const cssVar = `--${key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;
+        root.style.setProperty(cssVar, value);
+        appliedWebsiteVars.add(cssVar);
     }
 }
 
@@ -335,16 +335,18 @@ export function applyWebsitePalette(
  * Single entry point that flips the mode class and applies the matching palette,
  * then the school's own colours on top so they are never the ones overwritten.
  */
-export function applyTheme(
-    mode: ThemeMode,
-    palettes: Palettes,
-    website?: Record<string, string> | null,
-): void {
+export function applyTheme(mode: ThemeMode, palettes: Palettes, website?: Record<string, string> | null): void {
     const root = document.documentElement;
     const resolved = resolveMode(mode);
 
     root.classList.toggle('dark', resolved === 'dark');
     root.dataset.theme = resolved;
+
+    // Website overrides are inline styles. Remove the previous school's/mode's
+    // values first, so skipped dark surfaces can fall back to the CSS palette.
+    // Headline tokens are reapplied below, including when an override is removed.
+    for (const cssVar of appliedWebsiteVars) root.style.removeProperty(cssVar);
+    appliedWebsiteVars.clear();
 
     applyPalette(palettes[resolved]);
     applyWebsitePalette(website, resolved);
@@ -380,7 +382,11 @@ export function persistMode(mode: ThemeMode): void {
 
     if (!serverPersistence) return;
 
-    router.post('/settings/theme/mode', { mode }, { preserveState: true, preserveScroll: true, preserveUrl: true, onError: () => undefined });
+    router.post(
+        '/settings/theme/mode',
+        { mode },
+        { preserveState: true, preserveScroll: true, preserveUrl: true, onError: () => undefined },
+    );
 }
 
 type ThemeContextValue = {
@@ -440,7 +446,7 @@ export function ThemeProvider({ children, initialMode, palettes, website }: Them
 
     const value = useMemo<ThemeContextValue>(
         () => ({ mode, resolved, palettes: activePalettes, setMode, toggle }),
-        [mode, resolved, activePalettes, setMode, toggle]
+        [mode, resolved, activePalettes, setMode, toggle],
     );
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -576,9 +582,7 @@ export const WEBSITE_COLOR_GROUPS: WebsiteTokenGroup[] = [
 ];
 
 /** The colour tokens the registry knows about, as one flat set. */
-export const KNOWN_COLOR_TOKENS: ReadonlySet<string> = new Set(
-    WEBSITE_COLOR_GROUPS.flatMap((group) => group.tokens)
-);
+export const KNOWN_COLOR_TOKENS: ReadonlySet<string> = new Set(WEBSITE_COLOR_GROUPS.flatMap((group) => group.tokens));
 
 /**
  * Splits `colorSidebarPrimaryForeground` into `Sidebar primary foreground`, so

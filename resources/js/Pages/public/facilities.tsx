@@ -3,16 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { t, tk } from '@/lib/i18n/copy';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-import {
-    Presentation,
-    FlaskConical,
-    Library,
-    Dumbbell,
-    Drama,
-    Trees,
-    Wifi,
-    Users,
-} from 'lucide-react';
+import { Presentation, FlaskConical, Library, Dumbbell, Drama, Trees, Wifi, Users } from 'lucide-react';
 
 interface Facility {
     title: string;
@@ -40,14 +31,14 @@ export default function Facilities({ facilities }: FacilitiesProps) {
 
     return (
         <PublicLayout>
-            <div className="min-h-screen bg-white dark:bg-gray-900">
+            <div className="min-h-screen bg-background text-foreground">
                 <section className="py-20 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-16">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                                 {t(locale, 'public.facilities')}
                             </h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                                 {t(locale, 'public.facilitiesDescription')}
                             </p>
                         </div>
@@ -56,40 +47,49 @@ export default function Facilities({ facilities }: FacilitiesProps) {
                             {facilities.map((facility) => {
                                 const Icon = facilityIcons[facility.icon] ?? Presentation;
                                 return (
-                                    <Card key={facility.title} className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 hover:shadow-xl transition-shadow duration-300">
+                                    <Card
+                                        key={facility.title}
+                                        className="border-0 shadow-lg bg-card text-card-foreground hover:shadow-xl transition-shadow duration-300"
+                                    >
                                         <CardHeader>
                                             <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:text-pine-200">
                                                     <Icon className="h-5 w-5" />
                                                 </div>
                                                 <CardTitle>{tk(locale, facility.title)}</CardTitle>
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <p className="text-gray-600 dark:text-gray-300">{tk(locale, facility.description)}</p>
+                                            <p className="text-muted-foreground">{tk(locale, facility.description)}</p>
                                         </CardContent>
                                     </Card>
                                 );
                             })}
                         </div>
 
-                        <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800">
+                        <Card className="border-0 shadow-lg bg-card text-card-foreground">
                             <CardHeader>
                                 <CardTitle className="text-2xl">{t(locale, 'public.campusHighlights')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid gap-4 sm:grid-cols-3">
                                     <div className="flex items-center gap-3">
-                                        <Wifi className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-gray-700 dark:text-gray-300">{t(locale, 'public.highlights.wifi')}</span>
+                                        <Wifi className="h-5 w-5 text-primary dark:text-pine-200" />
+                                        <span className="text-card-foreground">
+                                            {t(locale, 'public.highlights.wifi')}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-gray-700 dark:text-gray-300">{t(locale, 'public.highlights.security')}</span>
+                                        <Users className="h-5 w-5 text-primary dark:text-pine-200" />
+                                        <span className="text-card-foreground">
+                                            {t(locale, 'public.highlights.security')}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Trees className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                        <span className="text-gray-700 dark:text-gray-300">{t(locale, 'public.highlights.ecoFriendly')}</span>
+                                        <Trees className="h-5 w-5 text-primary dark:text-pine-200" />
+                                        <span className="text-card-foreground">
+                                            {t(locale, 'public.highlights.ecoFriendly')}
+                                        </span>
                                     </div>
                                 </div>
                             </CardContent>

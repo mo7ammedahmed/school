@@ -13,6 +13,9 @@ class ProgramsController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('programs')) {
+            return $managed;
+        }
         $schoolId = $this->schoolId();
 
         // `subjects` and `grade_levels` store their names in two columns and

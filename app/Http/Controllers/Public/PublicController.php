@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Content\Services\PublicWebsiteContent;
 use App\Domain\Schools\Services\SchoolResolver;
 use App\Domain\Schools\Support\BelongsToSchool;
+use Inertia\Response;
 
 /**
  * The one owner of "which school is this public page about?".
@@ -34,5 +36,10 @@ abstract class PublicController
     protected function schoolId(): ?int
     {
         return $this->schools->current()?->id;
+    }
+
+    protected function managedPage(string $slug): ?Response
+    {
+        return app(PublicWebsiteContent::class)->published($this->schoolId(), $slug);
     }
 }

@@ -54,29 +54,19 @@ export default function Welcome() {
             // ---------- Hero entrance ----------
             mm.add('(prefers-reduced-motion: no-preference)', () => {
                 const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
-                tl.fromTo(
-                    '[data-hero="badge"]',
-                    { y: 18, autoAlpha: 0 },
-                    { y: 0, autoAlpha: 1, duration: 0.7 },
-                    0.15
-                )
+                tl.fromTo('[data-hero="badge"]', { y: 18, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7 }, 0.15)
                     .fromTo(
                         '[data-hero="line"]',
                         { yPercent: 110 },
                         { yPercent: 0, duration: 1.1, stagger: 0.12, ease: 'power4.out' },
-                        0.3
+                        0.3,
                     )
-                    .fromTo(
-                        '[data-hero="copy"]',
-                        { y: 24, autoAlpha: 0 },
-                        { y: 0, autoAlpha: 1, duration: 0.8 },
-                        0.75
-                    )
+                    .fromTo('[data-hero="copy"]', { y: 24, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.8 }, 0.75)
                     .fromTo(
                         '[data-hero="visual"]',
                         { y: 40, autoAlpha: 0, scale: 0.97 },
                         { y: 0, autoAlpha: 1, scale: 1, duration: 1.1, ease: 'power3.out' },
-                        0.6
+                        0.6,
                     );
 
                 // ---------- Stats count-up ----------
@@ -145,7 +135,7 @@ export default function Welcome() {
             });
         }, root);
         return () => ctx.revert();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locale, ar]);
 
     return (
@@ -156,7 +146,7 @@ export default function Welcome() {
                     {/* ambient wash */}
                     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
                         <div className="absolute -top-32 start-[8%] size-[30rem] rounded-full bg-pine-100/80 blur-[120px]" />
-                        <div className="absolute top-40 -end-24 size-[26rem] rounded-full bg-gold-100/90 blur-[110px]" />
+                        <div className="absolute top-40 -end-24 size-[26rem] rounded-full bg-pine-100/90 blur-[110px]" />
                         <div className="absolute bottom-0 start-[45%] size-[22rem] rounded-full bg-pine-50 blur-[100px]" />
                     </div>
 
@@ -166,7 +156,7 @@ export default function Welcome() {
                             <div className="relative z-10">
                                 <span
                                     data-hero="badge"
-                                    className="inline-flex items-center gap-2.5 rounded-full border border-pine-200/80 bg-white/70 px-4 py-2 text-[0.8125rem] font-medium text-pine-800 shadow-[0_1px_2px_rgba(28,26,22,0.04)] backdrop-blur"
+                                    className="inline-flex items-center gap-2.5 rounded-full border border-pine-200/80 bg-card/70 px-4 py-2 text-[0.8125rem] font-medium text-primary dark:text-pine-200 shadow-[0_1px_2px_rgba(28,26,22,0.04)] backdrop-blur"
                                 >
                                     <span className="relative flex size-2" aria-hidden="true">
                                         <span className="absolute inline-flex size-full animate-ping rounded-full bg-pine-500 opacity-60" />
@@ -179,7 +169,10 @@ export default function Welcome() {
                                     <span data-hero="line" className="block text-balance">
                                         {t(locale, 'welcome.titleA')}
                                     </span>
-                                    <span data-hero="line" className="block text-balance text-pine-700 dark:text-pine-200">
+                                    <span
+                                        data-hero="line"
+                                        className="block text-balance text-primary dark:text-pine-200"
+                                    >
                                         {t(locale, 'welcome.titleB')}
                                     </span>
                                 </h1>
@@ -203,13 +196,16 @@ export default function Welcome() {
                                     </Button>
                                 </div>
 
-                                <div data-hero="copy" className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                                <div
+                                    data-hero="copy"
+                                    className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground"
+                                >
                                     <span className="inline-flex items-center gap-2">
-                                        <BookOpen className="size-4 text-gold-600" aria-hidden="true" />
+                                        <BookOpen className="size-4 text-primary dark:text-pine-200" aria-hidden="true" />
                                         {locale === 'ar' ? 'منهج وطني ودولي' : 'National & international curriculum'}
                                     </span>
                                     <span className="inline-flex items-center gap-2">
-                                        <Sparkles className="size-4 text-gold-600" aria-hidden="true" />
+                                        <Sparkles className="size-4 text-primary dark:text-pine-200" aria-hidden="true" />
                                         {locale === 'ar' ? 'صفوف صغيرة برعاية فردية' : 'Small classes, personal care'}
                                     </span>
                                 </div>
@@ -219,17 +215,17 @@ export default function Welcome() {
                             <div data-hero="visual" className="relative mx-auto w-full max-w-md lg:max-w-none">
                                 <div
                                     aria-hidden="true"
-                                    className="absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-pine-100/70 via-transparent to-gold-100/80 blur-2xl"
+                                    className="absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-pine-100/70 via-transparent to-pine-100/80 blur-2xl"
                                 />
                                 {/* Motto card */}
                                 <div className="relative rounded-[2rem] border border-border/70 bg-card/85 p-8 shadow-[var(--shadow-panel)] backdrop-blur-sm sm:p-10">
                                     <div className="flex items-center justify-between">
-                                        <span className="font-display text-[0.8125rem] font-semibold uppercase tracking-[0.22em] text-gold-600">
+                                        <span className="font-display text-[0.8125rem] font-semibold uppercase tracking-[0.22em] text-primary dark:text-pine-200">
                                             {locale === 'ar' ? 'شعارنا' : 'Our motto'}
                                         </span>
                                         <span
                                             aria-hidden="true"
-                                            className="flex size-10 items-center justify-center rounded-full border border-gold-200 bg-gold-100/60 text-gold-700"
+                                            className="flex size-10 items-center justify-center rounded-full border border-pine-200 bg-pine-100/60 text-pine-700"
                                         >
                                             <Sparkles className="size-4" />
                                         </span>
@@ -239,12 +235,15 @@ export default function Welcome() {
                                             ? '«نرتقي بالعقول، ونبني الشخصية، ونُلهم القادة.»'
                                             : '“We nurture minds, build character, and inspire leaders.”'}
                                     </p>
-                                    <div className="mt-7 h-px w-full bg-gradient-to-r from-gold-300/80 to-transparent" aria-hidden="true" />
+                                    <div
+                                        className="mt-7 h-px w-full bg-gradient-to-r from-pine-300/80 to-transparent"
+                                        aria-hidden="true"
+                                    />
                                     <div className="mt-6 flex items-center justify-between text-sm">
                                         <span className="text-muted-foreground">
                                             {locale === 'ar' ? 'الرؤية منذ ١٩٩٥' : 'The vision since 1995'}
                                         </span>
-                                        <span className="inline-flex items-center gap-1.5 font-medium text-pine-700 dark:text-pine-200">
+                                        <span className="inline-flex items-center gap-1.5 font-medium text-primary dark:text-pine-200">
                                             <span className="size-1.5 rounded-full bg-pine-600" aria-hidden="true" />
                                             {locale === 'ar' ? 'الرياض' : 'Riyadh'}
                                         </span>
@@ -257,7 +256,7 @@ export default function Welcome() {
                                     style={{ animationDelay: '-2.4s' }}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="flex size-11 items-center justify-center rounded-xl bg-pine-800 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+                                        <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
                                             <GraduationCap className="size-5" aria-hidden="true" />
                                         </span>
                                         <div className="leading-tight">
@@ -273,10 +272,10 @@ export default function Welcome() {
                                 {/* Floating ring */}
                                 <div
                                     aria-hidden="true"
-                                    className="absolute -top-9 -end-3 hidden size-24 rounded-full border border-gold-300/60 md:block animate-float"
+                                    className="absolute -top-9 -end-3 hidden size-24 rounded-full border border-pine-300/60 md:block animate-float"
                                     style={{ animationDelay: '-4.2s', animationDuration: '9s' }}
                                 >
-                                    <span className="absolute inset-3 rounded-full border border-gold-300/40" />
+                                    <span className="absolute inset-3 rounded-full border border-pine-300/40" />
                                 </div>
                             </div>
                         </div>
@@ -294,7 +293,7 @@ export default function Welcome() {
                                     className="flex shrink-0 items-center font-display text-[1.05rem] tracking-wide text-foreground/45"
                                 >
                                     <span className="whitespace-nowrap px-7">{t(locale, 'welcome.marquee')}</span>
-                                    <span className="text-gold-500" aria-hidden="true">
+                                    <span className="text-pine-500" aria-hidden="true">
                                         ◆
                                     </span>
                                 </span>
@@ -324,7 +323,7 @@ export default function Welcome() {
                                     </dd>
                                     <span
                                         aria-hidden="true"
-                                        className="pointer-events-none absolute inset-x-1/2 top-0 h-px w-10 -translate-x-1/2 bg-gold-400/70 lg:start-0 lg:inset-x-auto lg:translate-x-0"
+                                        className="pointer-events-none absolute inset-x-1/2 top-0 h-px w-10 -translate-x-1/2 bg-pine-400/70 lg:start-0 lg:inset-x-auto lg:translate-x-0"
                                     />
                                 </div>
                             ))}
@@ -362,7 +361,7 @@ export default function Welcome() {
                                     data-stage-row
                                     className="group grid items-center gap-3 border-b border-border/80 py-7 transition-all duration-300 hover:bg-paper/70 hover:ps-3 sm:py-8 md:grid-cols-[4.5rem_1.4fr_1fr] md:gap-8"
                                 >
-                                    <span className="font-display text-2xl font-medium text-gold-500/90 transition-colors group-hover:text-gold-600">
+                                    <span className="font-display text-2xl font-medium text-primary dark:text-pine-200">
                                         {String(i + 1).padStart(2, '0')}
                                     </span>
                                     <span>
@@ -374,10 +373,10 @@ export default function Welcome() {
                                         </span>
                                     </span>
                                     <span className="flex items-center justify-between gap-4 md:justify-end">
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-pine-200/70 bg-pine-50/60 px-3.5 py-1.5 text-[0.8125rem] font-medium text-pine-800">
+                                        <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1.5 text-[0.8125rem] font-medium text-primary dark:text-pine-200">
                                             {t(locale, stage.agesKey)}
                                         </span>
-                                        <span className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-card text-foreground transition-all duration-300 group-hover:border-pine-700 group-hover:bg-pine-800 group-hover:text-white">
+                                        <span className="flex size-10 items-center justify-center rounded-full border border-border/80 bg-card text-foreground transition-all duration-300 group-hover:border-pine-700 group-hover:bg-primary group-hover:text-primary-foreground">
                                             <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
                                         </span>
                                     </span>
@@ -421,7 +420,7 @@ export default function Welcome() {
                                                 className="absolute -end-10 -top-10 size-32 rounded-full bg-pine-50 transition-transform duration-500 group-hover:scale-[1.7]"
                                             />
                                             <div className="relative flex items-start gap-5">
-                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pine-700 to-pine-950 text-white shadow-[0_6px_16px_-6px_rgba(6,40,30,0.5)]">
+                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_6px_16px_-6px_rgba(6,40,30,0.5)]">
                                                     <Icon className="size-5" aria-hidden="true" />
                                                 </span>
                                                 <div className="min-w-0">
@@ -452,44 +451,29 @@ export default function Welcome() {
                     <div className="public-section">
                         <div
                             data-cta-panel
-                            className="surface-noise relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-pine-900 via-pine-950 to-[#04231b] px-6 py-16 text-center shadow-[var(--shadow-lift)] sm:rounded-[2.5rem] sm:px-12 sm:py-24"
+                            className="surface-noise relative overflow-hidden rounded-[2rem] bg-primary text-primary-foreground px-6 py-16 text-center shadow-[var(--shadow-lift)] sm:rounded-[2.5rem] sm:px-12 sm:py-24"
                         >
-                            <div
-                                aria-hidden="true"
-                                className="pointer-events-none absolute -top-24 start-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-pine-600/30 blur-[100px]"
-                            />
-                            <div
-                                aria-hidden="true"
-                                className="pointer-events-none absolute -bottom-32 -end-20 size-80 rounded-full bg-gold-500/15 blur-[90px]"
-                            />
-                            <span aria-hidden="true" className="absolute inset-x-0 top-0 h-px hairline-dark" />
-
                             <div className="relative mx-auto max-w-3xl">
-                                <span className="eyebrow" style={{ color: '#d9b970' }}>
+                                <span className="eyebrow text-primary-foreground/80">
                                     <span className="inline-flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-gold-300" aria-hidden="true" />
+                                        <span className="size-1.5 rounded-full bg-pine-300" aria-hidden="true" />
                                         {locale === 'ar' ? 'العام الدراسي ٢٠٢٦–٢٠٢٧' : 'Academic year 2026–2027'}
                                     </span>
                                 </span>
-                                <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.02em] text-white sm:text-6xl">
+                                <h2 className="mt-5 font-display text-4xl leading-[1.05] tracking-[-0.02em] text-primary-foreground sm:text-6xl">
                                     {t(locale, 'welcome.ctaTitle')}
                                 </h2>
-                                <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+                                <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-primary-foreground/80">
                                     {t(locale, 'welcome.ctaBody')}
                                 </p>
                                 <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                                    <Button size="lg" asChild className="w-full bg-white px-9 text-pine-950 hover:bg-white/90 sm:w-auto">
+                                    <Button size="lg" variant="secondary" asChild className="w-full px-9 sm:w-auto">
                                         <Link href="/apply">
                                             {t(locale, 'public.applyNow')}
                                             <ArrowRight className="size-4 rtl:-scale-x-100" aria-hidden="true" />
                                         </Link>
                                     </Button>
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        asChild
-                                        className="w-full border-white/25 bg-white/5 text-white hover:border-white/40 hover:bg-white/10 sm:w-auto"
-                                    >
+                                    <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
                                         <Link href="/contact">{t(locale, 'welcome.ctaSecondary')}</Link>
                                     </Button>
                                 </div>

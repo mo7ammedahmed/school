@@ -13,6 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Bilingual columns added by the shared translation-column migration.
+ *
+ * @property string|null $title_ar
+ * @property string|null $description_ar
+ */
 #[Fillable([
     'school_id',
     'title',

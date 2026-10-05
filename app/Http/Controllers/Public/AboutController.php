@@ -7,10 +7,14 @@ namespace App\Http\Controllers\Public;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AboutController
+class AboutController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('about')) {
+            return $managed;
+        }
+
         return Inertia::render('public/about', [
             'stats' => [
                 ['number' => '500+', 'label' => 'public.studentsEnrolled'],

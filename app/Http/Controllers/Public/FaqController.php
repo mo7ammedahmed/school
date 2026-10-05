@@ -7,10 +7,13 @@ namespace App\Http\Controllers\Public;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class FaqController
+class FaqController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('faq')) {
+            return $managed;
+        }
         $faqs = [
             'admissions' => [
                 ['question' => 'public.faq.admissions.howToApply.q', 'answer' => 'public.faq.admissions.howToApply.a'],

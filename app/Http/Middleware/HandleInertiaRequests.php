@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Domain\Content\Models\ContentPage;
+use App\Domain\Content\Services\PublicWebsiteContent;
 use App\Domain\Identity\Services\SharedPermissionList;
 use App\Domain\Localization\Services\InterfaceCatalog;
 use App\Domain\Schools\Models\School;
@@ -72,6 +74,13 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'school' => $school ? $this->safeSchool($school) : null,
+            'publicSchoolContact' => $school?->only(['email', 'phone', 'address', 'address_ar']),
+            'websiteNavigation' => fn (): array => $school ? ContentPage::forSchool($school->id)->published()
+                ->where('show_in_navigation', true)->orderBy('navigation_order')->orderBy('title')->limit(12)
+                ->get(['slug', 'title', 'title_ar'])->map(fn (ContentPage $page) => [
+                    'title' => $page->title, 'title_ar' => $page->title_ar,
+                    'url' => app(PublicWebsiteContent::class)->url($page->slug),
+                ])->all() : [],
             'appearance' => array_merge(
                 $appearance,
                 [

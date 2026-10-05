@@ -16,6 +16,10 @@ class ContactController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('contact')) {
+            return $managed;
+        }
+
         return Inertia::render('public/contact');
     }
 

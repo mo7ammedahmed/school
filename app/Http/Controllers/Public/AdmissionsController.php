@@ -212,6 +212,9 @@ class AdmissionsController extends PublicController
 
     public function index(): Response
     {
+        if ($managed = $this->managedPage('admissions')) {
+            return $managed;
+        }
         // `name` is an appended accessor on both models below, not a column: a
         // select list asking for it filled every row with the literal "name".
         // A period covers no particular grades — there is no column for it, and

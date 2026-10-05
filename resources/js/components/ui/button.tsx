@@ -16,15 +16,15 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 default: [
-                    'bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(6,40,30,0.28)]',
-                    'hover:bg-primary/92 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_6px_rgba(6,40,30,0.3)]',
+                    'bg-button-primary text-button-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(6,40,30,0.28)]',
+                    'hover:bg-button-primary/92 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_6px_rgba(6,40,30,0.3)]',
                 ],
-                secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/85',
+                secondary: 'bg-button-secondary text-button-secondary-foreground hover:bg-button-secondary/85',
                 outline: [
-                    'border border-input bg-card/60 text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]',
+                    'border border-input bg-button-outline text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]',
                     'hover:border-foreground/20 hover:bg-accent',
                 ],
-                ghost: 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                ghost: 'bg-button-ghost text-muted-foreground hover:bg-accent hover:text-foreground',
                 destructive: 'bg-destructive text-white shadow-sm hover:bg-destructive/90',
                 link: 'text-primary underline-offset-4 hover:underline',
             },
@@ -40,12 +40,11 @@ const buttonVariants = cva(
             variant: 'default',
             size: 'md',
         },
-    }
+    },
 );
 
 export interface ButtonProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-        VariantProps<typeof buttonVariants> {
+    extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
     asChild?: boolean;
 }
 
@@ -57,6 +56,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {children}
             </Comp>
         );
-    }
+    },
 );
 Button.displayName = 'Button';

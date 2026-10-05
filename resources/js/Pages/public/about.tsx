@@ -11,67 +11,77 @@ export default function About() {
 
     return (
         <PublicLayout>
-            <div className="min-h-screen bg-white dark:bg-gray-900">
+            <div className="min-h-screen bg-background text-foreground">
                 <section className="py-20 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-6xl mx-auto">
                         <div className="text-center mb-16">
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+                            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
                                 {t(locale, 'public.about')}
                             </h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                                 {t(locale, 'public.aboutDescription')}
                             </p>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 mb-16">
-                            <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800">
+                            <Card className="border-0 shadow-lg bg-card text-card-foreground">
                                 <CardHeader>
                                     <CardTitle className="text-2xl">{t(locale, 'public.mission')}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                                    <p className="text-muted-foreground text-lg leading-relaxed">
                                         {t(locale, 'public.missionDescription')}
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800">
+                            <Card className="border-0 shadow-lg bg-card text-card-foreground">
                                 <CardHeader>
                                     <CardTitle className="text-2xl">{t(locale, 'public.vision')}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                                    <p className="text-muted-foreground text-lg leading-relaxed">
                                         {t(locale, 'public.visionDescription')}
                                     </p>
                                 </CardContent>
                             </Card>
                         </div>
 
-                        <Card className="border-0 shadow-lg bg-gray-50 dark:bg-gray-800 mb-16">
+                        <Card className="border-0 shadow-lg bg-card text-card-foreground mb-16">
                             <CardHeader>
                                 <CardTitle className="text-2xl">{t(locale, 'public.whyChooseUs')}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <ul className="space-y-4">
                                     <li className="flex items-start gap-3">
-                                        <CheckCircle className="h-6 w-6 text-emerald-600 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-700 dark:text-gray-300 text-lg">{t(locale, 'public.experiencedFaculty')}</span>
+                                        <CheckCircle className="h-6 w-6 text-primary dark:text-pine-200 mt-0.5 flex-shrink-0" />
+                                        <span className="text-card-foreground text-lg">
+                                            {t(locale, 'public.experiencedFaculty')}
+                                        </span>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <CheckCircle className="h-6 w-6 text-emerald-600 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-700 dark:text-gray-300 text-lg">{t(locale, 'public.stateOfArtFacilities')}</span>
+                                        <CheckCircle className="h-6 w-6 text-primary dark:text-pine-200 mt-0.5 flex-shrink-0" />
+                                        <span className="text-card-foreground text-lg">
+                                            {t(locale, 'public.stateOfArtFacilities')}
+                                        </span>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <CheckCircle className="h-6 w-6 text-emerald-600 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-700 dark:text-gray-300 text-lg">{t(locale, 'public.comprehensiveCurriculum')}</span>
+                                        <CheckCircle className="h-6 w-6 text-primary dark:text-pine-200 mt-0.5 flex-shrink-0" />
+                                        <span className="text-card-foreground text-lg">
+                                            {t(locale, 'public.comprehensiveCurriculum')}
+                                        </span>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <CheckCircle className="h-6 w-6 text-emerald-600 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-700 dark:text-gray-300 text-lg">{t(locale, 'public.safeEnvironment')}</span>
+                                        <CheckCircle className="h-6 w-6 text-primary dark:text-pine-200 mt-0.5 flex-shrink-0" />
+                                        <span className="text-card-foreground text-lg">
+                                            {t(locale, 'public.safeEnvironment')}
+                                        </span>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <CheckCircle className="h-6 w-6 text-emerald-600 mt-0.5 flex-shrink-0" />
-                                        <span className="text-gray-700 dark:text-gray-300 text-lg">{t(locale, 'public.extracurricularFocus')}</span>
+                                        <CheckCircle className="h-6 w-6 text-primary dark:text-pine-200 mt-0.5 flex-shrink-0" />
+                                        <span className="text-card-foreground text-lg">
+                                            {t(locale, 'public.extracurricularFocus')}
+                                        </span>
                                     </li>
                                 </ul>
                             </CardContent>

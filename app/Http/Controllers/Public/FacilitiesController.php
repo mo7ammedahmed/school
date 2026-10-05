@@ -7,10 +7,13 @@ namespace App\Http\Controllers\Public;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class FacilitiesController
+class FacilitiesController extends PublicController
 {
     public function index(): Response
     {
+        if ($managed = $this->managedPage('facilities')) {
+            return $managed;
+        }
         $facilities = [
             [
                 'title' => 'public.facilities.classrooms',

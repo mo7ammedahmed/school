@@ -35,11 +35,11 @@ use App\Http\Controllers\Finance\RefundController as FinanceRefundController;
 use App\Http\Controllers\GradeLevelController;
 use App\Http\Controllers\Guardian\PortalController as GuardianPortalController;
 use App\Http\Controllers\GuardianController;
-use App\Http\Controllers\LiveSessionController;
 use App\Http\Controllers\LiveHlsController;
-use App\Http\Controllers\MediaAuthorizationController;
+use App\Http\Controllers\LiveSessionController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MediaAuthorizationController;
 use App\Http\Controllers\MediaHookController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NewsController;
@@ -478,6 +478,7 @@ Route::middleware(['auth', 'school.context'])->prefix('')->name('')->group(funct
     // and `content.events.show`, routes that did not exist: creating, updating
     // or deleting an article or an event saved the row and then answered 500.
     Route::middleware('permission:manage-content')->group(function () {
+        Route::get('content/pages/{page}/preview', [ContentPageController::class, 'preview'])->name('content.pages.preview');
         Route::resource('content/pages', ContentPageController::class)->except(['show'])->names('content.pages');
         Route::resource('content/news', NewsController::class)->names('content.news');
         Route::resource('content/events', EventController::class)->names('content.events');
